@@ -240,42 +240,44 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
         {/* Subtle subject-colored top-edge gradient glint */}
         <div className={`absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r ${topGlintGradient} pointer-events-none opacity-80`} />
 
-        {/* Brand Logo & Name */}
-        <div 
-          onClick={() => handleNavClick('home')}
-          className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group transition-all min-w-0 shrink-0 active:scale-[0.99]"
-          title="Go to Cambridge IGCSE Portal"
-        >
-          <div className={`w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-lg bg-gradient-to-tr ${brandIconGradient} flex items-center justify-center shadow-md border group-hover:scale-105 transition-transform`}>
-            {isMath ? (
-              <Sigma className="w-4 h-4 text-white" />
-            ) : isPhysics ? (
-              <Atom className="w-4 h-4 text-white" />
-            ) : isBio ? (
-              <Dna className="w-4 h-4 text-white" />
-            ) : (
-              <FlaskConical className="w-4 h-4 text-white" />
-            )}
-          </div>
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <span className="text-[13px] sm:text-sm lg:text-base font-bold tracking-tight truncate whitespace-nowrap text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors">
-                Cambridge IGCSE
-              </span>
-              <span className={`inline-flex shrink-0 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border ${hubPillClass}`}>
-                {currentSubjectInfo.code}
+        {/* Left Wing: Brand Logo & Name */}
+        <div className="flex-1 flex items-center justify-start min-w-0">
+          <div 
+            onClick={() => handleNavClick('home')}
+            className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group transition-all min-w-0 shrink-0 active:scale-[0.99]"
+            title="Go to Cambridge IGCSE Portal"
+          >
+            <div className={`w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-lg bg-gradient-to-tr ${brandIconGradient} flex items-center justify-center shadow-md border group-hover:scale-105 transition-transform`}>
+              {isMath ? (
+                <Sigma className="w-4 h-4 text-white" />
+              ) : isPhysics ? (
+                <Atom className="w-4 h-4 text-white" />
+              ) : isBio ? (
+                <Dna className="w-4 h-4 text-white" />
+              ) : (
+                <FlaskConical className="w-4 h-4 text-white" />
+              )}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="text-[13px] sm:text-sm lg:text-base font-bold tracking-tight truncate whitespace-nowrap text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors">
+                  Cambridge IGCSE
+                </span>
+                <span className={`inline-flex shrink-0 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border ${hubPillClass}`}>
+                  {currentSubjectInfo.code}
+                </span>
+              </div>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 hidden xl:inline truncate max-w-[240px] 2xl:max-w-none">
+                {currentView === 'home'
+                  ? 'Maths 0580, Physics 0625, Chemistry 0620 & Biology 0610'
+                  : `${currentSubjectInfo.fullLabel} Topicals & Mock Builder`}
               </span>
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 hidden xl:inline truncate max-w-[240px] 2xl:max-w-none">
-              {currentView === 'home'
-                ? 'Maths 0580, Physics 0625, Chemistry 0620 & Biology 0610'
-                : `${currentSubjectInfo.fullLabel} Topicals & Mock Builder`}
-            </span>
           </div>
         </div>
 
-        {/* Center: Desktop Navigation, Tools & User Profile (>= 1024px) */}
-        <div className="hidden lg:flex flex-nowrap items-center gap-1.5 xl:gap-2 mx-auto shrink-0">
+        {/* Center Group: Desktop Navigation, Tools & User Profile (>= 1024px) */}
+        <div className="hidden lg:flex shrink-0 flex-nowrap items-center justify-center gap-1.5 xl:gap-2 mx-auto">
           <nav
             onPointerMove={handleSpotlightMove}
             onPointerLeave={handleSpotlightLeave}
@@ -451,88 +453,90 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           </div>
         </div>
 
-        {/* Right: Subject Switcher (>= 1024px) */}
-        <div className="hidden lg:flex items-center relative shrink-0" ref={subjectMenuRef}>
-          <button
-            type="button"
-            onClick={() => setIsSubjectMenuOpen((o) => !o)}
-            onPointerMove={handleSpotlightMove}
-            onPointerLeave={handleSpotlightLeave}
-            style={getSubjectSpotlightStyle(activeSubject, 200)}
-            className="spotlight-surface shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#07090D] dark:hover:bg-[#0C0F17] border border-slate-200 dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] text-xs font-medium transition-all duration-150 active:scale-[0.98]"
-            title="Switch subject"
-            aria-haspopup="menu"
-            aria-expanded={isSubjectMenuOpen}
-          >
-            <span className={`relative z-10 w-2 h-2 rounded-full shrink-0 animate-pulse shadow-[0_0_8px_currentColor] ${
-              currentView === 'home'
-                ? 'text-amber-400 bg-amber-500'
-                : isMath
-                ? 'text-amber-400 bg-amber-500'
-                : isPhysics
-                ? 'text-indigo-400 bg-indigo-500'
-                : isBio
-                ? 'text-emerald-400 bg-emerald-500'
-                : 'text-cyan-400 bg-cyan-500'
-            }`}></span>
-            <span className="relative z-10 text-slate-800 dark:text-slate-200 font-semibold whitespace-nowrap">
-              {currentView === 'home' ? 'All Subjects' : currentSubjectInfo.label}
-            </span>
-            <span className="relative z-10 font-mono tabular-nums text-slate-500 hidden 2xl:inline whitespace-nowrap">
-              ({(currentView === 'home' ? grandTotalQuestions : resolvedTotalQuestions).toLocaleString()} Qs)
-            </span>
-            <ChevronDown className={`relative z-10 w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-500 transition-transform ${isSubjectMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
+        {/* Right Wing: Subject Switcher (>= 1024px) */}
+        <div className="hidden lg:flex flex-1 items-center justify-end min-w-0">
+          <div className="relative shrink-0" ref={subjectMenuRef}>
+            <button
+              type="button"
+              onClick={() => setIsSubjectMenuOpen((o) => !o)}
+              onPointerMove={handleSpotlightMove}
+              onPointerLeave={handleSpotlightLeave}
+              style={getSubjectSpotlightStyle(activeSubject, 200)}
+              className="spotlight-surface shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#07090D] dark:hover:bg-[#0C0F17] border border-slate-200 dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] text-xs font-medium transition-all duration-150 active:scale-[0.98]"
+              title="Switch subject"
+              aria-haspopup="menu"
+              aria-expanded={isSubjectMenuOpen}
+            >
+              <span className={`relative z-10 w-2 h-2 rounded-full shrink-0 animate-pulse shadow-[0_0_8px_currentColor] ${
+                currentView === 'home'
+                  ? 'text-amber-400 bg-amber-500'
+                  : isMath
+                  ? 'text-amber-400 bg-amber-500'
+                  : isPhysics
+                  ? 'text-indigo-400 bg-indigo-500'
+                  : isBio
+                  ? 'text-emerald-400 bg-emerald-500'
+                  : 'text-cyan-400 bg-cyan-500'
+              }`}></span>
+              <span className="relative z-10 text-slate-800 dark:text-slate-200 font-semibold whitespace-nowrap">
+                {currentView === 'home' ? 'All Subjects' : currentSubjectInfo.label}
+              </span>
+              <span className="relative z-10 font-mono tabular-nums text-slate-500 hidden 2xl:inline whitespace-nowrap">
+                ({(currentView === 'home' ? grandTotalQuestions : resolvedTotalQuestions).toLocaleString()} Qs)
+              </span>
+              <ChevronDown className={`relative z-10 w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-500 transition-transform ${isSubjectMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-          {isSubjectMenuOpen && (
-            <div role="menu" className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-1rem)] rounded-2xl surface-glass shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.08)] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
-              {subjectList.map(({ code, subject, fullLabel, count, view, Icon, dot, activeCls }) => {
-                const isActive = currentView !== 'home' && activeSubject === subject;
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    role="menuitem"
-                    onPointerMove={handleSpotlightMove}
-                    onPointerLeave={handleSpotlightLeave}
-                    style={getSubjectSpotlightStyle(subject, 220)}
-                    onClick={() => {
-                      setIsSubjectMenuOpen(false);
-                      onNavigate(view);
-                    }}
-                    className={`spotlight-surface w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-[0.98] ${
-                      isActive
-                        ? activeCls
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-transparent'
-                    }`}
-                  >
-                    <span className="relative z-10 flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${dot} shadow-[0_0_6px_currentColor]`}></span>
-                      <Icon className="w-3.5 h-3.5" />
-                      {fullLabel}
-                    </span>
-                    <span className="relative z-10 font-mono tabular-nums text-[11px] text-slate-500 dark:text-slate-400">
-                      {count.toLocaleString()} Qs
-                    </span>
-                  </button>
-                );
-              })}
-              <div className="my-1 border-t border-slate-100 dark:border-white/[0.07]" />
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setIsSubjectMenuOpen(false);
-                  onNavigate('home');
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all duration-150 active:scale-[0.98]"
-              >
-                <Home className="w-3.5 h-3.5" />
-                Cambridge Portal Overview
-                <ChevronRight className="w-3.5 h-3.5 ml-auto" />
-              </button>
-            </div>
-          )}
+            {isSubjectMenuOpen && (
+              <div role="menu" className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-1rem)] rounded-2xl surface-glass shadow-[0_16px_40px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.08)] p-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                {subjectList.map(({ code, subject, fullLabel, count, view, Icon, dot, activeCls }) => {
+                  const isActive = currentView !== 'home' && activeSubject === subject;
+                  return (
+                    <button
+                      key={code}
+                      type="button"
+                      role="menuitem"
+                      onPointerMove={handleSpotlightMove}
+                      onPointerLeave={handleSpotlightLeave}
+                      style={getSubjectSpotlightStyle(subject, 220)}
+                      onClick={() => {
+                        setIsSubjectMenuOpen(false);
+                        onNavigate(view);
+                      }}
+                      className={`spotlight-surface w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 active:scale-[0.98] ${
+                        isActive
+                          ? activeCls
+                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-transparent'
+                      }`}
+                    >
+                      <span className="relative z-10 flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${dot} shadow-[0_0_6px_currentColor]`}></span>
+                        <Icon className="w-3.5 h-3.5" />
+                        {fullLabel}
+                      </span>
+                      <span className="relative z-10 font-mono tabular-nums text-[11px] text-slate-500 dark:text-slate-400">
+                        {count.toLocaleString()} Qs
+                      </span>
+                    </button>
+                  );
+                })}
+                <div className="my-1 border-t border-slate-100 dark:border-white/[0.07]" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setIsSubjectMenuOpen(false);
+                    onNavigate('home');
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all duration-150 active:scale-[0.98]"
+                >
+                  <Home className="w-3.5 h-3.5" />
+                  Cambridge Portal Overview
+                  <ChevronRight className="w-3.5 h-3.5 ml-auto" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Mobile & Tablet Action Controls (< 1024px) - Strictly single-row compact h-9 w-9 buttons */}

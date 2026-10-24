@@ -249,14 +249,18 @@ export const TopBar: React.FC<TopBarProps> = ({
   return (
     <>
       <header className="relative z-30 flex flex-nowrap items-center justify-between gap-2 px-3 py-2 w-full min-w-0 shrink-0 bg-white/95 dark:bg-[#0B0F19]/90 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800/80 overflow-visible select-none transition-colors">
-        {/* Left: Breadcrumb / Paper badge & Search */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Left Wing: Title & Subject Badge only */}
+        <div className="flex-1 flex items-center justify-start min-w-0">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-zinc-300 shrink-0 whitespace-nowrap">
             <span className="hidden sm:inline">Topical Explorer</span>
             <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-transparent">
               {selectedSubject}
             </span>
           </div>
+        </div>
+
+        {/* Center Group: Search & Filter Controls */}
+        <div className="shrink-0 flex items-center justify-center gap-1.5 xl:gap-2 mx-auto overflow-visible">
           <div className="relative w-36 sm:w-44 lg:w-52 shrink-0">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-zinc-400 pointer-events-none" />
             <input
@@ -267,10 +271,9 @@ export const TopBar: React.FC<TopBarProps> = ({
               className="w-full h-8 pl-8 pr-2 text-xs bg-slate-100 hover:bg-slate-200/70 focus:bg-white dark:bg-white/[0.04] dark:hover:bg-white/[0.07] dark:focus:bg-white/[0.09] text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 rounded-lg border border-slate-200 dark:border-white/[0.08] focus:border-[var(--subject-accent,#F59E0B)] focus:outline-none transition-all"
             />
           </div>
-        </div>
 
-        {/* Center / Filters: Inline filter pills & controls (Wide Desktop >= 1536px) */}
-        <div className="hidden 2xl:flex flex-nowrap items-center gap-1.5 shrink-0 overflow-visible">
+          {/* Inline filter pills & controls (Wide Desktop >= 1536px) */}
+          <div className="hidden 2xl:flex flex-nowrap items-center gap-1.5 xl:gap-2 shrink-0 overflow-visible">
 
           {/* Primary 2: 0580 Mathematics Syllabus Segmented Toggle */}
           {isMath && (
@@ -652,49 +655,52 @@ export const TopBar: React.FC<TopBarProps> = ({
               </button>
             )}
 
-        </div>
-
-        {/* Right Zone: Filter Drawer Trigger (< 1536px) & View mode controls */}
-        <div className="flex items-center gap-1.5 ml-auto shrink-0">
-          {/* Slide-Over Filter Drawer Trigger (< 1536px) */}
-          <button
-            type="button"
-            onClick={() => setIsMobileDrawerOpen(true)}
-            className={`2xl:hidden h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 whitespace-nowrap shrink-0 ${
-              hasActiveFilters
-                ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/50'
-                : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08]'
-            }`}
-            title="Filter Questions"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span>Filters</span>
-            {hasActiveFilters && (
-              <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-600 text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-
-          <div className="2xl:hidden h-8 px-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.03] text-xs font-mono text-slate-700 dark:text-zinc-300 hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
-            <span className={`font-semibold tabular-nums ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
-              {totalFiltered}
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-500">Qs</span>
           </div>
 
-          {hasActiveFilters && (
+          {/* Compact Filter Drawer Trigger & Counter (< 1536px) */}
+          <div className="flex 2xl:hidden items-center gap-1.5 shrink-0">
             <button
               type="button"
-              onClick={onResetFilters}
-              title="Reset All Filters"
-              className="2xl:hidden hidden sm:flex h-8 w-8 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 items-center justify-center transition-colors shrink-0"
+              onClick={() => setIsMobileDrawerOpen(true)}
+              className={`h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 whitespace-nowrap shrink-0 ${
+                hasActiveFilters
+                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/50'
+                  : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08]'
+              }`}
+              title="Filter Questions"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>Filters</span>
+              {hasActiveFilters && (
+                <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-600 text-white">
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
-          )}
 
-          <div className="hidden md:inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] h-8 shrink-0">
+            <div className="h-8 px-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.03] text-xs font-mono text-slate-700 dark:text-zinc-300 hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
+              <span className={`font-semibold tabular-nums ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
+                {totalFiltered}
+              </span>
+              <span className="text-[10px] text-slate-500 dark:text-zinc-500">Qs</span>
+            </div>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={onResetFilters}
+                title="Reset All Filters"
+                className="hidden sm:flex h-8 w-8 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 items-center justify-center transition-colors shrink-0"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Right Wing: View Mode Controls (>= 768px) */}
+        <div className="hidden md:flex flex-1 items-center justify-end min-w-0">
+          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] h-8 shrink-0">
             <button
               type="button"
               onClick={() => onViewModeChange('question-only')}
