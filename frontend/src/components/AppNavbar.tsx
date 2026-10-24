@@ -262,11 +262,11 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
               <span className="text-[13px] sm:text-sm lg:text-base font-bold tracking-tight truncate whitespace-nowrap text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors">
                 Cambridge IGCSE
               </span>
-              <span className={`hidden sm:inline-flex shrink-0 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border ${hubPillClass}`}>
+              <span className={`inline-flex shrink-0 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border ${hubPillClass}`}>
                 {currentSubjectInfo.code}
               </span>
             </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 hidden xl:inline truncate">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 hidden xl:inline truncate max-w-[240px] 2xl:max-w-none">
               {currentView === 'home'
                 ? 'Maths 0580, Physics 0625, Chemistry 0620 & Biology 0610'
                 : `${currentSubjectInfo.fullLabel} Topicals & Mock Builder`}
@@ -274,13 +274,13 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           </div>
         </div>
 
-        {/* Center: Desktop & Tablet Navigation, Tools & User Profile (>= 640px) */}
-        <div className="hidden sm:flex flex-nowrap items-center gap-1.5 lg:gap-2 mx-auto">
+        {/* Center: Desktop Navigation, Tools & User Profile (>= 1024px) */}
+        <div className="hidden lg:flex flex-nowrap items-center gap-1.5 xl:gap-2 mx-auto shrink-0">
           <nav
             onPointerMove={handleSpotlightMove}
             onPointerLeave={handleSpotlightLeave}
             style={getSubjectSpotlightStyle(activeSubject, 220)}
-            className="spotlight-surface flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 dark:bg-[#07090D] dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:text-slate-300 p-1 rounded-xl"
+            className="spotlight-surface flex items-center gap-1 bg-slate-100 border border-slate-200 text-slate-700 dark:bg-[#07090D] dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] dark:text-slate-300 p-1 rounded-xl shrink-0"
           >
             <button
               type="button"
@@ -342,11 +342,11 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
               onPointerLeave={handleSpotlightLeave}
               style={getSubjectSpotlightStyle(activeSubject, 180)}
               title="Open Command Palette (Ctrl+K / Cmd+K)"
-              className="spotlight-surface flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#07090D] dark:hover:bg-[#0C0F17] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 text-xs font-medium transition-all duration-150 active:scale-[0.98] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+              className="spotlight-surface shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#07090D] dark:hover:bg-[#0C0F17] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 text-xs font-medium transition-all duration-150 active:scale-[0.98] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
             >
-              <Search className="relative z-10 w-3.5 h-3.5 text-slate-400 dark:text-slate-400" />
-              <span className="relative z-10 hidden lg:inline text-slate-500 dark:text-slate-400">Jump...</span>
-              <kbd className="relative z-10 hidden lg:inline-block kbd-keycap">Ctrl K</kbd>
+              <Search className="relative z-10 w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-400" />
+              <span className="relative z-10 hidden xl:inline text-slate-500 dark:text-slate-400 whitespace-nowrap">Jump...</span>
+              <kbd className="relative z-10 inline-block shrink-0 whitespace-nowrap kbd-keycap">Ctrl K</kbd>
             </button>
           )}
 
@@ -359,11 +359,11 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
               onPointerLeave={handleSpotlightLeave}
               style={getSubjectSpotlightStyle(activeSubject, 180)}
               title="Official Cambridge Formulae & Tables (Press 'D')"
-              className={`spotlight-surface flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 active:scale-[0.98] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] ${dataBtnClass}`}
+              className={`spotlight-surface shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl text-xs font-bold border transition-all duration-150 active:scale-[0.98] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] ${dataBtnClass}`}
             >
-              <BookOpen className={`relative z-10 w-3.5 h-3.5 ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : isBio ? 'text-emerald-600 dark:text-emerald-400' : 'text-cyan-600 dark:text-cyan-400'}`} />
-              <span className="relative z-10 hidden lg:inline">Formulae</span>
-              <span className="relative z-10 hidden lg:inline-block kbd-keycap">D</span>
+              <BookOpen className={`relative z-10 w-3.5 h-3.5 shrink-0 ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : isBio ? 'text-emerald-600 dark:text-emerald-400' : 'text-cyan-600 dark:text-cyan-400'}`} />
+              <span className="relative z-10 hidden xl:inline whitespace-nowrap">Formulae</span>
+              <span className="relative z-10 inline-block shrink-0 whitespace-nowrap kbd-keycap">D</span>
             </button>
           )}
 
@@ -373,7 +373,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-8 h-8 lg:w-9 lg:h-9 rounded-xl flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 transition-all duration-150 active:scale-95 shadow-sm"
+            className="w-8 h-8 lg:w-9 lg:h-9 shrink-0 rounded-xl flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-200 transition-all duration-150 active:scale-95 shadow-sm"
           >
             {theme === 'dark' ? (
               <Sun className="w-4 h-4 text-amber-400 hover:rotate-45 transition-transform" />
@@ -383,22 +383,22 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           </button>
 
           {/* Authentication Button / User Profile Dropdown */}
-          <div className="relative" ref={userMenuRef}>
+          <div className="relative shrink-0" ref={userMenuRef}>
             {user ? (
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-xs transition-all active:scale-95 shadow-sm"
+                  className="flex items-center gap-1.5 p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-xs transition-all active:scale-95 shadow-sm shrink-0 whitespace-nowrap"
                   title={`Logged in as ${user.email}`}
                 >
-                  <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                  <div className="w-6 h-6 shrink-0 rounded-lg bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-xs shadow-sm">
                     {userInitial}
                   </div>
-                  <span className="max-w-[120px] truncate font-medium text-slate-800 dark:text-slate-200 hidden md:inline">
+                  <span className="max-w-[120px] truncate font-medium text-slate-800 dark:text-slate-200 hidden 2xl:inline">
                     {userDisplayName}
                   </span>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 </button>
 
                 {/* User Dropdown */}
@@ -451,15 +451,15 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           </div>
         </div>
 
-        {/* Right: Subject Switcher (>= 640px) */}
-        <div className="hidden sm:flex items-center relative shrink-0" ref={subjectMenuRef}>
+        {/* Right: Subject Switcher (>= 1024px) */}
+        <div className="hidden lg:flex items-center relative shrink-0" ref={subjectMenuRef}>
           <button
             type="button"
             onClick={() => setIsSubjectMenuOpen((o) => !o)}
             onPointerMove={handleSpotlightMove}
             onPointerLeave={handleSpotlightLeave}
             style={getSubjectSpotlightStyle(activeSubject, 200)}
-            className="spotlight-surface flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#07090D] dark:hover:bg-[#0C0F17] border border-slate-200 dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] text-xs font-medium transition-all duration-150 active:scale-[0.98] whitespace-nowrap"
+            className="spotlight-surface shrink-0 whitespace-nowrap flex items-center gap-1.5 px-2.5 lg:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-[#07090D] dark:hover:bg-[#0C0F17] border border-slate-200 dark:border-white/[0.08] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] text-xs font-medium transition-all duration-150 active:scale-[0.98]"
             title="Switch subject"
             aria-haspopup="menu"
             aria-expanded={isSubjectMenuOpen}
@@ -475,13 +475,13 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
                 ? 'text-emerald-400 bg-emerald-500'
                 : 'text-cyan-400 bg-cyan-500'
             }`}></span>
-            <span className="relative z-10 text-slate-800 dark:text-slate-200 font-semibold">
+            <span className="relative z-10 text-slate-800 dark:text-slate-200 font-semibold whitespace-nowrap">
               {currentView === 'home' ? 'All Subjects' : currentSubjectInfo.label}
             </span>
-            <span className="relative z-10 font-mono tabular-nums text-slate-500 hidden lg:inline">
+            <span className="relative z-10 font-mono tabular-nums text-slate-500 hidden 2xl:inline whitespace-nowrap">
               ({(currentView === 'home' ? grandTotalQuestions : resolvedTotalQuestions).toLocaleString()} Qs)
             </span>
-            <ChevronDown className={`relative z-10 w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform ${isSubjectMenuOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`relative z-10 w-3.5 h-3.5 shrink-0 text-slate-400 dark:text-slate-500 transition-transform ${isSubjectMenuOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isSubjectMenuOpen && (
@@ -535,8 +535,36 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           )}
         </div>
 
-        {/* Mobile Action Controls (< 640px) - Strictly single-row compact h-9 w-9 buttons */}
-        <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+        {/* Mobile & Tablet Action Controls (< 1024px) - Strictly single-row compact h-9 w-9 buttons */}
+        <div className="flex lg:hidden items-center gap-1.5 shrink-0">
+          {/* Mobile Command Palette Search Button */}
+          {onOpenCommandPalette && (
+            <button
+              type="button"
+              onClick={onOpenCommandPalette}
+              aria-label="Open Command Palette"
+              title="Open Command Palette (Ctrl+K)"
+              className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Mobile Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
+          >
+            {theme === 'dark' ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-700" />
+            )}
+          </button>
+
           {/* Mobile Auth Button & Bounded Dropdown */}
           {user ? (
             <div className="relative" ref={mobileUserMenuRef}>
@@ -594,34 +622,6 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
             </button>
           )}
 
-          {/* Mobile Command Palette Search Button */}
-          {onOpenCommandPalette && (
-            <button
-              type="button"
-              onClick={onOpenCommandPalette}
-              aria-label="Open Command Palette"
-              title="Open Command Palette (Ctrl+K)"
-              className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-          )}
-
-          {/* Mobile Theme Toggle Button */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
-          >
-            {theme === 'dark' ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-slate-700" />
-            )}
-          </button>
-
           {/* Hamburger Menu Toggle Button */}
           <button
             type="button"
@@ -638,10 +638,10 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
         </div>
       </header>
 
-      {/* Mobile Slide-down Navigation Sheet (< 640px) - Anchored cleanly below single-row h-14 header */}
+      {/* Mobile & Tablet Slide-down Navigation Sheet (< 1024px) - Anchored cleanly below single-row h-14 header */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-x-0 top-14 bottom-0 z-50 bg-black/75 dark:bg-black/80 backdrop-blur-md sm:hidden flex flex-col justify-start overflow-y-auto animate-in fade-in duration-150"
+          className="fixed inset-x-0 top-14 bottom-0 z-50 bg-black/75 dark:bg-black/80 backdrop-blur-md lg:hidden flex flex-col justify-start overflow-y-auto animate-in fade-in duration-150"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <div 
