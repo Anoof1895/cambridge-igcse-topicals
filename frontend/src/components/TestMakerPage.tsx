@@ -28,6 +28,7 @@ import {
   Sparkles,
   Award,
   Layers,
+  Columns,
 } from 'lucide-react';
 import {
   QuestionItem,
@@ -886,11 +887,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden bg-slate-50/60 dark:bg-transparent text-slate-800 dark:text-slate-100 select-none relative transition-colors">
+    <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-slate-50/60 dark:bg-transparent text-slate-800 dark:text-slate-100 select-none relative transition-colors">
       {/* ===================================================================== */}
-      {/* MOBILE TOP TAB BAR: [ Pool (N) | Preview (Q#) | Cart (M) ] (< 768px)  */}
+      {/* MOBILE/TABLET TOP TAB BAR: [ Pool (N) | Preview (Q#) | Cart (M) ] (< 1024px) */}
       {/* ===================================================================== */}
-      <div className="flex md:hidden items-center justify-center p-2 bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-dark-800 shrink-0 z-30">
+      <div className="flex lg:hidden items-center justify-center p-2 bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-dark-800 shrink-0 z-30">
         <div className="grid grid-cols-3 gap-1 w-full max-w-md bg-slate-100 dark:bg-dark-850 p-1 rounded-xl border border-slate-200 dark:border-dark-750">
           <button
             type="button"
@@ -950,9 +951,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       <aside
         className={`
-          border-r border-slate-200 dark:border-dark-800 bg-white/95 md:bg-slate-50/70 dark:bg-dark-900/80 flex flex-col shrink-0 overflow-hidden
-          w-full md:w-[350px] md:min-w-[340px] lg:w-[360px]
-          ${mobileTab === 'pool' ? 'flex flex-1 md:flex-none' : 'hidden md:flex'}
+          border-r border-slate-200 dark:border-dark-800 bg-white/95 lg:bg-slate-50/70 dark:bg-dark-900/80 flex flex-col shrink-0 overflow-hidden
+          w-full lg:w-[340px] lg:min-w-[320px] xl:w-[360px]
+          ${mobileTab === 'pool' ? 'flex flex-1 lg:flex-none' : 'hidden lg:flex'}
         `}
       >
         {/* Filter Controls Header */}
@@ -1493,7 +1494,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Filtered Questions List: High-Density Fast Skim Cards */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-dark-800/60 p-2 space-y-1 pb-20 md:pb-2">
+        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-dark-800/60 p-2 space-y-1 pb-4">
           {pagedQuestions.length === 0 ? (
             <div className="p-8 text-center text-slate-400 dark:text-slate-500">
               <AlertCircle className="w-6 h-6 mx-auto mb-2 text-slate-400 dark:text-slate-600" />
@@ -1624,15 +1625,15 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       <main
         className={`
-          flex-1 flex flex-col h-full bg-slate-100 dark:bg-[#0B0F19] overflow-hidden border-r border-slate-200 dark:border-dark-800
+          flex-1 min-w-0 flex flex-col h-full bg-slate-100 dark:bg-[#0B0F19] overflow-hidden border-r border-slate-200 dark:border-dark-800
           w-full
-          ${mobileTab === 'preview' ? 'flex' : 'hidden md:flex'}
+          ${mobileTab === 'preview' ? 'flex' : 'hidden lg:flex'}
         `}
       >
         {/* Preview Header Bar */}
-        <div className="h-14 px-2.5 sm:px-5 border-b border-slate-200 dark:border-dark-800 bg-white/95 dark:bg-dark-900/90 flex items-center justify-between shrink-0 gap-2">
+        <div className="h-14 px-2.5 sm:px-4 border-b border-slate-200 dark:border-dark-800 bg-white/95 dark:bg-dark-900/90 flex items-center justify-between shrink-0 gap-2 overflow-hidden">
           {activePreviewQuestion ? (
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0 overflow-hidden">
               {/* Prev / Next question navigation with [← / →] hotkey hint */}
               <div className="flex items-center gap-1 shrink-0">
                 <button
@@ -1653,76 +1654,85 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
-                <span className="hidden xl:inline-flex items-center text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-dark-700 select-none">
+                <span className="hidden 2xl:inline-flex items-center text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-dark-700 select-none shrink-0 whitespace-nowrap">
                   ← / →
                 </span>
               </div>
 
-              <span className={`hidden sm:inline font-mono font-bold text-sm ${accentClasses.text} shrink-0`}>
+              <span className={`hidden sm:inline font-mono font-bold text-sm ${accentClasses.text} shrink-0 whitespace-nowrap`}>
                 Question{' '}
                 {activePreviewQuestion.question_number ??
                   activePreviewQuestion.questionNumber ??
                   '1'}
               </span>
-              <span className="text-slate-300 dark:text-dark-600 hidden sm:inline">•</span>
-              <div className="hidden sm:flex items-center gap-2 text-xs overflow-hidden">
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 font-bold shrink-0">
+              <span className="text-slate-300 dark:text-dark-600 hidden sm:inline shrink-0">•</span>
+              <div className="hidden sm:flex items-center gap-2 text-xs min-w-0 flex-1 overflow-hidden">
+                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 font-bold shrink-0 whitespace-nowrap">
                   {activePreviewQuestion.marks} marks
                 </span>
                 {activePreviewQuestion.calculator_allowed === false && (
-                  <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30 font-bold shrink-0">
+                  <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30 font-bold shrink-0 whitespace-nowrap">
                     Non-Calc
                   </span>
                 )}
-                <span className="text-slate-700 dark:text-slate-300 font-medium truncate hidden lg:inline">
+                <span
+                  className="text-slate-700 dark:text-slate-300 font-medium min-w-0 flex-1 truncate hidden xl:block"
+                  title={`${activePreviewQuestion.topic} / ${activePreviewQuestion.subtopic}`}
+                >
                   {activePreviewQuestion.topic} / {activePreviewQuestion.subtopic}
                 </span>
               </div>
             </div>
           ) : (
-            <span className="text-xs text-slate-400 dark:text-slate-500">
+            <span className="text-xs text-slate-400 dark:text-slate-500 truncate">
               No question selected for preview
             </span>
           )}
 
           {/* Preview Controls & Add/Remove Action */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <div className="flex items-center bg-slate-100 dark:bg-dark-850 p-0.5 rounded-lg border border-slate-200 dark:border-dark-750 text-xs shrink-0">
               <button
                 type="button"
                 onClick={() => setPreviewTab('question')}
-                className={`px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
+                title="Question Only"
+                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'question'
                     ? `${accentClasses.bg} text-white`
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                Question
+                <Eye className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden 2xl:inline">Question</span>
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewTab('split')}
-                className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
+                title="Side-by-Side Split View (Space)"
+                className={`hidden md:inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'split'
                     ? `${accentClasses.bg} text-white`
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <span>Side-by-Side</span>
-                <span className="text-[9px] font-mono opacity-70 px-1 py-0.2 rounded bg-black/15 dark:bg-white/10 select-none">
+                <Columns className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden 2xl:inline">Side-by-Side</span>
+                <span className="hidden 2xl:inline-block text-[9px] font-mono opacity-70 px-1 py-0.2 rounded bg-black/15 dark:bg-white/10 select-none">
                   Space
                 </span>
               </button>
               <button
                 type="button"
                 onClick={() => setPreviewTab('ms')}
-                className={`px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
+                title="Mark Scheme Only"
+                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'ms'
                     ? `${accentClasses.bg} text-white`
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                Mark Scheme
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden 2xl:inline">Mark Scheme</span>
               </button>
             </div>
 
@@ -1730,7 +1740,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <button
                 type="button"
                 onClick={handleToggleCartActive}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 shrink-0 whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 shrink-0 whitespace-nowrap ${
                   cartQuestionIds.includes(activePreviewQuestion.id)
                     ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 hover:bg-rose-100'
                     : `bg-gradient-to-r ${accentClasses.gradient} text-white shadow-lg`
@@ -1740,16 +1750,16 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   <>
                     <Trash2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="hidden sm:inline">Remove</span>
-                    <span className="hidden sm:inline-block text-[10px] font-mono font-normal opacity-75 px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 select-none">
+                    <span className="hidden 2xl:inline-block text-[10px] font-mono font-normal opacity-75 px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 select-none">
                       A
                     </span>
                   </>
                 ) : (
                   <>
                     <Plus className="w-3.5 h-3.5 shrink-0" />
-                    <span className="sm:hidden">Add</span>
-                    <span className="hidden sm:inline">Add to Quiz</span>
-                    <span className="hidden sm:inline-block text-[10px] font-mono font-normal opacity-85 px-1 py-0.2 rounded bg-black/20 dark:bg-white/20 select-none">
+                    <span className="2xl:hidden">Add</span>
+                    <span className="hidden 2xl:inline">Add to Quiz</span>
+                    <span className="hidden 2xl:inline-block text-[10px] font-mono font-normal opacity-85 px-1 py-0.2 rounded bg-black/20 dark:bg-white/20 select-none">
                       A
                     </span>
                   </>
@@ -1759,12 +1769,24 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
           </div>
         </div>
 
-        {/* Preview Canvas Workspace */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative pb-24 md:pb-0 bg-slate-100 dark:bg-[#0B0F19]">
+        {/* Preview Canvas Workspace: Vertical stack below 2xl when split, side-by-side at 2xl+ */}
+        <div
+          className={`flex-1 relative bg-slate-100 dark:bg-[#0B0F19] ${
+            previewTab === 'split'
+              ? 'flex flex-col 2xl:grid 2xl:grid-cols-2 overflow-y-auto 2xl:overflow-hidden pb-16 lg:pb-0'
+              : 'flex flex-col overflow-hidden pb-16 lg:pb-0'
+          }`}
+        >
           {activePreviewQuestion ? (
             <>
               {(previewTab === 'question' || previewTab === 'split') && (
-                <div className="flex-1 flex flex-col md:h-full min-h-[340px] md:overflow-hidden">
+                <div
+                  className={`flex flex-col min-w-0 ${
+                    previewTab === 'split'
+                      ? 'min-h-[420px] flex-1 2xl:min-h-0 2xl:h-full overflow-hidden border-b 2xl:border-b-0 2xl:border-r border-slate-200 dark:border-dark-800'
+                      : 'flex-1 h-full overflow-hidden'
+                  }`}
+                >
                   <ImageCanvas
                     src={resolveQuestionImageUrl(activePreviewQuestion)}
                     title={`Question ${
@@ -1792,7 +1814,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               )}
 
               {(previewTab === 'ms' || previewTab === 'split') && (
-                <div className="flex-1 flex flex-col md:h-full min-h-[340px] md:overflow-hidden">
+                <div
+                  className={`flex flex-col min-w-0 ${
+                    previewTab === 'split'
+                      ? 'min-h-[420px] flex-1 2xl:min-h-0 2xl:h-full overflow-hidden'
+                      : 'flex-1 h-full overflow-hidden'
+                  }`}
+                >
                   <ImageCanvas
                     src={resolveMarkSchemeImageUrl(activePreviewQuestion)}
                     title={`Mark Scheme: Q${
@@ -1820,14 +1848,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       </main>
 
       {/* ========================================================================= */}
-      {/* FLOATING EXAM CART BADGE BUTTON (< 1024px)                                */}
+      {/* FLOATING EXAM CART BADGE BUTTON (1024px - 1279px)                         */}
+      {/* Hidden on < 1024px where the top [ Pool | Preview | Cart ] bar is shown   */}
       {/* ========================================================================= */}
       {!isCartDrawerOpen && mobileTab !== 'cart' && (
-        <div className="fixed bottom-5 right-5 z-40 lg:hidden">
+        <div className="fixed bottom-5 right-5 z-40 hidden lg:block xl:hidden">
           <button
             type="button"
             onClick={() => {
-              setMobileTab('cart');
               setIsCartDrawerOpen(true);
             }}
             className={`flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r ${accentClasses.gradient} text-white font-bold text-xs shadow-2xl border border-white/20 active:scale-95 transition-all`}
@@ -1841,10 +1869,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
       )}
 
-      {/* Tablet Backdrop for Cart Drawer (768px - 1024px) */}
+      {/* Laptop Backdrop for Cart Drawer (1024px - 1279px) */}
       {isCartDrawerOpen && (
         <div
-          className="hidden md:block lg:hidden fixed inset-0 top-14 z-40 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
+          className="hidden lg:block xl:hidden fixed inset-0 top-14 z-40 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
           onClick={() => {
             setIsCartDrawerOpen(false);
             if (mobileTab === 'cart') setMobileTab('pool');
@@ -1858,15 +1886,15 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       <aside
         className={`
           bg-white dark:bg-dark-900 flex flex-col shrink-0 transition-transform duration-200
-          w-full flex-1 min-h-0 h-full max-h-full md:flex-none
-          md:fixed md:top-14 md:bottom-0 md:right-0 md:z-50 md:w-[26rem] md:border-l md:border-slate-200 md:dark:border-dark-750 md:shadow-2xl
-          lg:static lg:w-84 lg:xl:w-96 lg:z-auto lg:border-l lg:border-slate-200 lg:dark:border-dark-800 lg:shadow-none lg:translate-x-0
+          w-full flex-1 min-h-0 h-full max-h-full lg:flex-none
+          lg:fixed lg:top-14 lg:bottom-0 lg:right-0 lg:z-50 lg:w-[26rem] lg:border-l lg:border-slate-200 lg:dark:border-dark-750 lg:shadow-2xl
+          xl:static xl:w-84 2xl:w-96 xl:z-auto xl:border-l xl:border-slate-200 xl:dark:border-dark-800 xl:shadow-none xl:translate-x-0
           ${mobileTab === 'cart' ? 'flex' : 'hidden'}
-          ${isCartDrawerOpen ? 'md:translate-x-0 md:flex' : 'md:translate-x-full lg:translate-x-0 lg:flex'}
+          ${isCartDrawerOpen ? 'lg:translate-x-0 lg:flex' : 'lg:translate-x-full xl:translate-x-0 xl:flex'}
         `}
       >
-        {/* Dedicated Sticky Mobile/Tablet Navigation Header inside Cart (< 1024px) */}
-        <div className="flex lg:hidden items-center justify-between px-3 py-2.5 bg-slate-100 dark:bg-dark-950 border-b border-slate-200 dark:border-dark-800 shrink-0 sticky top-0 z-20">
+        {/* Dedicated Sticky Mobile/Tablet/Laptop Navigation Header inside Cart (< 1280px) */}
+        <div className="flex xl:hidden items-center justify-between px-3 py-2.5 bg-slate-100 dark:bg-dark-950 border-b border-slate-200 dark:border-dark-800 shrink-0 sticky top-0 z-20">
           <button
             type="button"
             onClick={() => {
@@ -1898,7 +1926,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Scrollable Cart Content Wrapper */}
-        <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden flex flex-col [-webkit-overflow-scrolling:touch]">
+        <div className="flex-1 min-h-0 overflow-y-auto xl:overflow-hidden flex flex-col [-webkit-overflow-scrolling:touch]">
 
         {/* Cart Top Header: Title & Actions */}
         <div className="p-3 border-b border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
@@ -2115,7 +2143,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Selected Questions List: Pinned Right Below The Meter */}
-        <div className="shrink-0 lg:flex-1 lg:min-h-0 overflow-visible lg:overflow-y-auto p-2.5 space-y-1.5">
+        <div className="shrink-0 xl:flex-1 xl:min-h-0 overflow-visible xl:overflow-y-auto p-2.5 space-y-1.5">
           {cartQuestions.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-5 text-slate-400 dark:text-slate-500">
               <FileText className="w-7 h-7 text-slate-400 dark:text-slate-600 mb-2" />
@@ -2146,6 +2174,8 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     setPreviewQuestionId(q.id);
                     if (window.innerWidth < 1024) {
                       setMobileTab('preview');
+                      setIsCartDrawerOpen(false);
+                    } else if (window.innerWidth < 1280) {
                       setIsCartDrawerOpen(false);
                     }
                   }}
@@ -2339,7 +2369,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Action Bar: Sit Exam, PDF Export Options & Buttons */}
-        <div className="p-3 pb-28 sm:pb-12 lg:pb-3 border-t border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
+        <div className="p-3 pb-28 sm:pb-12 xl:pb-3 border-t border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
           {/* Primary Action 1: In-Browser Exam Sitting Mode */}
           <button
             type="button"
