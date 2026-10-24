@@ -19,6 +19,7 @@ import { getStatusConfig, getCambridgeMetadata, formatQuestionNumber } from './Q
 import { getQuestionType, getQuestionSubject } from '../utils/questionClassification';
 import { resolveQuestionImageUrl, resolveMarkSchemeImageUrl } from '../utils/imageUrl';
 import { useProgress } from '../context/ProgressContext';
+import { usePrefetchQuestions } from '../hooks/usePrefetchQuestions';
 import {
   handleSpotlightMove,
   handleSpotlightLeave,
@@ -30,6 +31,7 @@ interface SplitViewerProps {
   prevQuestion?: QuestionItem | null;
   nextQuestion?: QuestionItem | null;
   allQuestions?: QuestionItem[];
+  questions?: QuestionItem[];
   onSelectQuestionById?: (id: string) => void;
   viewMode: ViewMode;
   onToggleMarkScheme: () => void;
@@ -52,6 +54,7 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
   prevQuestion,
   nextQuestion,
   allQuestions,
+  questions,
   onSelectQuestionById,
   viewMode,
   onToggleMarkScheme,
@@ -74,47 +77,6 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
   const [mobileTab, setMobileTab] = useState<'question' | 'ms'>('question');
   // Student's interactive selection for MCQ items
   const [selectedMcqOption, setSelectedMcqOption] = useState<string | null>(null);
-
-  // Background idle prefetcher for adjacent questions (prev & next)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const prefetchUrls: string[] = [];
-    if (prevQuestion) {
-      const prevQImg = resolveQuestionImageUrl(prevQuestion);
-      const prevMsImg = resolveMarkSchemeImageUrl(prevQuestion);
-      if (prevQImg) prefetchUrls.push(prevQImg);
-      if (prevMsImg) prefetchUrls.push(prevMsImg);
-    }
-    if (nextQuestion) {
-      const nextQImg = resolveQuestionImageUrl(nextQuestion);
-      const nextMsImg = resolveMarkSchemeImageUrl(nextQuestion);
-      if (nextQImg) prefetchUrls.push(nextQImg);
-      if (nextMsImg) prefetchUrls.push(nextMsImg);
-    }
-
-    if (prefetchUrls.length === 0) return;
-
-    const win = window as Window & {
-      requestIdleCallback?: (cb: () => void) => number;
-      cancelIdleCallback?: (id: number) => void;
-    };
-    const schedulePrefetch = win.requestIdleCallback || ((cb: () => void) => window.setTimeout(cb, 100));
-    const handle = schedulePrefetch(() => {
-      prefetchUrls.forEach((url) => {
-        const img = new Image();
-        img.src = url;
-      });
-    });
-
-    return () => {
-      if (win.cancelIdleCallback) {
-        win.cancelIdleCallback(handle);
-      } else {
-        window.clearTimeout(handle);
-      }
-    };
-  }, [prevQuestion?.id, nextQuestion?.id]);
 
   // Non-spoiling practice mode state
   const [mcqAttempts, setMcqAttempts] = useState<number>(0);
@@ -160,6 +122,15 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
   }, [question, allQuestions]);
 
   const activeSubject = getQuestionSubject(question);
+
+  // Adaptive background prefetching: sliding window (2 backward, 5 forward)
+  const prefetchPool = useMemo(() => {
+    if (questions && questions.length > 0) return questions;
+    if (allQuestions && allQuestions.length > 0) return allQuestions;
+    return [prevQuestion, question, nextQuestion].filter(Boolean) as QuestionItem[];
+  }, [questions, allQuestions, prevQuestion, question, nextQuestion]);
+
+  usePrefetchQuestions(prefetchPool, currentIndex, activeSubject);
   const isMath = activeSubject === 'mathematics';
   const isPhysics = activeSubject === 'physics';
   const qType = question ? getQuestionType(question) : 'theory';

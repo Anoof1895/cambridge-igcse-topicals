@@ -228,6 +228,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
     setIsImageLoading(false);
     if (!useLocalFallback && localSrc && localSrc !== cdnSrc) {
       setUseLocalFallback(true);
+      setIsImageLoading(true);
     } else {
       setHasError(true);
     }
@@ -538,17 +539,18 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
     }
   }, [editingItem]);
 
-  // Reset per-image view state only when the raw src prop changes
+  // Reset per-image view state immediately whenever the active question or src changes
   useEffect(() => {
     setHasError(false);
     setUseLocalFallback(false);
     setRetryCount(0);
     setZoom(1);
+    setIsImageLoading(Boolean(src));
     strokeHistoryRef.current = [];
     setCanUndo(false);
-  }, [src]);
+  }, [src, questionId]);
 
-  // Dedicated image loading effect: depends strictly on resolvedSrc (never on questionId, zoom, or resize callbacks)
+  // Dedicated image loading effect: depends strictly on resolvedSrc (never on zoom or resize callbacks)
   useEffect(() => {
     if (!resolvedSrc) {
       setIsImageLoading(false);
@@ -573,6 +575,12 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
     probe.onerror = () => {
       if (cancelled) return;
       setIsImageLoading(false);
+      if (!useLocalFallback && localSrc && localSrc !== cdnSrc) {
+        setUseLocalFallback(true);
+        setIsImageLoading(true);
+      } else {
+        setHasError(true);
+      }
     };
     probe.src = resolvedSrc;
 

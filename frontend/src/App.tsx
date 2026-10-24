@@ -1167,6 +1167,7 @@ export const App: React.FC = () => {
                       prevQuestion={hasPrev ? filteredQuestions[currentIndex - 1] : null}
                       nextQuestion={hasNext ? filteredQuestions[currentIndex + 1] : null}
                       allQuestions={questions}
+                      questions={filteredQuestions}
                       onSelectQuestionById={(id: string) => setSelectedQuestionId(id)}
                       viewMode={viewMode}
                       onToggleMarkScheme={handleToggleMarkScheme}
