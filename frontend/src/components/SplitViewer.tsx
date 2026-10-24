@@ -449,7 +449,7 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
       <div className="flex-1 h-full min-h-0 w-full flex flex-col md:flex-row overflow-hidden relative pb-16 md:pb-0">
         {/* Question Canvas */}
         <div
-          className={`flex-1 h-full min-h-0 overflow-y-auto overflow-x-hidden p-6 flex flex-col items-center ${
+          className={`flex-1 h-full min-h-0 w-full max-w-full overflow-y-auto overflow-x-hidden p-0 sm:p-3 md:p-5 flex flex-col items-center ${
             mobileTab === 'question' ? 'flex' : 'hidden'
           } ${viewMode === 'ms-only' ? 'md:hidden' : 'md:flex'}`}
         >
@@ -620,7 +620,7 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
 
         {/* Mark Scheme Canvas */}
         <div
-          className={`flex-1 h-full min-h-0 overflow-y-auto overflow-x-hidden p-6 border-l border-zinc-800/80 flex flex-col items-center ${
+          className={`flex-1 h-full min-h-0 w-full max-w-full overflow-y-auto overflow-x-hidden p-0 sm:p-3 md:p-5 border-l border-zinc-800/80 flex flex-col items-center ${
             mobileTab === 'ms' ? 'flex' : 'hidden'
           } ${viewMode === 'question-only' ? 'md:hidden' : 'md:flex'}`}
         >

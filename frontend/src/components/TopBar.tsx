@@ -266,7 +266,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <>
-      <header className="relative z-30 flex items-center justify-between px-3 py-2 w-full min-w-0 shrink-0 bg-[#0B0F19]/90 backdrop-blur-md border-b border-zinc-800/80 overflow-visible select-none">
+      <header className="relative z-30 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 py-2 w-full min-w-0 shrink-0 bg-[#0B0F19]/90 backdrop-blur-md border-b border-zinc-800/80 overflow-visible select-none">
         {/* Left: Breadcrumb / Paper badge & Search */}
         <div className="flex items-center gap-2 shrink-0">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 shrink-0">
@@ -287,8 +287,8 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         </div>
 
-        {/* Center / Filters: Filter pills & controls (Desktop >= 1024px) */}
-        <div className="hidden lg:flex items-center gap-1.5 shrink-0 overflow-visible">
+        {/* Center / Filters: Filter pills & controls (Tablet & Desktop >= 768px) */}
+        <div className="hidden md:flex flex-wrap items-center gap-1.5 shrink-0 overflow-visible">
 
           {/* Primary 2: 0580 Mathematics Syllabus Segmented Toggle */}
           {isMath && (
@@ -450,7 +450,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             {/* Secondary Filters Popover Dropdown */}
             {isSecondaryPopoverOpen && (
-              <div className="absolute top-full mt-1.5 right-0 w-80 sm:w-96 min-w-[280px] p-4 space-y-4 rounded-xl bg-[#0B0F19]/95 border border-white/10 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1rem)] min-w-[260px] p-4 space-y-4 rounded-xl bg-[#0B0F19]/95 border border-white/10 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
                 {/* Popover Header */}
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/[0.07]">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
@@ -672,13 +672,13 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         </div>
 
-        {/* Right Zone: Mobile/Tablet Filter Drawer Trigger (< 1024px) & View mode controls */}
+        {/* Right Zone: Mobile Filter Drawer Trigger (< 768px) & View mode controls */}
         <div className="flex items-center gap-1.5 shrink-0">
-          {/* Tablet & Mobile Filter Drawer Trigger (< 1024px) */}
+          {/* Mobile Filter Drawer Trigger (< 768px) */}
           <button
             type="button"
             onClick={() => setIsMobileDrawerOpen(true)}
-            className={`lg:hidden h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 whitespace-nowrap ${
+            className={`md:hidden h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 whitespace-nowrap ${
               hasActiveFilters
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
                 : 'bg-white/[0.04] text-zinc-300 border-white/[0.08] hover:bg-white/[0.08]'
@@ -694,7 +694,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
           </button>
 
-          <div className="lg:hidden h-8 px-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-xs font-mono text-zinc-300 hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
+          <div className="md:hidden h-8 px-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-xs font-mono text-zinc-300 hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
             <span className={`font-semibold tabular-nums ${isMath ? 'text-amber-400' : isPhysics ? 'text-indigo-400' : 'text-cyan-400'}`}>
               {totalFiltered}
             </span>
@@ -743,85 +743,87 @@ export const TopBar: React.FC<TopBarProps> = ({
             </button>
           </div>
 
-          {/* Authentication & User Profile */}
-          {!user ? (
-            <button
-              type="button"
-              onClick={openAuthModal}
-              className="h-8 px-2.5 sm:px-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:text-white transition-all flex items-center gap-1.5 shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
-              title="Sign in to sync your progress"
-            >
-              <LogIn className="w-3.5 h-3.5 text-cyan-400" />
-              <span className="hidden sm:inline">Sign In</span>
-            </button>
-          ) : (
-            <div className="relative shrink-0" ref={userMenuRef}>
+          {/* Authentication & User Profile (Hidden on Mobile/Tablet < 1024px where AppNavbar avatar handles profile) */}
+          <div className="hidden lg:flex items-center shrink-0">
+            {!user ? (
               <button
                 type="button"
-                onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="h-8 px-2 sm:px-2.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-medium text-zinc-200 flex items-center gap-1.5 transition-all shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                onClick={openAuthModal}
+                className="h-8 px-2.5 sm:px-3 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-200 hover:text-white transition-all flex items-center gap-1.5 shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                title="Sign in to sync your progress"
               >
-                <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
-                  {(user.email?.[0] || 'U').toUpperCase()}
-                </div>
-                <span className="max-w-[100px] truncate text-[11px] font-mono text-zinc-300 hidden md:inline">
-                  {user.email?.split('@')[0]}
-                </span>
-                <ChevronDown className="w-3 h-3 text-zinc-400" />
+                <LogIn className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden sm:inline">Sign In</span>
               </button>
-
-              {isUserMenuOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl bg-[#0B0F19] border border-zinc-800 shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-3 py-2 border-b border-zinc-800/80 mb-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Signed in as</p>
-                    <p className="text-xs font-medium text-zinc-200 truncate mt-0.5">{user.email}</p>
+            ) : (
+              <div className="relative shrink-0" ref={userMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                  className="h-8 px-2 sm:px-2.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-medium text-zinc-200 flex items-center gap-1.5 transition-all shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+                >
+                  <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
+                    {(user.email?.[0] || 'U').toUpperCase()}
                   </div>
+                  <span className="max-w-[100px] truncate text-[11px] font-mono text-zinc-300 hidden lg:inline">
+                    {user.email?.split('@')[0]}
+                  </span>
+                  <ChevronDown className="w-3 h-3 text-zinc-400" />
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onFilterChange({ bookmarkedOnly: !filters.bookmarkedOnly });
-                      setIsUserMenuOpen(false);
-                    }}
-                    className={`w-full px-2.5 py-1.5 rounded-lg text-left flex items-center gap-2 transition-colors ${
-                      filters.bookmarkedOnly
-                        ? 'bg-amber-500/15 text-amber-300 font-semibold'
-                        : 'text-zinc-300 hover:text-white hover:bg-zinc-800/60'
-                    }`}
-                  >
-                    <Bookmark className="w-3.5 h-3.5 text-amber-400" />
-                    <span>My Bookmarks</span>
-                    {filters.bookmarkedOnly && (
-                      <span className="ml-auto text-[10px] text-amber-400 font-mono">Active</span>
-                    )}
-                  </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 max-w-[calc(100vw-1rem)] rounded-xl bg-[#0B0F19] border border-zinc-800 shadow-2xl p-1.5 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-3 py-2 border-b border-zinc-800/80 mb-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Signed in as</p>
+                      <p className="text-xs font-medium text-zinc-200 truncate mt-0.5">{user.email}</p>
+                    </div>
 
-                  <div className="my-1 border-t border-zinc-800/80" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onFilterChange({ bookmarkedOnly: !filters.bookmarkedOnly });
+                        setIsUserMenuOpen(false);
+                      }}
+                      className={`w-full px-2.5 py-1.5 rounded-lg text-left flex items-center gap-2 transition-colors ${
+                        filters.bookmarkedOnly
+                          ? 'bg-amber-500/15 text-amber-300 font-semibold'
+                          : 'text-zinc-300 hover:text-white hover:bg-zinc-800/60'
+                      }`}
+                    >
+                      <Bookmark className="w-3.5 h-3.5 text-amber-400" />
+                      <span>My Bookmarks</span>
+                      {filters.bookmarkedOnly && (
+                        <span className="ml-auto text-[10px] text-amber-400 font-mono">Active</span>
+                      )}
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setIsUserMenuOpen(false);
-                      await signOut();
-                    }}
-                    className="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center gap-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 transition-colors"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                    <div className="my-1 border-t border-zinc-800/80" />
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setIsUserMenuOpen(false);
+                        await signOut();
+                      }}
+                      className="w-full px-2.5 py-1.5 rounded-lg text-left flex items-center gap-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 transition-colors"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* ===================================================================== */}
-      {/* SLIDE-OVER FILTER DRAWER FOR TABLET & MOBILE (< 1024px)               */}
+      {/* SLIDE-OVER FILTER DRAWER FOR MOBILE (< 768px)                         */}
       {/* ===================================================================== */}
       {isMobileDrawerOpen && (
         <div 
-          className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/70 backdrop-blur-sm lg:hidden flex justify-end animate-in fade-in duration-150"
+          className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/70 backdrop-blur-sm md:hidden flex justify-end animate-in fade-in duration-150"
           onClick={() => setIsMobileDrawerOpen(false)}
         >
           <div 

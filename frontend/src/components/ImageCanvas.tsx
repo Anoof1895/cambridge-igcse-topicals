@@ -1271,7 +1271,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
       {/* Canvas Viewport */}
       <div 
         ref={containerRef}
-        className="flex-1 w-full min-h-0 overflow-y-auto overflow-x-auto p-3 sm:p-5 flex items-start justify-center bg-slate-100/50 dark:bg-[#07090D] bg-drafting-grid relative"
+        className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-auto px-2 sm:px-4 py-2 flex items-start justify-center bg-slate-100/50 dark:bg-[#07090D] bg-drafting-grid relative"
         style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
       >
         {/* Subtle Subject-Reactive Radial Ambient Glow in Top Center */}
@@ -1313,14 +1313,14 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             )}
 
             <div
-              className="flex justify-center w-full"
+              className="flex justify-center w-full max-w-full"
               style={zoom > 1 ? { minWidth: `${Math.round(zoom * 100)}%` } : undefined}
             >
               <div 
-                className={`relative max-w-full transition-transform duration-100 ease-out origin-top rounded-xl overflow-hidden shadow-[0_12px_40px_-10px_rgba(0,0,0,0.65)] ring-1 ring-slate-200 dark:ring-white/10 bg-white ${
-                  isImageLoading ? 'w-full max-w-3xl min-h-[280px]' : ''
+                className={`relative w-full max-w-full transition-transform duration-100 ease-out origin-top rounded-lg sm:rounded-xl overflow-hidden shadow-[0_12px_40px_-10px_rgba(0,0,0,0.65)] ring-1 ring-slate-200 dark:ring-white/10 bg-white ${
+                  isImageLoading ? 'min-h-[280px]' : ''
                 } ${!isAnnotating ? 'cursor-pointer' : ''}`}
-                style={{ transform: `scale(${zoom})` }}
+                style={{ transform: `scale(${zoom})`, width: '100%' }}
                 onClick={() => {
                   if (!isAnnotating && zoom === 1) {
                     openLightbox();
