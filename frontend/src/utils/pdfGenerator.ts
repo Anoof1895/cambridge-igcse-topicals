@@ -93,7 +93,7 @@ export function analyzeCanvasStructure(
 
   const rows: RowMetrics[] = new Array(height);
 
-  // Step 1: Row Analysis Across the Image (sampling every 2px from x = 0 to width - 1)
+  // Step 1: Row Analysis Across the Image (scanning every pixel x += 1 so 1px vertical axes/gridlines are never missed)
   for (let y = 0; y < height; y++) {
     const rowOffset = y * width * 4;
     let isWhite = true;
@@ -103,13 +103,14 @@ export function analyzeCanvasStructure(
     let prevDark = false;
     let midDarkCount = 0;
 
-    for (let x = xMargin; x < width - xMargin; x += 2) {
+    for (let x = xMargin; x < width - xMargin; x++) {
       const idx = rowOffset + x * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      if (r < 235 || g < 235 || b < 235) {
+      // Strict whitespace check: a row is blank ONLY if 0 pixels have min(R, G, B) < 242
+      if (r < 242 || g < 242 || b < 242) {
         isWhite = false;
       }
 
@@ -136,11 +137,11 @@ export function analyzeCanvasStructure(
       minX,
       maxX,
       transitions,
-      hasMidContent: midDarkCount >= 3,
+      hasMidContent: midDarkCount >= 5,
     };
   }
 
-  // Step 2: Group consecutive non-white rows (merging tiny internal white gaps < 8px) into Content Strips
+  // Step 2: Group consecutive non-white rows (merging tiny internal white gaps < 10px) into Content Strips
   const rawRuns: Array<{ y0: number; y1: number }> = [];
   let inRun = false;
   let runStart = 0;
@@ -166,7 +167,7 @@ export function analyzeCanvasStructure(
       mergedRuns.push({ ...run });
     } else {
       const prev = mergedRuns[mergedRuns.length - 1];
-      if (run.y0 - prev.y1 < 8) {
+      if (run.y0 - prev.y1 < 10) {
         prev.y1 = run.y1;
       } else {
         mergedRuns.push({ ...run });
@@ -318,24 +319,24 @@ export function findBestSplitY(
     return true;
   };
 
-  // Candidate white gaps in [minCutY, targetCutY] with height >= 16px
+  // Candidate white gaps in [minCutY, targetCutY] requiring a contiguous >= 20px pure-white seam
   const candidateGaps = gaps.filter((gap) => {
     if (gap.y1 <= minCutY || gap.y0 > targetCutY - 6) return false;
     const effectiveBottom = Math.min(gap.y1, targetCutY);
     const effectiveHeight = effectiveBottom - gap.y0;
-    return gap.height >= 16 && effectiveHeight >= 12;
+    return gap.height >= 20 && effectiveHeight >= 18;
   });
 
   let validGaps = candidateGaps.filter(passesRuleA);
 
-  // If no gap in [minCutY, targetCutY] passed Rule A (e.g. a very tall calculation space + diagram),
-  // look slightly higher up in [currentY + 60, minCutY] before giving up on Rule A
+  // If no gap in [minCutY, targetCutY] passed Rule A (e.g. targetCutY landed inside a tall graph/diagram),
+  // expand the upward search all the way above the graph in [currentY + 12, minCutY]
   if (validGaps.length === 0) {
     const higherGaps = gaps.filter(
       (gap) =>
-        gap.y1 > currentY + 60 &&
+        gap.y1 > currentY + 12 &&
         gap.y0 <= minCutY &&
-        gap.height >= 16 &&
+        gap.height >= 18 &&
         passesRuleA(gap)
     );
     if (higherGaps.length > 0) {
@@ -343,25 +344,25 @@ export function findBestSplitY(
     }
   }
 
-  // Rule B: Keep Lead-In Prompt With Split Diagram
-  // If targetCutY falls inside a tall diagram strip (diagramStrip.height > 90), and the strip immediately
-  // above diagramStrip is a short lead-in text prompt (prevStrip.height <= 70 && !prevStrip.isAnswerOrMarkStrip),
+  // Rule B: Keep Lead-In Prompt With Split Diagram / Graph
+  // If targetCutY falls inside a tall diagram/graph strip (diagramStrip.height > 80), and the strip immediately
+  // above diagramStrip is a short lead-in text prompt (prevStrip.height <= 75 && !prevStrip.isAnswerOrMarkStrip),
   // do NOT cut in the small gap between prevStrip and diagramStrip—prefer the valid gap above prevStrip.
   const straddledDiagramIdx = strips.findIndex(
-    (s) => s.height > 90 && s.y0 < targetCutY && s.y1 > targetCutY
+    (s) => s.height > 80 && s.y0 < targetCutY && s.y1 > targetCutY
   );
-  if (straddledDiagramIdx > 0 && validGaps.length > 0) {
+  if (straddledDiagramIdx > 0) {
     let leadInStartIdx = straddledDiagramIdx;
     const prev1 = strips[straddledDiagramIdx - 1];
-    if (prev1.height <= 70 && !prev1.isAnswerOrMarkStrip) {
+    if (prev1.height <= 75 && !prev1.isAnswerOrMarkStrip) {
       leadInStartIdx = straddledDiagramIdx - 1;
-      // If the lead-in prompt was 2 lines of text separated by a small line gap (< 22px), include the first line too
+      // If the lead-in prompt was 2 lines of text separated by a small line gap (< 24px), include the first line too
       if (straddledDiagramIdx >= 2) {
         const prev2 = strips[straddledDiagramIdx - 2];
         if (
           prev2.height <= 55 &&
           !prev2.isAnswerOrMarkStrip &&
-          prev1.y0 - prev2.y1 < 22
+          prev1.y0 - prev2.y1 < 24
         ) {
           leadInStartIdx = straddledDiagramIdx - 2;
         }
@@ -373,6 +374,10 @@ export function findBestSplitY(
       const gapsAboveLeadIn = validGaps.filter((g) => g.y1 <= leadInTopY);
       if (gapsAboveLeadIn.length > 0) {
         validGaps = gapsAboveLeadIn;
+      } else if (leadInTopY - currentY < 130) {
+        // The lead-in prompt (e.g. "1 Fig. 1.1 is a speed-time graph...") sits right at the top of the slice
+        // with no valid gap above it. Return leadInTopY so orphan protection pushes the whole question to the next page.
+        return Math.max(currentY, leadInTopY);
       }
     }
   }
@@ -381,12 +386,12 @@ export function findBestSplitY(
   if (validGaps.length > 0) {
     const bestGap = validGaps[validGaps.length - 1];
     const cutY = Math.min(targetCutY, bestGap.y1 - 4);
-    return Math.max(currentY + 50, cutY);
+    return Math.max(currentY + 8, cutY);
   }
 
-  // Fallback: Pick the lowest gap >= 12px that is not immediately above a dotted line, or targetCutY
+  // Fallback: Search all the way up to currentY + 12 for any pure-white gap >= 16px not immediately above a dotted line
   const fallbackGaps = gaps.filter((gap) => {
-    if (gap.y1 <= minCutY || gap.y0 > targetCutY - 4 || gap.height < 12) return false;
+    if (gap.y1 <= currentY + 12 || gap.y0 > targetCutY - 4 || gap.height < 16) return false;
     const nextStrip = gap.nextStripIndex < strips.length ? strips[gap.nextStripIndex] : null;
     if (nextStrip && nextStrip.maxTransitions >= 14 && nextStrip.midActiveRows <= 7) {
       return false;
@@ -397,7 +402,13 @@ export function findBestSplitY(
   if (fallbackGaps.length > 0) {
     const bestFallback = fallbackGaps[fallbackGaps.length - 1];
     const cutY = Math.min(targetCutY, bestFallback.y1 - 4);
-    return Math.max(currentY + 50, cutY);
+    return Math.max(currentY + 8, cutY);
+  }
+
+  // If targetCutY straddles a tall graph/diagram strip and no gap >= 16px exists above it,
+  // return the top of the straddled strip so we never hard-cut through the middle of the graph.
+  if (straddledDiagramIdx !== -1 && strips[straddledDiagramIdx].y0 > currentY) {
+    return strips[straddledDiagramIdx].y0;
   }
 
   return targetCutY;
@@ -805,15 +816,17 @@ export async function generateQuestionPaperPDF({
         } else {
           const targetCutY = currentY + maxSlicePx;
           const bestCutY = findBestSplitY(qCtx, qW, currentY, targetCutY, qStructure);
+          const minOrphanPx = Math.max(120, Math.floor(45 * pxPerMm));
 
-          // If starting on a partially used page and the best seam leaves < 45mm before a tall diagram, start on a fresh page
-          if (sIdx === 0 && cursorY > marginTop && bestCutY - currentY < Math.floor(45 * pxPerMm)) {
+          // Orphan protection: if starting on a partially used page and the only valid seam above a graph/diagram
+          // leaves less than minOrphanPx (120px / 35mm–45mm), push the entire question to the start of the next page
+          if (sIdx === 0 && cursorY > marginTop && bestCutY - currentY < minOrphanPx) {
             doc.addPage();
             cursorY = marginTop;
             continue;
           }
 
-          nextCutY = bestCutY > currentY + 50 ? bestCutY : targetCutY;
+          nextCutY = bestCutY > currentY + 16 ? bestCutY : targetCutY;
         }
 
         const sliceHeightPx = nextCutY - currentY;
@@ -1087,14 +1100,15 @@ export async function generateMarkSchemePDF({
         } else {
           const targetCutY = currentY + maxSlicePx;
           const bestCutY = findBestSplitY(msCtx, msW, currentY, targetCutY, msStructure);
+          const minOrphanPx = Math.max(120, Math.floor(40 * pxPerMm));
 
-          if (sIdx === 0 && cursorY > marginTop && bestCutY - currentY < Math.floor(40 * pxPerMm)) {
+          if (sIdx === 0 && cursorY > marginTop && bestCutY - currentY < minOrphanPx) {
             doc.addPage();
             cursorY = marginTop;
             continue;
           }
 
-          nextCutY = bestCutY > currentY + 50 ? bestCutY : targetCutY;
+          nextCutY = bestCutY > currentY + 16 ? bestCutY : targetCutY;
         }
 
         const sliceHeightPx = nextCutY - currentY;

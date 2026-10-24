@@ -221,7 +221,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div
-      className="relative flex-1 overflow-y-auto bg-slate-50 text-slate-900 dark:bg-[#080C14] dark:text-slate-100 min-h-screen select-none transition-colors"
+      className="relative flex-1 overflow-y-auto bg-transparent text-slate-900 dark:text-slate-100 min-h-screen select-none transition-colors"
     >
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-60 dark:opacity-40 pointer-events-none" />

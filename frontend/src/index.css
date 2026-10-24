@@ -5,6 +5,9 @@
 :root {
   --subject-accent: #06B6D4;
   --subject-accent-rgb: 6, 182, 212;
+  --subject-glow-rgb: 99, 102, 241;
+  --global-mouse-x: 50vw;
+  --global-mouse-y: 50vh;
 }
 
 @layer base {

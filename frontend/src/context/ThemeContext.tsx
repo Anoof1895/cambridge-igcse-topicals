@@ -44,6 +44,7 @@ export function applySubjectThemeVariables(subject: SubjectCode | Subject): Subj
     const root = document.documentElement;
     root.style.setProperty('--subject-accent', token.accent);
     root.style.setProperty('--subject-accent-rgb', token.accentRgb);
+    root.style.setProperty('--subject-glow-rgb', token.accentRgb);
     root.setAttribute('data-subject', token.code);
   }
   return token;
