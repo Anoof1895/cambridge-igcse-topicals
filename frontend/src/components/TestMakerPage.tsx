@@ -886,7 +886,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/60 dark:bg-transparent text-slate-800 dark:text-slate-100 select-none relative transition-colors">
+    <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-hidden bg-slate-50/60 dark:bg-transparent text-slate-800 dark:text-slate-100 select-none relative transition-colors">
       {/* ===================================================================== */}
       {/* MOBILE TOP TAB BAR: [ Pool (N) | Preview (Q#) | Cart (M) ] (< 768px)  */}
       {/* ===================================================================== */}
@@ -1857,8 +1857,8 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       <aside
         className={`
-          bg-white dark:bg-dark-900 flex flex-col shrink-0 overflow-hidden transition-transform duration-200
-          w-full flex-1 md:flex-none
+          bg-white dark:bg-dark-900 flex flex-col shrink-0 transition-transform duration-200
+          w-full flex-1 min-h-0 h-full max-h-full md:flex-none
           md:fixed md:top-14 md:bottom-0 md:right-0 md:z-50 md:w-[26rem] md:border-l md:border-slate-200 md:dark:border-dark-750 md:shadow-2xl
           lg:static lg:w-84 lg:xl:w-96 lg:z-auto lg:border-l lg:border-slate-200 lg:dark:border-dark-800 lg:shadow-none lg:translate-x-0
           ${mobileTab === 'cart' ? 'flex' : 'hidden'}
@@ -1866,7 +1866,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         `}
       >
         {/* Dedicated Sticky Mobile/Tablet Navigation Header inside Cart (< 1024px) */}
-        <div className="flex lg:hidden items-center justify-between px-3 py-2.5 bg-slate-100 dark:bg-dark-950 border-b border-slate-200 dark:border-dark-800 shrink-0">
+        <div className="flex lg:hidden items-center justify-between px-3 py-2.5 bg-slate-100 dark:bg-dark-950 border-b border-slate-200 dark:border-dark-800 shrink-0 sticky top-0 z-20">
           <button
             type="button"
             onClick={() => {
@@ -1896,6 +1896,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Scrollable Cart Content Wrapper */}
+        <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden flex flex-col [-webkit-overflow-scrolling:touch]">
 
         {/* Cart Top Header: Title & Actions */}
         <div className="p-3 border-b border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
@@ -2112,7 +2115,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Selected Questions List: Pinned Right Below The Meter */}
-        <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5">
+        <div className="shrink-0 lg:flex-1 lg:min-h-0 overflow-visible lg:overflow-y-auto p-2.5 space-y-1.5">
           {cartQuestions.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-5 text-slate-400 dark:text-slate-500">
               <FileText className="w-7 h-7 text-slate-400 dark:text-slate-600 mb-2" />
@@ -2336,7 +2339,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Action Bar: Sit Exam, PDF Export Options & Buttons */}
-        <div className="p-3 border-t border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
+        <div className="p-3 pb-28 sm:pb-12 lg:pb-3 border-t border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
           {/* Primary Action 1: In-Browser Exam Sitting Mode */}
           <button
             type="button"
@@ -2418,6 +2421,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <span>Export MS</span>
             </button>
           </div>
+        </div>
         </div>
       </aside>
 
