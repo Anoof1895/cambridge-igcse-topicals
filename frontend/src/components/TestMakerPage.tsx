@@ -1532,16 +1532,16 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       <span className={`font-mono tabular-nums font-bold text-xs ${accentClasses.text}`}>
                         Q{qNum}
                       </span>
-                      <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/25">
+                      <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                         {q.marks}m
                       </span>
                       {paperLabel && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                           {paperLabel}
                         </span>
                       )}
                       {isNonCalcQuestion && (
-                        <span className="text-[9px] font-bold px-1 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30">
                           Non-Calc
                         </span>
                       )}
@@ -1581,11 +1581,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   <p className="relative z-10 text-[11px] text-slate-800 dark:text-slate-200 truncate font-medium">
                     {q.subtopic || q.topic}
                   </p>
-                  <div className="relative z-10 flex items-center justify-between text-[10px] text-slate-400 mt-0.5 tabular-nums">
+                  <div className="relative z-10 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 tabular-nums">
                     <span>
                       {q.series && q.year ? `${q.series.toUpperCase()} ${q.year}` : `${q.year || ''}`}
                     </span>
-                    <span>{q.is_mcq ? 'MCQ' : 'Theory'}</span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                      {q.is_mcq ? 'MCQ' : 'Theory'}
+                    </span>
                   </div>
                 </div>
               );
@@ -1622,13 +1624,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       <main
         className={`
-          flex-1 flex flex-col h-full bg-slate-100/40 dark:bg-transparent overflow-hidden border-r border-slate-200 dark:border-dark-800
+          flex-1 flex flex-col h-full bg-slate-100 dark:bg-[#0B0F19] overflow-hidden border-r border-slate-200 dark:border-dark-800
           w-full
           ${mobileTab === 'preview' ? 'flex' : 'hidden md:flex'}
         `}
       >
         {/* Preview Header Bar */}
-        <div className="h-14 px-2.5 sm:px-5 border-b border-slate-200 dark:border-dark-800 bg-white/90 dark:bg-dark-900/90 flex items-center justify-between shrink-0 gap-2">
+        <div className="h-14 px-2.5 sm:px-5 border-b border-slate-200 dark:border-dark-800 bg-white/95 dark:bg-dark-900/90 flex items-center justify-between shrink-0 gap-2">
           {activePreviewQuestion ? (
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
               {/* Prev / Next question navigation with [← / →] hotkey hint */}
@@ -1664,11 +1666,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               </span>
               <span className="text-slate-300 dark:text-dark-600 hidden sm:inline">•</span>
               <div className="hidden sm:flex items-center gap-2 text-xs overflow-hidden">
-                <span className="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold shrink-0">
+                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 font-bold shrink-0">
                   {activePreviewQuestion.marks} marks
                 </span>
                 {activePreviewQuestion.calculator_allowed === false && (
-                  <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold shrink-0">
+                  <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30 font-bold shrink-0">
                     Non-Calc
                   </span>
                 )}
@@ -1692,7 +1694,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 className={`px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'question'
                     ? `${accentClasses.bg} text-white`
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Question
@@ -1703,7 +1705,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'split'
                     ? `${accentClasses.bg} text-white`
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <span>Side-by-Side</span>
@@ -1717,7 +1719,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 className={`px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'ms'
                     ? `${accentClasses.bg} text-white`
-                    : 'text-slate-600 dark:text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Mark Scheme
@@ -1758,7 +1760,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Preview Canvas Workspace */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative pb-24 md:pb-0">
+        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative pb-24 md:pb-0 bg-slate-100 dark:bg-[#0B0F19]">
           {activePreviewQuestion ? (
             <>
               {(previewTab === 'question' || previewTab === 'split') && (
@@ -2159,11 +2161,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                         <span className={`font-mono tabular-nums font-bold text-xs ${accentClasses.text}`}>
                           Q{qNum}
                         </span>
-                        <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/25">
+                        <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                           {q.marks}m
                         </span>
                         {q.paper && (
-                          <span className="text-[9px] font-mono text-slate-400">P{q.paper}</span>
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                            P{q.paper}
+                          </span>
                         )}
                       </div>
                       <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
@@ -2338,9 +2342,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             type="button"
             disabled={cartQuestions.length === 0}
             onClick={() => setIsSittingModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs shadow-md shadow-emerald-950/30 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-md shadow-emerald-950/20 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
           >
-            <PlayCircle className="w-4 h-4 fill-slate-950 text-white" />
+            <PlayCircle className="w-4 h-4 text-white" />
             <span>Sit Mock Exam In-Browser ({formatDuration(targetTimeMinutes)})</span>
           </button>
 

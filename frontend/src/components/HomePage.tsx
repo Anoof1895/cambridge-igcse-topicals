@@ -221,7 +221,7 @@ export const HomePage: React.FC<HomePageProps> = ({
 
   return (
     <div
-      className="relative flex-1 overflow-y-auto bg-transparent text-slate-900 dark:text-slate-100 select-none transition-colors"
+      className="relative flex-1 overflow-y-auto bg-slate-50 text-slate-900 dark:bg-[#080C14] dark:text-slate-100 min-h-screen select-none transition-colors"
     >
       {/* Background Grid Pattern */}
       <div className="absolute inset-0 bg-grid-pattern opacity-60 dark:opacity-40 pointer-events-none" />
@@ -230,7 +230,7 @@ export const HomePage: React.FC<HomePageProps> = ({
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Top Hero Pill & Heading */}
         <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/25 mb-4 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 dark:bg-amber-500/10 text-slate-900 dark:text-white border border-amber-500/30 dark:border-amber-500/25 mb-4 shadow-sm">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>2025–2028 Cambridge IGCSE Syllabus Specification Engine</span>
           </div>

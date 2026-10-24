@@ -1035,7 +1035,7 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className="h-screen w-screen overflow-hidden bg-[#080B11] text-zinc-100 flex flex-col relative"
+      className="h-screen w-screen min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-[#080C14] dark:text-slate-100 flex flex-col relative transition-colors"
       style={{
         '--accent-spotlight': accentSpotlight,
       } as React.CSSProperties}

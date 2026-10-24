@@ -1190,7 +1190,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
       : 'from-cyan-500/10 via-sky-500/5 to-transparent';
 
   return (
-    <div className="flex-1 flex flex-col h-full w-full min-h-[300px] bg-slate-100/60 dark:bg-dark-950/80 overflow-hidden transition-colors">
+    <div className="flex-1 flex flex-col h-full w-full min-h-[300px] bg-slate-100 dark:bg-[#0B0F19] overflow-hidden transition-colors">
       {/* Canvas Header */}
       <div
         onPointerMove={handleSpotlightMove}
@@ -1272,7 +1272,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
       {/* Canvas Viewport */}
       <div 
         ref={containerRef}
-        className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-auto px-2 sm:px-4 py-2 flex items-start justify-center bg-slate-100/50 dark:bg-[#07090D] bg-drafting-grid relative"
+        className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-auto px-2 sm:px-4 py-2 flex items-start justify-center bg-slate-100 dark:bg-[#0B0F19] bg-drafting-grid relative"
         style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
       >
         {/* Subtle Subject-Reactive Radial Ambient Glow in Top Center */}
@@ -1318,7 +1318,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
               style={zoom > 1 ? { minWidth: `${Math.round(zoom * 100)}%` } : undefined}
             >
               <div 
-                className={`relative w-full max-w-full transition-transform duration-100 ease-out origin-top rounded-lg sm:rounded-xl overflow-hidden shadow-[0_12px_40px_-10px_rgba(0,0,0,0.65)] ring-1 ring-slate-200 dark:ring-white/10 bg-white ${
+                className={`relative w-full max-w-full transition-transform duration-100 ease-out origin-top rounded-lg sm:rounded-xl overflow-hidden shadow-md dark:shadow-[0_12px_40px_-10px_rgba(0,0,0,0.65)] border border-slate-200 dark:border-slate-800 bg-white ${
                   isImageLoading ? 'min-h-[280px]' : ''
                 } ${!isAnnotating ? 'cursor-pointer' : ''}`}
                 style={{ transform: `scale(${zoom})`, width: '100%' }}

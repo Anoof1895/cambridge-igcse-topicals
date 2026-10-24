@@ -268,7 +268,7 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
     : 'text-cyan-600 dark:text-cyan-400';
 
   return (
-    <main className="flex-1 h-full min-h-0 w-full flex flex-col bg-slate-100/50 dark:bg-transparent overflow-hidden select-none relative transition-colors">
+    <main className="flex-1 h-full min-h-0 w-full flex flex-col bg-slate-100 dark:bg-[#0B0F19] overflow-hidden select-none relative transition-colors">
       {/* ===================================================================== */}
       {/* ACTIVE QUESTION TOP HEADER (Clean sub-bar: metadata, bookmarks & counter)*/}
       <div

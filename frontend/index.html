@@ -12,8 +12,7 @@
       (function() {
         try {
           var saved = localStorage.getItem('theme');
-          var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
-          if (saved === 'light' || (!saved && prefersLight)) {
+          if (saved === 'light') {
             document.documentElement.classList.remove('dark');
             document.documentElement.classList.add('light');
           } else {

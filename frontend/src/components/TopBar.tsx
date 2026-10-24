@@ -248,23 +248,23 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   return (
     <>
-      <header className="relative z-30 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 py-2 w-full min-w-0 shrink-0 bg-[#0B0F19]/90 backdrop-blur-md border-b border-zinc-800/80 overflow-visible select-none">
+      <header className="relative z-30 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 py-2 w-full min-w-0 shrink-0 bg-white/95 dark:bg-[#0B0F19]/90 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800/80 overflow-visible select-none transition-colors">
         {/* Left: Breadcrumb / Paper badge & Search */}
         <div className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 shrink-0">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-zinc-300 shrink-0">
             <span className="hidden sm:inline">Topical Explorer</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/[0.06] text-zinc-400">
+            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-transparent">
               {selectedSubject}
             </span>
           </div>
           <div className="relative w-36 sm:w-44 lg:w-56 shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-400 pointer-events-none" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-zinc-400 pointer-events-none" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search topic or Q#..."
-              className="w-full h-8 pl-8 pr-2 text-xs bg-white/[0.04] hover:bg-white/[0.07] focus:bg-white/[0.09] text-zinc-200 placeholder-zinc-500 rounded-lg border border-white/[0.08] focus:border-[var(--subject-accent,#F59E0B)] focus:outline-none transition-all"
+              className="w-full h-8 pl-8 pr-2 text-xs bg-slate-100 hover:bg-slate-200/70 focus:bg-white dark:bg-white/[0.04] dark:hover:bg-white/[0.07] dark:focus:bg-white/[0.09] text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 rounded-lg border border-slate-200 dark:border-white/[0.08] focus:border-[var(--subject-accent,#F59E0B)] focus:outline-none transition-all"
             />
           </div>
         </div>
@@ -432,7 +432,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             {/* Secondary Filters Popover Dropdown */}
             {isSecondaryPopoverOpen && (
-              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1rem)] min-w-[260px] p-4 space-y-4 rounded-xl bg-[#0B0F19]/95 border border-white/10 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
+              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1rem)] min-w-[260px] p-4 space-y-4 rounded-xl bg-white/95 dark:bg-[#0B0F19]/95 border border-slate-200 dark:border-white/10 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
                 {/* Popover Header */}
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/[0.07]">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
@@ -463,7 +463,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                       <span>Cambridge Tier</span>
                     </label>
                   </div>
-                  <div className="grid grid-cols-3 gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.06]">
+                  <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.06]">
                     {(['all', 'core', 'extended'] as const).map((t) => {
                       const label = t === 'all' ? 'All Tiers' : t === 'core' ? 'Core' : 'Extended';
                       return (
@@ -474,7 +474,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                           className={`py-1.5 px-2 text-xs font-medium text-center truncate rounded-lg transition-all ${
                             currentTier === t
                               ? activePillBtnClass
-                              : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.04]'
                           }`}
                         >
                           {label}
@@ -492,7 +492,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                       <span>Paper Variant</span>
                     </label>
                   </div>
-                  <div className="grid grid-cols-4 gap-1 p-1 bg-white/[0.04] rounded-xl border border-white/[0.06]">
+                  <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.06]">
                     {([
                       { value: 'all', label: 'All' },
                       { value: 1, label: 'V1' },
@@ -506,7 +506,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                         className={`py-1.5 px-2 text-xs font-medium font-mono tabular-nums text-center truncate rounded-lg transition-all ${
                           currentVariant === v.value
                             ? activePillBtnClass
-                            : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.04]'
                         }`}
                       >
                         {v.label}
@@ -616,7 +616,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                           className={`py-1.5 px-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
                             isSelected
                               ? 'bg-amber-600 text-white font-bold shadow-sm'
-                              : 'bg-white/[0.04] text-slate-300 hover:text-white hover:bg-white/[0.08] border border-white/[0.06]'
+                              : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06]'
                           }`}
                         >
                           {st.dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.dot}`} />}
@@ -630,14 +630,14 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
           </div>
 
-            {/* 7. Question / Mark counter chip (h-8 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-xs font-mono) */}
-            <div className="h-8 px-2.5 rounded-lg border border-white/[0.08] bg-white/[0.03] text-xs font-mono text-zinc-300 flex items-center gap-1.5 shrink-0 whitespace-nowrap min-w-[80px]">
-              <span className={`font-semibold whitespace-nowrap tabular-nums ${isMath ? 'text-amber-400' : isPhysics ? 'text-indigo-400' : 'text-cyan-400'}`}>
+            {/* 7. Question / Mark counter chip */}
+            <div className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.03] text-xs font-mono text-slate-700 dark:text-zinc-300 flex items-center gap-1.5 shrink-0 whitespace-nowrap min-w-[80px]">
+              <span className={`font-semibold whitespace-nowrap tabular-nums ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
                 {totalFiltered}
               </span>{' '}
               Qs
-              <span className="w-1 h-1 rounded-full bg-zinc-600"></span>
-              <span className="font-semibold text-emerald-400 whitespace-nowrap tabular-nums">{totalMarks}</span> marks
+              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-zinc-600"></span>
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap tabular-nums">{totalMarks}</span> marks
             </div>
 
             {/* 8. Reset filter icon button (h-8 w-8) */}
@@ -646,7 +646,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 type="button"
                 onClick={onResetFilters}
                 title="Reset All Filters"
-                className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-zinc-400 hover:text-zinc-200 flex items-center justify-center transition-colors shrink-0"
+                className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 flex items-center justify-center transition-colors shrink-0"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -662,12 +662,12 @@ export const TopBar: React.FC<TopBarProps> = ({
             onClick={() => setIsMobileDrawerOpen(true)}
             className={`md:hidden h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 whitespace-nowrap ${
               hasActiveFilters
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                : 'bg-white/[0.04] text-zinc-300 border-white/[0.08] hover:bg-white/[0.08]'
+                ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/50'
+                : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08]'
             }`}
             title="Filter Questions"
           >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
             <span>Filters</span>
             {hasActiveFilters && (
               <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-600 text-white">
@@ -676,14 +676,14 @@ export const TopBar: React.FC<TopBarProps> = ({
             )}
           </button>
 
-          <div className="md:hidden h-8 px-2 rounded-lg border border-white/[0.08] bg-white/[0.03] text-xs font-mono text-zinc-300 hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
-            <span className={`font-semibold tabular-nums ${isMath ? 'text-amber-400' : isPhysics ? 'text-indigo-400' : 'text-cyan-400'}`}>
+          <div className="md:hidden h-8 px-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.03] text-xs font-mono text-slate-700 dark:text-zinc-300 hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
+            <span className={`font-semibold tabular-nums ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
               {totalFiltered}
             </span>
-            <span className="text-[10px] text-zinc-500">Qs</span>
+            <span className="text-[10px] text-slate-500 dark:text-zinc-500">Qs</span>
           </div>
 
-          <div className="hidden md:inline-flex items-center bg-white/[0.04] p-0.5 rounded-lg border border-white/[0.08] h-8 shrink-0">
+          <div className="hidden md:inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] h-8 shrink-0">
             <button
               type="button"
               onClick={() => onViewModeChange('question-only')}
@@ -691,7 +691,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               className={`h-7 px-2 sm:px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 shrink-0 ${
                 viewMode === 'question-only'
                   ? `${activePillBtnClass} shadow-sm`
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
               }`}
             >
               <Eye className="w-3.5 h-3.5 shrink-0" />
@@ -704,7 +704,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               className={`h-7 px-2 sm:px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 shrink-0 ${
                 viewMode === 'split'
                   ? `${activePillBtnClass} shadow-sm`
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
               }`}
             >
               <Columns className="w-3.5 h-3.5 shrink-0" />
@@ -717,7 +717,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               className={`h-7 px-2 sm:px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 shrink-0 ${
                 viewMode === 'ms-only'
                   ? `${activePillBtnClass} shadow-sm`
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -773,26 +773,26 @@ export const TopBar: React.FC<TopBarProps> = ({
             {/* Drawer Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {/* Account / Auth in Mobile Drawer */}
-              <div className="p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80">
                 {user ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
                         {(user.email?.[0] || 'U').toUpperCase()}
                       </div>
-                      <span className="text-xs text-zinc-300 truncate">{user.email}</span>
+                      <span className="text-xs text-slate-700 dark:text-zinc-300 truncate">{user.email}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => signOut()}
-                      className="text-xs text-rose-400 hover:text-rose-300 font-semibold ml-2 shrink-0"
+                      className="text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-semibold ml-2 shrink-0"
                     >
                       Sign Out
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-zinc-400">Sync progress & bookmarks</span>
+                    <span className="text-xs text-slate-600 dark:text-zinc-400">Sync progress &amp; bookmarks</span>
                     <button
                       type="button"
                       onClick={() => {
