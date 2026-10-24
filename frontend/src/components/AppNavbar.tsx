@@ -167,13 +167,25 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
     ? 'from-emerald-500/0 via-emerald-400/80 to-emerald-500/0'
     : 'from-cyan-500/0 via-cyan-400/80 to-cyan-500/0';
 
+  const STATIC_SUBJECT_COUNTS: Record<Subject, number> = {
+    mathematics: 3936,
+    physics: 5577,
+    chemistry: 3825,
+    biology: 3743,
+  };
+
+  const resolvedMathCount = mathCount > 0 ? mathCount : STATIC_SUBJECT_COUNTS.mathematics;
+  const resolvedPhysCount = physCount > 0 ? physCount : STATIC_SUBJECT_COUNTS.physics;
+  const resolvedChemCount = chemCount > 0 ? chemCount : STATIC_SUBJECT_COUNTS.chemistry;
+  const resolvedBioCount = bioCount > 0 ? bioCount : STATIC_SUBJECT_COUNTS.biology;
+
   const subjectList = [
     {
       code: '0580',
       subject: 'mathematics' as Subject,
       label: 'Maths 0580',
       fullLabel: 'Mathematics (0580)',
-      count: mathCount,
+      count: resolvedMathCount,
       view: (isTestMakerActive ? 'mathematics-test-maker' : 'mathematics-topical') as AppView,
       Icon: Sigma,
       dot: 'bg-amber-500 text-amber-400',
@@ -185,7 +197,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
       subject: 'physics' as Subject,
       label: 'Physics 0625',
       fullLabel: 'Physics (0625)',
-      count: physCount,
+      count: resolvedPhysCount,
       view: (isTestMakerActive ? 'physics-test-maker' : 'physics-topical') as AppView,
       Icon: Atom,
       dot: 'bg-indigo-500 text-indigo-400',
@@ -197,7 +209,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
       subject: 'chemistry' as Subject,
       label: 'Chemistry 0620',
       fullLabel: 'Chemistry (0620)',
-      count: chemCount,
+      count: resolvedChemCount,
       view: (isTestMakerActive ? 'chemistry-test-maker' : 'chemistry-topical') as AppView,
       Icon: FlaskConical,
       dot: 'bg-cyan-500 text-cyan-400',
@@ -209,7 +221,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
       subject: 'biology' as Subject,
       label: 'Biology 0610',
       fullLabel: 'Biology (0610)',
-      count: bioCount,
+      count: resolvedBioCount,
       view: (isTestMakerActive ? 'biology-test-maker' : 'biology-topical') as AppView,
       Icon: Dna,
       dot: 'bg-emerald-500 text-emerald-400',
@@ -219,11 +231,12 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
   ];
 
   const currentSubjectInfo = subjectList.find((s) => s.subject === activeSubject) || subjectList[0];
-  const grandTotalQuestions = mathCount + physCount + chemCount + bioCount;
+  const resolvedTotalQuestions = totalQuestions > 0 ? totalQuestions : currentSubjectInfo.count;
+  const grandTotalQuestions = resolvedMathCount + resolvedPhysCount + resolvedChemCount + resolvedBioCount;
 
   return (
     <>
-      <header className="surface-glass w-full max-w-full min-h-[3.5rem] py-1.5 border-b border-slate-200 dark:border-white/[0.07] px-2.5 sm:px-4 lg:px-6 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 lg:gap-3 select-none shrink-0 relative z-50 transition-colors">
+      <header className="surface-glass w-full max-w-full h-14 border-b border-slate-200 dark:border-white/[0.07] px-2.5 sm:px-4 lg:px-6 flex flex-nowrap items-center justify-between gap-1.5 sm:gap-2 lg:gap-3 select-none shrink-0 relative z-50 transition-colors">
         {/* Subtle subject-colored top-edge gradient glint */}
         <div className={`absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r ${topGlintGradient} pointer-events-none opacity-80`} />
 
@@ -246,7 +259,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-              <span className="text-[13px] sm:text-sm lg:text-base font-bold tracking-tight truncate text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors">
+              <span className="text-[13px] sm:text-sm lg:text-base font-bold tracking-tight truncate whitespace-nowrap text-slate-900 dark:text-white group-hover:text-amber-500 dark:group-hover:text-amber-300 transition-colors">
                 Cambridge IGCSE
               </span>
               <span className={`hidden sm:inline-flex shrink-0 text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded border ${hubPillClass}`}>
@@ -262,7 +275,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
         </div>
 
         {/* Center: Desktop & Tablet Navigation, Tools & User Profile (>= 640px) */}
-        <div className="hidden sm:flex flex-wrap items-center gap-1.5 lg:gap-2 mx-auto">
+        <div className="hidden sm:flex flex-nowrap items-center gap-1.5 lg:gap-2 mx-auto">
           <nav
             onPointerMove={handleSpotlightMove}
             onPointerLeave={handleSpotlightLeave}
@@ -466,7 +479,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
               {currentView === 'home' ? 'All Subjects' : currentSubjectInfo.label}
             </span>
             <span className="relative z-10 font-mono tabular-nums text-slate-500 hidden lg:inline">
-              ({(currentView === 'home' ? grandTotalQuestions : totalQuestions).toLocaleString()} Qs)
+              ({(currentView === 'home' ? grandTotalQuestions : resolvedTotalQuestions).toLocaleString()} Qs)
             </span>
             <ChevronDown className={`relative z-10 w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform ${isSubjectMenuOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -522,15 +535,15 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           )}
         </div>
 
-        {/* Mobile Action Controls (< 640px) */}
-        <div className="flex sm:hidden items-center gap-1 shrink-0">
+        {/* Mobile Action Controls (< 640px) - Strictly single-row compact h-9 w-9 buttons */}
+        <div className="flex sm:hidden items-center gap-1.5 shrink-0">
           {/* Mobile Auth Button & Bounded Dropdown */}
           {user ? (
             <div className="relative" ref={mobileUserMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                className="w-8 h-8 p-0 flex items-center justify-center rounded-lg shrink-0 bg-gradient-to-tr from-amber-500 to-orange-600 text-white font-bold text-xs shadow-sm active:scale-95"
+                className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-gradient-to-tr from-amber-500 to-orange-600 text-white font-bold text-xs shadow-sm active:scale-95"
                 title={`Logged in as ${user.email}`}
               >
                 {userInitial}
@@ -573,11 +586,11 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
             <button
               type="button"
               onClick={openAuthModal}
-              className="h-8 px-2.5 shrink-0 flex items-center gap-1 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold text-xs active:scale-95 transition-all shadow-sm"
+              aria-label="Sign In"
               title="Sign In"
+              className="w-9 h-9 p-0 shrink-0 flex items-center justify-center rounded-lg bg-amber-600 hover:bg-amber-500 text-white active:scale-95 transition-all shadow-sm"
             >
-              <LogIn className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden min-[380px]:inline">Sign In</span>
+              <LogIn className="w-4 h-4 shrink-0" />
             </button>
           )}
 
@@ -588,7 +601,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
               onClick={onOpenCommandPalette}
               aria-label="Open Command Palette"
               title="Open Command Palette (Ctrl+K)"
-              className="w-8 h-8 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
+              className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -600,7 +613,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
             onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            className="w-8 h-8 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
+            className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all shadow-sm"
           >
             {theme === 'dark' ? (
               <Sun className="w-4 h-4 text-amber-400" />
@@ -609,24 +622,12 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
             )}
           </button>
 
-          {/* Quick Cart Pill on Mobile */}
-          {cartCount > 0 && (
-            <button
-              type="button"
-              onClick={() => handleNavClick(testMakerView)}
-              className="h-8 px-2 shrink-0 flex items-center gap-1 rounded-lg bg-amber-50 dark:bg-dark-800 border border-amber-500/40 text-amber-700 dark:text-amber-300 text-xs font-bold font-mono tabular-nums transition-all"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>{cartCount}</span>
-            </button>
-          )}
-
           {/* Hamburger Menu Toggle Button */}
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle navigation menu"
-            className="w-8 h-8 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all"
+            className="w-9 h-9 p-0 flex items-center justify-center rounded-lg shrink-0 bg-slate-100 hover:bg-slate-200 dark:bg-dark-800 dark:hover:bg-dark-750 border border-slate-200 dark:border-dark-700 text-slate-700 dark:text-slate-200 active:scale-95 transition-all"
           >
             {isMobileMenuOpen ? (
               <X className="w-4 h-4 text-amber-500 dark:text-amber-400" />
@@ -637,14 +638,14 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
         </div>
       </header>
 
-      {/* Mobile Slide-down Navigation Sheet (< 640px) */}
+      {/* Mobile Slide-down Navigation Sheet (< 640px) - Anchored cleanly below single-row h-14 header */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 top-14 z-50 bg-black/60 dark:bg-black/70 backdrop-blur-md sm:hidden flex flex-col justify-start animate-in fade-in duration-150"
+          className="fixed inset-x-0 top-14 bottom-0 z-50 bg-black/75 dark:bg-black/80 backdrop-blur-md sm:hidden flex flex-col justify-start overflow-y-auto animate-in fade-in duration-150"
           onClick={() => setIsMobileMenuOpen(false)}
         >
           <div 
-            className="bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-dark-750 p-4 space-y-2 shadow-2xl animate-in slide-in-from-top-4 duration-200"
+            className="bg-white dark:bg-[#0B0F19] border-b border-slate-200 dark:border-white/10 p-4 space-y-2.5 shadow-2xl animate-in slide-in-from-top-4 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* User Account Card in Mobile Drawer */}
@@ -839,7 +840,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
                 </span>
               </div>
               <span className="font-mono text-[11px] text-amber-600 dark:text-amber-400 font-bold">
-                {totalQuestions.toLocaleString()} Questions
+                {resolvedTotalQuestions.toLocaleString()} Questions
               </span>
             </div>
           </div>

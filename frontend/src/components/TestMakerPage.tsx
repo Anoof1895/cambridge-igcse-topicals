@@ -184,7 +184,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
 
   // Responsive state
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState<boolean>(false);
-  const [mobileTab, setMobileTab] = useState<'pool' | 'preview'>('pool');
+  const [mobileTab, setMobileTab] = useState<'pool' | 'preview' | 'cart'>('pool');
 
   // Progressive Disclosure: Popover State & Ref
   const [isFilterPopoverOpen, setIsFilterPopoverOpen] = useState<boolean>(false);
@@ -888,38 +888,59 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
   return (
     <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-slate-50/60 dark:bg-transparent text-slate-800 dark:text-slate-100 select-none relative transition-colors">
       {/* ===================================================================== */}
-      {/* MOBILE TOP TAB BAR: [ Question Pool ] | [ Preview ] (< 768px)         */}
+      {/* MOBILE TOP TAB BAR: [ Pool (N) | Preview (Q#) | Cart (M) ] (< 768px)  */}
       {/* ===================================================================== */}
-      <div className="flex md:hidden items-center justify-center p-2 bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-dark-800 shrink-0">
-        <div className="grid grid-cols-2 w-full max-w-md bg-slate-100 dark:bg-dark-850 p-1 rounded-xl border border-slate-200 dark:border-dark-750">
+      <div className="flex md:hidden items-center justify-center p-2 bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-dark-800 shrink-0 z-30">
+        <div className="grid grid-cols-3 gap-1 w-full max-w-md bg-slate-100 dark:bg-dark-850 p-1 rounded-xl border border-slate-200 dark:border-dark-750">
           <button
             type="button"
-            onClick={() => setMobileTab('pool')}
-            className={`min-h-[40px] flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all ${
+            onClick={() => {
+              setMobileTab('pool');
+              setIsCartDrawerOpen(false);
+            }}
+            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all truncate ${
               mobileTab === 'pool'
                 ? `${accentClasses.bg} text-white shadow-sm`
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <Search className="w-3.5 h-3.5" />
-            <span>Pool ({filteredPool.length})</span>
+            <Search className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Pool ({filteredPool.length})</span>
           </button>
           <button
             type="button"
-            onClick={() => setMobileTab('preview')}
-            className={`min-h-[40px] flex items-center justify-center gap-1.5 rounded-lg text-xs font-bold transition-all ${
+            onClick={() => {
+              setMobileTab('preview');
+              setIsCartDrawerOpen(false);
+            }}
+            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all truncate ${
               mobileTab === 'preview'
                 ? `${accentClasses.bg} text-white shadow-sm`
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
             }`}
           >
-            <Eye className="w-3.5 h-3.5" />
-            <span>
+            <Eye className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">
               Preview{' '}
               {activePreviewQuestion
                 ? `(Q${activePreviewQuestion.question_number ?? activePreviewQuestion.questionNumber ?? '1'})`
                 : ''}
             </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileTab('cart');
+              setIsCartDrawerOpen(true);
+            }}
+            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all truncate ${
+              mobileTab === 'cart'
+                ? `${accentClasses.bg} text-white shadow-sm`
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">Cart ({cartQuestionIds.length})</span>
           </button>
         </div>
       </div>
@@ -1607,18 +1628,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         `}
       >
         {/* Preview Header Bar */}
-        <div className="h-14 px-3 sm:px-5 border-b border-slate-200 dark:border-dark-800 bg-white/90 dark:bg-dark-900/90 flex items-center justify-between shrink-0 gap-2">
+        <div className="h-14 px-2.5 sm:px-5 border-b border-slate-200 dark:border-dark-800 bg-white/90 dark:bg-dark-900/90 flex items-center justify-between shrink-0 gap-2">
           {activePreviewQuestion ? (
-            <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setMobileTab('pool')}
-                className="md:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 text-xs font-semibold shrink-0"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>Pool</span>
-              </button>
-
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
               {/* Prev / Next question navigation with [← / →] hotkey hint */}
               <div className="flex items-center gap-1 shrink-0">
                 <button
@@ -1626,32 +1638,32 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   onClick={goToPrevQuestion}
                   disabled={filteredPool.length <= 1}
                   title="Previous question (←, ↑, j)"
-                  className="p-1.5 rounded-lg border border-slate-200 dark:border-dark-700 hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-dark-700 hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95 shrink-0"
                 >
-                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={goToNextQuestion}
                   disabled={filteredPool.length <= 1}
                   title="Next question (→, ↓, k)"
-                  className="p-1.5 rounded-lg border border-slate-200 dark:border-dark-700 hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-dark-700 hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95 shrink-0"
                 >
-                  <ChevronRight className="w-3.5 h-3.5" />
+                  <ChevronRight className="w-4 h-4" />
                 </button>
                 <span className="hidden xl:inline-flex items-center text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-dark-700 select-none">
                   ← / →
                 </span>
               </div>
 
-              <span className={`font-mono font-bold text-sm ${accentClasses.text} shrink-0`}>
+              <span className={`hidden sm:inline font-mono font-bold text-sm ${accentClasses.text} shrink-0`}>
                 Question{' '}
                 {activePreviewQuestion.question_number ??
                   activePreviewQuestion.questionNumber ??
                   '1'}
               </span>
               <span className="text-slate-300 dark:text-dark-600 hidden sm:inline">•</span>
-              <div className="flex items-center gap-2 text-xs overflow-hidden">
+              <div className="hidden sm:flex items-center gap-2 text-xs overflow-hidden">
                 <span className="px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300 font-bold shrink-0">
                   {activePreviewQuestion.marks} marks
                 </span>
@@ -1660,7 +1672,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     Non-Calc
                   </span>
                 )}
-                <span className="text-slate-700 dark:text-slate-300 font-medium truncate hidden sm:inline">
+                <span className="text-slate-700 dark:text-slate-300 font-medium truncate hidden lg:inline">
                   {activePreviewQuestion.topic} / {activePreviewQuestion.subtopic}
                 </span>
               </div>
@@ -1672,12 +1684,12 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
           )}
 
           {/* Preview Controls & Add/Remove Action */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="flex items-center bg-slate-100 dark:bg-dark-850 p-0.5 rounded-lg border border-slate-200 dark:border-dark-750 text-xs">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <div className="flex items-center bg-slate-100 dark:bg-dark-850 p-0.5 rounded-lg border border-slate-200 dark:border-dark-750 text-xs shrink-0">
               <button
                 type="button"
                 onClick={() => setPreviewTab('question')}
-                className={`px-2.5 py-1 rounded transition-all font-medium ${
+                className={`px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'question'
                     ? `${accentClasses.bg} text-white`
                     : 'text-slate-600 dark:text-slate-400 hover:text-white'
@@ -1688,7 +1700,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <button
                 type="button"
                 onClick={() => setPreviewTab('split')}
-                className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded transition-all font-medium ${
+                className={`hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'split'
                     ? `${accentClasses.bg} text-white`
                     : 'text-slate-600 dark:text-slate-400 hover:text-white'
@@ -1702,7 +1714,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <button
                 type="button"
                 onClick={() => setPreviewTab('ms')}
-                className={`px-2.5 py-1 rounded transition-all font-medium ${
+                className={`px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'ms'
                     ? `${accentClasses.bg} text-white`
                     : 'text-slate-600 dark:text-slate-400 hover:text-white'
@@ -1716,7 +1728,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <button
                 type="button"
                 onClick={handleToggleCartActive}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 shrink-0 whitespace-nowrap ${
                   cartQuestionIds.includes(activePreviewQuestion.id)
                     ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 hover:bg-rose-100'
                     : `bg-gradient-to-r ${accentClasses.gradient} text-white shadow-lg`
@@ -1724,17 +1736,18 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               >
                 {cartQuestionIds.includes(activePreviewQuestion.id) ? (
                   <>
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="hidden sm:inline">Remove</span>
-                    <span className="text-[10px] font-mono font-normal opacity-75 px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 select-none">
+                    <span className="hidden sm:inline-block text-[10px] font-mono font-normal opacity-75 px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 select-none">
                       A
                     </span>
                   </>
                 ) : (
                   <>
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Add to Quiz</span>
-                    <span className="text-[10px] font-mono font-normal opacity-85 px-1 py-0.2 rounded bg-black/20 dark:bg-white/20 select-none">
+                    <Plus className="w-3.5 h-3.5 shrink-0" />
+                    <span className="sm:hidden">Add</span>
+                    <span className="hidden sm:inline">Add to Quiz</span>
+                    <span className="hidden sm:inline-block text-[10px] font-mono font-normal opacity-85 px-1 py-0.2 rounded bg-black/20 dark:bg-white/20 select-none">
                       A
                     </span>
                   </>
@@ -1745,11 +1758,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Preview Canvas Workspace */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative pb-16 md:pb-0">
+        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden relative pb-24 md:pb-0">
           {activePreviewQuestion ? (
             <>
               {(previewTab === 'question' || previewTab === 'split') && (
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div className="flex-1 flex flex-col md:h-full min-h-[340px] md:overflow-hidden">
                   <ImageCanvas
                     src={resolveQuestionImageUrl(activePreviewQuestion)}
                     title={`Question ${
@@ -1777,7 +1790,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               )}
 
               {(previewTab === 'ms' || previewTab === 'split') && (
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div className="flex-1 flex flex-col md:h-full min-h-[340px] md:overflow-hidden">
                   <ImageCanvas
                     src={resolveMarkSchemeImageUrl(activePreviewQuestion)}
                     title={`Mark Scheme: Q${
@@ -1807,25 +1820,33 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       {/* FLOATING EXAM CART BADGE BUTTON (< 1024px)                                */}
       {/* ========================================================================= */}
-      <div className="fixed bottom-5 right-5 z-40 lg:hidden">
-        <button
-          type="button"
-          onClick={() => setIsCartDrawerOpen(true)}
-          className={`flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r ${accentClasses.gradient} text-white font-bold text-xs shadow-2xl border border-white/20 active:scale-95 transition-all`}
-        >
-          <FileText className="w-4 h-4 text-white" />
-          <span>Quiz Cart ({cartQuestionIds.length})</span>
-          <span className="px-2 py-0.5 rounded-full bg-amber-400 text-dark-950 font-bold font-mono text-[11px]">
-            {totalCartMarks} / {targetMarks}m
-          </span>
-        </button>
-      </div>
+      {!isCartDrawerOpen && mobileTab !== 'cart' && (
+        <div className="fixed bottom-5 right-5 z-40 lg:hidden">
+          <button
+            type="button"
+            onClick={() => {
+              setMobileTab('cart');
+              setIsCartDrawerOpen(true);
+            }}
+            className={`flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r ${accentClasses.gradient} text-white font-bold text-xs shadow-2xl border border-white/20 active:scale-95 transition-all`}
+          >
+            <FileText className="w-4 h-4 text-white" />
+            <span>Quiz Cart ({cartQuestionIds.length})</span>
+            <span className="px-2 py-0.5 rounded-full bg-amber-400 text-dark-950 font-bold font-mono text-[11px]">
+              {totalCartMarks} / {targetMarks}m
+            </span>
+          </button>
+        </div>
+      )}
 
-      {/* Mobile/Tablet Backdrop for Cart Drawer (< 1024px) */}
+      {/* Tablet Backdrop for Cart Drawer (768px - 1024px) */}
       {isCartDrawerOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden animate-in fade-in duration-150"
-          onClick={() => setIsCartDrawerOpen(false)}
+          className="hidden md:block lg:hidden fixed inset-0 top-14 z-40 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
+          onClick={() => {
+            setIsCartDrawerOpen(false);
+            if (mobileTab === 'cart') setMobileTab('pool');
+          }}
         />
       )}
 
@@ -1835,11 +1856,45 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       <aside
         className={`
           bg-white dark:bg-dark-900 flex flex-col shrink-0 overflow-hidden transition-transform duration-200
-          fixed inset-y-0 right-0 z-50 w-full sm:w-[26rem] border-l border-slate-200 dark:border-dark-750 shadow-2xl
+          w-full flex-1 md:flex-none
+          md:fixed md:top-14 md:bottom-0 md:right-0 md:z-50 md:w-[26rem] md:border-l md:border-slate-200 md:dark:border-dark-750 md:shadow-2xl
           lg:static lg:w-84 lg:xl:w-96 lg:z-auto lg:border-l lg:border-slate-200 lg:dark:border-dark-800 lg:shadow-none lg:translate-x-0
-          ${isCartDrawerOpen ? 'translate-x-0 flex' : 'translate-x-full lg:translate-x-0 hidden lg:flex'}
+          ${mobileTab === 'cart' ? 'flex' : 'hidden'}
+          ${isCartDrawerOpen ? 'md:translate-x-0 md:flex' : 'md:translate-x-full lg:translate-x-0 lg:flex'}
         `}
       >
+        {/* Dedicated Sticky Mobile/Tablet Navigation Header inside Cart (< 1024px) */}
+        <div className="flex lg:hidden items-center justify-between px-3 py-2.5 bg-slate-100 dark:bg-dark-950 border-b border-slate-200 dark:border-dark-800 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setIsCartDrawerOpen(false);
+              setMobileTab('pool');
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-dark-800 active:scale-95 transition-all shadow-sm"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Back to Pool</span>
+          </button>
+
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            Quiz Cart ({cartQuestionIds.length})
+          </span>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsCartDrawerOpen(false);
+              if (mobileTab === 'cart') setMobileTab('pool');
+            }}
+            aria-label="Close Quiz Cart"
+            title="Close Quiz Cart"
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white active:scale-95 transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
         {/* Cart Top Header: Title & Actions */}
         <div className="p-3 border-b border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
           <div className="flex items-center justify-between">
@@ -1867,13 +1922,6 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   </button>
                 </>
               )}
-              <button
-                type="button"
-                onClick={() => setIsCartDrawerOpen(false)}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white lg:hidden"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
           </div>
 

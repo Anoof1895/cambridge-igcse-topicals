@@ -135,19 +135,19 @@ export const HomePage: React.FC<HomePageProps> = ({
     bioPapers,
     bioMarks,
   } = useMemo(() => {
-    const mathTot = mathematicsQuestions.length || 1269;
+    const mathTot = mathematicsQuestions.length || 3936;
     const mathP = new Set(mathematicsQuestions.map((q) => q.paperId || q.id.slice(0, 14))).size || 142;
     const mathM = mathematicsQuestions.reduce((sum, q) => sum + (q.marks ?? q.total_marks ?? 0), 0) || 10650;
 
-    const physTot = physicsQuestions.length || 4136;
+    const physTot = physicsQuestions.length || 5577;
     const physP = new Set(physicsQuestions.map((q) => q.paperId || q.id.slice(0, 14))).size || 140;
     const physM = physicsQuestions.reduce((sum, q) => sum + (q.marks ?? q.total_marks ?? 0), 0) || 10230;
 
-    const chemTot = questions.length || 5712;
+    const chemTot = questions.length || 3825;
     const chemP = new Set(questions.map((q) => q.paperId || q.id.slice(0, 14))).size || 140;
     const chemM = questions.reduce((sum, q) => sum + (q.marks ?? q.total_marks ?? 0), 0) || 10041;
 
-    const bioTot = biologyQuestions.length || 1850;
+    const bioTot = biologyQuestions.length || 3743;
     const bioP = new Set(biologyQuestions.map((q) => q.paperId || q.id.slice(0, 14))).size || 80;
     const bioM = biologyQuestions.reduce((sum, q) => sum + (q.marks ?? q.total_marks ?? 0), 0) || 5400;
 
