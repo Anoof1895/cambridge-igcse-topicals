@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cambridge IGCSE Extraction Audit Report</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0B0E14; color: #E2E8F0; font-family: ui-sans-serif, system-ui, sans-serif; }
+    .glass { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); }
+  </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="glass p-6 rounded-2xl border border-white/10 shadow-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+          <span>Cambridge IGCSE Extraction Auditor</span>
+          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">Auto-Auditor</span>
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">
+          Automated QA audit across 0580 Mathematics, 0625 Physics, 0620 Chemistry, and 0610 Biology.
+        </p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="px-4 py-2 rounded-xl bg-slate-900 border border-white/10 text-right">
+          <div class="text-[10px] uppercase font-mono text-slate-400">Integrity Score</div>
+          <div class="text-xl font-bold text-emerald-400">100.0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="glass p-4 rounded-xl border border-white/10">
+        <div class="text-[11px] font-mono text-slate-400">Total Questions</div>
+        <div class="text-2xl font-black text-white mt-1">17,081</div>
+      </div>
+      <div class="glass p-4 rounded-xl border border-white/10">
+        <div class="text-[11px] font-mono text-slate-400">Clean Questions</div>
+        <div class="text-2xl font-black text-emerald-400 mt-1">17,081</div>
+      </div>
+      <div class="glass p-4 rounded-xl border border-white/10">
+        <div class="text-[11px] font-mono text-slate-400">Flagged Questions</div>
+        <div class="text-2xl font-black text-slate-500 mt-1">0</div>
+      </div>
+      <div class="glass p-4 rounded-xl border border-white/10">
+        <div class="text-[11px] font-mono text-slate-400">Audit Timestamp</div>
+        <div class="text-xs font-mono text-cyan-300 mt-2">2026-10-23 22:10:07</div>
+      </div>
+    </div>
+
+    <!-- Coverage Table -->
+    <div class="glass rounded-xl border border-white/10 overflow-hidden">
+      <div class="px-4 py-3 border-b border-white/10 font-bold text-xs uppercase tracking-wider text-slate-300">
+        Breakdown by Subject
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b border-white/10 text-[11px] font-mono uppercase text-slate-400 bg-white/[0.02]">
+              <th class="py-2.5 px-3">Subject</th>
+              <th class="py-2.5 px-3 text-right">Checked</th>
+              <th class="py-2.5 px-3 text-right">Clean</th>
+              <th class="py-2.5 px-3 text-right">Flagged</th>
+              <th class="py-2.5 px-3 text-right text-amber-300">Height &gt; 4800px (&gt;3200px &amp; &lt;6m)</th>
+              <th class="py-2.5 px-3 text-right text-indigo-300">Barcode</th>
+              <th class="py-2.5 px-3 text-right text-purple-300">Banned Text</th>
+              <th class="py-2.5 px-3 text-right text-rose-300">Missing</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+          <tr class="border-b border-white/5 text-xs font-mono">
+            <td class="py-2.5 px-3 font-bold text-white">0580 (Mathematics)</td>
+            <td class="py-2.5 px-3 text-right text-slate-300">3,936</td>
+            <td class="py-2.5 px-3 text-right text-emerald-400 font-bold">3,936</td>
+            <td class="py-2.5 px-3 text-right text-slate-500">0</td>
+            <td class="py-2.5 px-3 text-right text-amber-400">0</td>
+            <td class="py-2.5 px-3 text-right text-indigo-400">0</td>
+            <td class="py-2.5 px-3 text-right text-purple-400">0</td>
+            <td class="py-2.5 px-3 text-right text-rose-400">0</td>
+          </tr>
+        
+          <tr class="border-b border-white/5 text-xs font-mono">
+            <td class="py-2.5 px-3 font-bold text-white">0625 (Physics)</td>
+            <td class="py-2.5 px-3 text-right text-slate-300">5,577</td>
+            <td class="py-2.5 px-3 text-right text-emerald-400 font-bold">5,577</td>
+            <td class="py-2.5 px-3 text-right text-slate-500">0</td>
+            <td class="py-2.5 px-3 text-right text-amber-400">0</td>
+            <td class="py-2.5 px-3 text-right text-indigo-400">0</td>
+            <td class="py-2.5 px-3 text-right text-purple-400">0</td>
+            <td class="py-2.5 px-3 text-right text-rose-400">0</td>
+          </tr>
+        
+          <tr class="border-b border-white/5 text-xs font-mono">
+            <td class="py-2.5 px-3 font-bold text-white">0620 (Chemistry)</td>
+            <td class="py-2.5 px-3 text-right text-slate-300">3,825</td>
+            <td class="py-2.5 px-3 text-right text-emerald-400 font-bold">3,825</td>
+            <td class="py-2.5 px-3 text-right text-slate-500">0</td>
+            <td class="py-2.5 px-3 text-right text-amber-400">0</td>
+            <td class="py-2.5 px-3 text-right text-indigo-400">0</td>
+            <td class="py-2.5 px-3 text-right text-purple-400">0</td>
+            <td class="py-2.5 px-3 text-right text-rose-400">0</td>
+          </tr>
+        
+          <tr class="border-b border-white/5 text-xs font-mono">
+            <td class="py-2.5 px-3 font-bold text-white">0610 (Biology)</td>
+            <td class="py-2.5 px-3 text-right text-slate-300">3,743</td>
+            <td class="py-2.5 px-3 text-right text-emerald-400 font-bold">3,743</td>
+            <td class="py-2.5 px-3 text-right text-slate-500">0</td>
+            <td class="py-2.5 px-3 text-right text-amber-400">0</td>
+            <td class="py-2.5 px-3 text-right text-indigo-400">0</td>
+            <td class="py-2.5 px-3 text-right text-purple-400">0</td>
+            <td class="py-2.5 px-3 text-right text-rose-400">0</td>
+          </tr>
+        
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="flex items-center gap-2 flex-wrap text-xs">
+      <span class="text-slate-400 font-mono text-[11px]">Filter Issues:</span>
+      <button onclick="filterIssues('ALL')" class="filter-btn px-3 py-1 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold active">All (0)</button>
+      <button onclick="filterIssues('HEIGHT_OUTLIER')" class="filter-btn px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Height Outliers</button>
+      <button onclick="filterIssues('BARCODE_LEAK')" class="filter-btn px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Barcode Leaks</button>
+      <button onclick="filterIssues('BANNED_TEXT')" class="filter-btn px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Banned Text</button>
+      <button onclick="filterIssues('MISSING_QP')" class="filter-btn px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">Missing Assets</button>
+    </div>
+
+    <!-- Cards Grid -->
+    <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      
+      <div class="col-span-full py-16 text-center text-emerald-400">
+        <div class="text-4xl mb-2">✓</div>
+        <div class="text-lg font-bold">100% Clean! Zero extraction issues detected.</div>
+        <div class="text-xs text-slate-400 mt-1">All height bounds, barcode striping, banned texts, and asset integrity checks passed.</div>
+      </div>
+    
+    </div>
+  </div>
+
+  <!-- Image Inspection Modal -->
+  <div id="imageModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4" onclick="closeModal()">
+    <div class="relative max-w-5xl max-h-[90vh] bg-slate-900 border border-white/20 rounded-2xl p-2 overflow-auto" onclick="event.stopPropagation()">
+      <button onclick="closeModal()" class="absolute top-3 right-3 px-3 py-1 rounded bg-black/60 text-white hover:bg-rose-600 text-sm">✕ Close</button>
+      <img id="modalImg" src="" alt="Inspection" class="w-full h-auto rounded-lg"/>
+    </div>
+  </div>
+
+  <script>
+    function openModal(src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('imageModal').classList.remove('hidden');
+    }
+    function closeModal() {
+      document.getElementById('imageModal').classList.add('hidden');
+    }
+    function filterIssues(code) {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(card => {
+        if (code === 'ALL' || (card.getAttribute('data-categories') || '').includes(code)) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/30'));
+      event.target.classList.add('bg-cyan-500/20', 'text-cyan-300', 'border-cyan-500/30');
+    }
+  </script>
+</body>
+</html>

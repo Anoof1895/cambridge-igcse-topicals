@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+dist/
+build/
+.cache/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Local Exam PDFs (Never push to GitHub; stays 100% local on PC only, do NOT upload to R2)
+raw_papers/
+*.pdf
+*.zip
+
+# Extracted Crops (Never push to GitHub; uploaded to Cloudflare R2 CDN)
+output/
+frontend/public/output/
+
+# Python Virtual Environments & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# OS / Editor Junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Ensure datasets are tracked
+!frontend/public/dataset_*.json
+!frontend/public/dataset.json

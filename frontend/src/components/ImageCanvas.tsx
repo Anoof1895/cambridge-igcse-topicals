@@ -1,0 +1,1492 @@
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { 
+  ZoomIn, 
+  ZoomOut, 
+  RotateCcw, 
+  FileQuestion,
+  Maximize2,
+  X,
+  Pencil,
+  PenLine,
+  Highlighter,
+  Eraser,
+  Trash2,
+  Type,
+  Undo2
+} from 'lucide-react';
+import { Subject } from '../types';
+import { getFullImageUrl, getLocalImageUrl } from '../utils/imageUrl';
+import {
+  handleSpotlightMove,
+  handleSpotlightLeave,
+  getSubjectSpotlightStyle,
+} from '../utils/spotlight';
+
+// Module-scoped in-memory LRU cache for annotations across question navigation & view mode toggles
+// Kept purely in RAM (max 25 questions per session); zero localStorage, sessionStorage, or backend persistence
+const MAX_CACHE_ENTRIES = 25;
+const inMemoryDrawingCache = new Map<string, HTMLCanvasElement>();
+
+function touchAndEnforceLRU<K, V>(map: Map<K, V>, key: K, value: V, limit: number = MAX_CACHE_ENTRIES) {
+  if (map.has(key)) {
+    map.delete(key);
+  }
+  map.set(key, value);
+  while (map.size > limit) {
+    const firstKey = map.keys().next().value;
+    if (firstKey !== undefined) {
+      map.delete(firstKey);
+    } else {
+      break;
+    }
+  }
+}
+
+export interface TextAnnotation {
+  id: string;
+  text: string;
+  xPercent: number; // 0 to 100 (% of image width)
+  yPercent: number; // 0 to 100 (% of image height)
+  fontSize: number; // base font size in px
+}
+
+const inMemoryTextCache = new Map<string, TextAnnotation[]>();
+
+type ToolType = 'pen' | 'highlighter' | 'eraser' | 'text';
+type BrushSizeTier = 'fine' | 'medium' | 'bold';
+
+const SIZE_CONFIG: Record<BrushSizeTier, {
+  label: string;
+  penWidth: number;
+  highlighterWidth: number;
+  eraserWidth: number;
+  fontSize: number;
+  dotClass: string;
+}> = {
+  fine: {
+    label: 'Fine',
+    penWidth: 2,
+    highlighterWidth: 12,
+    eraserWidth: 14,
+    fontSize: 13,
+    dotClass: 'w-1.5 h-1.5',
+  },
+  medium: {
+    label: 'Medium',
+    penWidth: 4,
+    highlighterWidth: 20,
+    eraserWidth: 22,
+    fontSize: 16,
+    dotClass: 'w-2.5 h-2.5',
+  },
+  bold: {
+    label: 'Bold',
+    penWidth: 7,
+    highlighterWidth: 30,
+    eraserWidth: 32,
+    fontSize: 20,
+    dotClass: 'w-3.5 h-3.5',
+  },
+};
+
+const HIGHLIGHTER_CURSOR = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><polygon points='4,2 14,2 10,18 0,18' fill='rgba(255,235,59,0.3)' stroke='%23facc15' stroke-width='1.5' stroke-dasharray='2,2'/></svg>") 2 2, default`;
+
+const ERASER_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23f43f5e' stroke-width='2' stroke-dasharray='3 2'/%3E%3Ccircle cx='12' cy='12' r='1.5' fill='%23f43f5e'/%3E%3C/svg%3E") 12 12, crosshair`;
+
+function getSubjectPenColor(activeSubject?: Subject, badgeColor?: string): string {
+  if (activeSubject === 'mathematics' || badgeColor === 'amber') return '#F59E0B'; // Amber
+  if (activeSubject === 'physics' || badgeColor === 'indigo') return '#38BDF8'; // Sky/Indigo
+  if (activeSubject === 'biology' || badgeColor === 'emerald') return '#10B981'; // Emerald
+  return '#00E5FF'; // Cyan (Chemistry default)
+}
+
+function formatCitationFromId(questionId?: string, explicitCitation?: string): string | null {
+  if (explicitCitation && explicitCitation.trim()) return explicitCitation.trim();
+  if (!questionId) return null;
+  const cleanId = questionId.replace(/-ms$/i, '');
+  // e.g. 0625_s24_qp_41_q03 -> 0625/41/M/J/24 Q3
+  const parts = cleanId.split('_');
+  if (parts.length >= 4) {
+    const subj = parts[0];
+    const seriesYr = parts[1]; // e.g. s24, w23, m25
+    const paperVar = parts[3]; // e.g. 41, 22
+    const qRaw = parts[4] ? parts[4].replace(/^q0*/i, '') : '';
+    const seasonCode = seriesYr?.[0]?.toLowerCase();
+    const yr = seriesYr?.slice(1) || '';
+    const seasonStr =
+      seasonCode === 's'
+        ? 'M/J'
+        : seasonCode === 'w'
+        ? 'O/N'
+        : seasonCode === 'm'
+        ? 'F/M'
+        : (seasonCode || '').toUpperCase();
+    return `${subj}/${paperVar}/${seasonStr}/${yr}${qRaw ? ` Q${qRaw}` : ''}`;
+  }
+  return cleanId;
+}
+
+interface ImageCanvasProps {
+  src: string | null;
+  title: string;
+  badgeText?: string;
+  badgeColor?: 'cyan' | 'emerald' | 'indigo' | 'amber' | 'purple';
+  extraBadge?: React.ReactNode;
+  placeholderTitle?: string;
+  placeholderMessage?: string;
+  children?: React.ReactNode;
+  enableAnnotation?: boolean;
+  questionId?: string;
+  paperCitation?: string;
+  activeSubject?: Subject;
+}
+
+export const ImageCanvas: React.FC<ImageCanvasProps> = ({
+  src,
+  title,
+  badgeText,
+  badgeColor = 'cyan',
+  extraBadge,
+  placeholderTitle = 'No image available',
+  placeholderMessage = 'Mark scheme for this question is not available in the sample paper.',
+  children,
+  enableAnnotation = false,
+  questionId,
+  paperCitation,
+  activeSubject,
+}) => {
+  const [zoom, setZoom] = useState(1);
+  const [hasError, setHasError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxZoom, setLightboxZoom] = useState(1.2);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [useLocalFallback, setUseLocalFallback] = useState(false);
+  const cdnSrc = getFullImageUrl(src);
+  const localSrc = getLocalImageUrl(src);
+  const baseResolvedSrc = useLocalFallback ? localSrc : cdnSrc;
+  const resolvedSrc = useMemo(() => {
+    if (!baseResolvedSrc) return '';
+    if (retryCount === 0) return baseResolvedSrc;
+    const sep = baseResolvedSrc.includes('?') ? '&' : '?';
+    return `${baseResolvedSrc}${sep}retry=${retryCount}`;
+  }, [baseResolvedSrc, retryCount]);
+
+  const citationDisplay = useMemo(
+    () => formatCitationFromId(questionId, paperCitation),
+    [questionId, paperCitation]
+  );
+
+  const handleRetryImage = useCallback(() => {
+    setHasError(false);
+    setUseLocalFallback(false);
+    setIsImageLoading(true);
+    setRetryCount((prev) => prev + 1);
+  }, []);
+
+  // Annotation Tooling State
+  const [isAnnotating, setIsAnnotating] = useState<boolean>(false);
+  const [currentTool, setCurrentTool] = useState<ToolType>('pen');
+  const [brushSize, setBrushSize] = useState<BrushSizeTier>('fine');
+  const brushSizeRef = useRef<BrushSizeTier>(brushSize);
+  brushSizeRef.current = brushSize;
+
+  const defaultSubjectColor = useMemo(
+    () => getSubjectPenColor(activeSubject, badgeColor),
+    [activeSubject, badgeColor]
+  );
+  const [penColor, setPenColor] = useState<string>(defaultSubjectColor);
+  const penColorRef = useRef<string>(penColor);
+  penColorRef.current = penColor;
+
+  useEffect(() => {
+    setPenColor(defaultSubjectColor);
+  }, [defaultSubjectColor]);
+
+  const [textAnnotations, setTextAnnotations] = useState<TextAnnotation[]>(() => {
+    const cacheKey = questionId || src;
+    return cacheKey && inMemoryTextCache.has(cacheKey) ? inMemoryTextCache.get(cacheKey)! : [];
+  });
+  const [editingItem, setEditingItem] = useState<TextAnnotation | null>(null);
+  const editingItemRef = useRef<TextAnnotation | null>(null);
+  editingItemRef.current = editingItem;
+  const [editingInLightbox, setEditingInLightbox] = useState<boolean>(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const imgRef = useRef<HTMLImageElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const lightboxImgRef = useRef<HTMLImageElement>(null);
+  const lightboxCanvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef<boolean>(false);
+  const lastPosRef = useRef<{ x: number; y: number } | null>(null);
+  const prevQuestionIdRef = useRef<string | undefined>(questionId);
+  const strokeHistoryRef = useRef<ImageData[]>([]);
+  const [canUndo, setCanUndo] = useState<boolean>(false);
+
+  const handleImageError = () => {
+    setIsImageLoading(false);
+    if (!useLocalFallback && localSrc && localSrc !== cdnSrc) {
+      setUseLocalFallback(true);
+    } else {
+      setHasError(true);
+    }
+  };
+
+  // Restore drawing from in-memory LRU cache (or clear canvas if unannotated)
+  const restoreFromCache = useCallback((targetCanvas: HTMLCanvasElement | null) => {
+    if (!targetCanvas) return;
+    const ctx = targetCanvas.getContext('2d');
+    if (!ctx) return;
+
+    const cacheKey = questionId || src;
+    const offscreen = cacheKey ? inMemoryDrawingCache.get(cacheKey) : undefined;
+    if (!offscreen || offscreen.width === 0 || offscreen.height === 0) {
+      ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+      return;
+    }
+
+    if (cacheKey) {
+      touchAndEnforceLRU(inMemoryDrawingCache, cacheKey, offscreen);
+    }
+
+    if (targetCanvas.width !== offscreen.width || targetCanvas.height !== offscreen.height) {
+      targetCanvas.width = offscreen.width;
+      targetCanvas.height = offscreen.height;
+    }
+    ctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+    ctx.drawImage(offscreen, 0, 0);
+  }, [questionId, src]);
+
+  // Synchronize drawn bitmap to in-memory offscreen LRU cache and other canvas (main or lightbox)
+  const syncDrawingCanvases = useCallback((sourceCanvas: HTMLCanvasElement) => {
+    const cacheKey = questionId || src;
+    if (!cacheKey || sourceCanvas.width === 0 || sourceCanvas.height === 0) return;
+
+    let offscreen = inMemoryDrawingCache.get(cacheKey);
+    if (!offscreen) {
+      offscreen = document.createElement('canvas');
+    }
+    if (offscreen.width !== sourceCanvas.width || offscreen.height !== sourceCanvas.height) {
+      offscreen.width = sourceCanvas.width;
+      offscreen.height = sourceCanvas.height;
+    }
+    const offCtx = offscreen.getContext('2d');
+    if (offCtx) {
+      offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
+      offCtx.drawImage(sourceCanvas, 0, 0);
+    }
+    touchAndEnforceLRU(inMemoryDrawingCache, cacheKey, offscreen);
+
+    const otherCanvas = sourceCanvas === canvasRef.current ? lightboxCanvasRef.current : canvasRef.current;
+    if (otherCanvas) {
+      if (otherCanvas.width !== sourceCanvas.width || otherCanvas.height !== sourceCanvas.height) {
+        otherCanvas.width = sourceCanvas.width;
+        otherCanvas.height = sourceCanvas.height;
+      }
+      const otherCtx = otherCanvas.getContext('2d');
+      if (otherCtx) {
+        otherCtx.clearRect(0, 0, otherCanvas.width, otherCanvas.height);
+        otherCtx.drawImage(sourceCanvas, 0, 0);
+      }
+    }
+  }, [questionId, src]);
+
+  // Undo last drawn stroke
+  const handleUndo = useCallback(() => {
+    if (strokeHistoryRef.current.length === 0) return;
+    const previousSnapshot = strokeHistoryRef.current.pop();
+    if (!previousSnapshot) return;
+
+    setCanUndo(strokeHistoryRef.current.length > 0);
+
+    const activeCanvas = isLightboxOpen ? lightboxCanvasRef.current : canvasRef.current;
+    if (activeCanvas) {
+      const ctx = activeCanvas.getContext('2d');
+      if (ctx) {
+        ctx.putImageData(previousSnapshot, 0, 0);
+        syncDrawingCanvases(activeCanvas);
+      }
+    }
+  }, [isLightboxOpen, syncDrawingCanvases]);
+
+  // Commit and save text annotation
+  const commitEditingText = useCallback(() => {
+    const current = editingItemRef.current;
+    if (!current) return;
+
+    const trimmed = current.text.trim();
+    const cacheKey = questionId || src;
+
+    if (trimmed.length === 0) {
+      setTextAnnotations((prev) => {
+        const next = prev.filter((item) => item.id !== current.id);
+        if (cacheKey) {
+          touchAndEnforceLRU(inMemoryTextCache, cacheKey, next);
+        }
+        return next;
+      });
+    } else {
+      setTextAnnotations((prev) => {
+        const idx = prev.findIndex((item) => item.id === current.id);
+        let next: TextAnnotation[];
+        if (idx >= 0) {
+          next = prev.map((item) => (item.id === current.id ? { ...current, text: current.text } : item));
+        } else {
+          next = [...prev, { ...current, text: current.text }];
+        }
+        if (cacheKey) {
+          touchAndEnforceLRU(inMemoryTextCache, cacheKey, next);
+        }
+        return next;
+      });
+    }
+
+    setEditingItem(null);
+    editingItemRef.current = null;
+  }, [questionId, src]);
+
+  const deleteAnnotation = useCallback((id: string) => {
+    if (editingItemRef.current?.id === id) {
+      setEditingItem(null);
+      editingItemRef.current = null;
+    }
+    setTextAnnotations((prev) => {
+      const next = prev.filter((item) => item.id !== id);
+      const cacheKey = questionId || src;
+      if (cacheKey) {
+        touchAndEnforceLRU(inMemoryTextCache, cacheKey, next);
+      }
+      return next;
+    });
+  }, [questionId, src]);
+
+  const startEditing = useCallback((item: TextAnnotation, isLightbox: boolean) => {
+    if (editingItemRef.current && editingItemRef.current.id !== item.id) {
+      commitEditingText();
+    }
+    const copy = { ...item };
+    editingItemRef.current = copy;
+    setEditingInLightbox(isLightbox);
+    setEditingItem(copy);
+  }, [commitEditingText]);
+
+  const handleCanvasClickForText = useCallback((
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    isLightbox: boolean
+  ) => {
+    const canvas = isLightbox ? lightboxCanvasRef.current : canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+
+    let clientX = 0;
+    let clientY = 0;
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if ('clientX' in e) {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    } else {
+      return;
+    }
+
+    if (editingItemRef.current) {
+      commitEditingText();
+    }
+
+    // Relative percentage coordinates within the canvas/image bounds
+    const xPercent = Math.max(0, Math.min(95, ((clientX - rect.left) / rect.width) * 100));
+    const yPercent = Math.max(0, Math.min(95, ((clientY - rect.top) / rect.height) * 100));
+    const config = SIZE_CONFIG[brushSizeRef.current];
+
+    const newItem: TextAnnotation = {
+      id: `text_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      text: '',
+      xPercent,
+      yPercent,
+      fontSize: config.fontSize,
+    };
+    editingItemRef.current = newItem;
+    setEditingInLightbox(isLightbox);
+    setEditingItem(newItem);
+  }, [commitEditingText]);
+
+  const switchTool = (tool: ToolType) => {
+    if (editingItemRef.current) {
+      commitEditingText();
+    }
+    setCurrentTool(tool);
+  };
+
+  const toggleAnnotating = () => {
+    if (isAnnotating && editingItemRef.current) {
+      commitEditingText();
+    }
+    setIsAnnotating((prev) => !prev);
+  };
+
+  const handleBrushSizeChange = (tier: BrushSizeTier) => {
+    setBrushSize(tier);
+    if (editingItemRef.current) {
+      const updated = {
+        ...editingItemRef.current,
+        fontSize: SIZE_CONFIG[tier].fontSize,
+      };
+      editingItemRef.current = updated;
+      setEditingItem(updated);
+    }
+  };
+
+  const MAX_CANVAS_PIXELS = 5_000_000;
+
+  // Sync main canvas buffer width & height to natural image dimensions (capped at 5 MP to prevent memory spikes)
+  const syncCanvasDimensions = useCallback(() => {
+    if (isDrawingRef.current) return;
+    const img = imgRef.current;
+    const canvas = canvasRef.current;
+    if (!img || !canvas) return;
+
+    const w = img.naturalWidth || img.clientWidth;
+    const h = img.naturalHeight || img.clientHeight;
+    if (w > 0 && h > 0) {
+      let targetW = w;
+      let targetH = h;
+      const totalPixels = w * h;
+      if (totalPixels > MAX_CANVAS_PIXELS) {
+        const scale = Math.sqrt(MAX_CANVAS_PIXELS / totalPixels);
+        targetW = Math.round(w * scale);
+        targetH = Math.round(h * scale);
+      }
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      restoreFromCache(canvas);
+    }
+  }, [restoreFromCache]);
+
+  const syncCanvasDimensionsRef = useRef(syncCanvasDimensions);
+  syncCanvasDimensionsRef.current = syncCanvasDimensions;
+
+  const handleClearCanvas = () => {
+    setEditingItem(null);
+    editingItemRef.current = null;
+    setTextAnnotations([]);
+    strokeHistoryRef.current = [];
+    setCanUndo(false);
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    }
+    if (lightboxCanvasRef.current) {
+      const ctx = lightboxCanvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, lightboxCanvasRef.current.width, lightboxCanvasRef.current.height);
+      }
+    }
+    const cacheKey = questionId || src;
+    if (cacheKey) {
+      inMemoryDrawingCache.delete(cacheKey);
+      inMemoryTextCache.delete(cacheKey);
+    }
+  };
+
+  // Preserve annotations in the 25-question LRU cache across Prev/Next question navigation;
+  // only reset the live canvas view and restore any cached annotations for the incoming question.
+  useEffect(() => {
+    if (prevQuestionIdRef.current && prevQuestionIdRef.current !== questionId) {
+      strokeHistoryRef.current = [];
+      setCanUndo(false);
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+      }
+      if (lightboxCanvasRef.current) {
+        const ctx = lightboxCanvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, lightboxCanvasRef.current.width, lightboxCanvasRef.current.height);
+        }
+      }
+      setEditingItem(null);
+      editingItemRef.current = null;
+    }
+    prevQuestionIdRef.current = questionId;
+    syncCanvasDimensionsRef.current();
+
+    const cacheKey = questionId || src;
+    if (cacheKey && inMemoryTextCache.has(cacheKey)) {
+      const savedNotes = inMemoryTextCache.get(cacheKey) || [];
+      touchAndEnforceLRU(inMemoryTextCache, cacheKey, savedNotes);
+      setTextAnnotations(savedNotes);
+    } else {
+      setTextAnnotations([]);
+    }
+  }, [questionId, src]);
+
+  // Auto-focus active text annotation input
+  useEffect(() => {
+    if (editingItem && inputRef.current) {
+      const el = inputRef.current;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  }, [editingItem]);
+
+  // Reset per-image view state only when the raw src prop changes
+  useEffect(() => {
+    setHasError(false);
+    setUseLocalFallback(false);
+    setRetryCount(0);
+    setZoom(1);
+    strokeHistoryRef.current = [];
+    setCanUndo(false);
+  }, [src]);
+
+  // Dedicated image loading effect: depends strictly on resolvedSrc (never on questionId, zoom, or resize callbacks)
+  useEffect(() => {
+    if (!resolvedSrc) {
+      setIsImageLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setHasError(false);
+
+    const probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = () => {
+      if (cancelled) return;
+      setHasError(false);
+      setIsImageLoading(false);
+      requestAnimationFrame(() => {
+        if (!cancelled) {
+          syncCanvasDimensionsRef.current();
+        }
+      });
+    };
+    probe.onerror = () => {
+      if (cancelled) return;
+      setIsImageLoading(false);
+    };
+    probe.src = resolvedSrc;
+
+    // Synchronously handle already-cached / preloaded images on initial mount
+    const domImg = imgRef.current;
+    if (
+      (probe.complete && probe.naturalWidth > 0) ||
+      (domImg && domImg.complete && domImg.naturalWidth > 0 && domImg.getAttribute('src') === resolvedSrc)
+    ) {
+      setHasError(false);
+      setIsImageLoading(false);
+      syncCanvasDimensionsRef.current();
+    } else {
+      setIsImageLoading(true);
+    }
+
+    return () => {
+      cancelled = true;
+      probe.onload = null;
+      probe.onerror = null;
+    };
+  }, [resolvedSrc]);
+
+  // ResizeObserver strictly redraws/syncs canvas dimensions without ever resetting isImageLoading
+  useEffect(() => {
+    const imgEl = imgRef.current;
+    if (!imgEl || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      syncCanvasDimensionsRef.current();
+    });
+    observer.observe(imgEl);
+    return () => observer.disconnect();
+  }, [resolvedSrc]);
+
+  const handleImageLoad = () => {
+    setHasError(false);
+    setIsImageLoading(false);
+    syncCanvasDimensionsRef.current();
+  };
+
+  const handleLightboxImageLoad = () => {
+    const img = lightboxImgRef.current;
+    const canvas = lightboxCanvasRef.current;
+    if (!img || !canvas) return;
+
+    const w = img.naturalWidth || img.clientWidth;
+    const h = img.naturalHeight || img.clientHeight;
+    if (w > 0 && h > 0) {
+      let targetW = w;
+      let targetH = h;
+      const totalPixels = w * h;
+      if (totalPixels > MAX_CANVAS_PIXELS) {
+        const scale = Math.sqrt(MAX_CANVAS_PIXELS / totalPixels);
+        targetW = Math.round(w * scale);
+        targetH = Math.round(h * scale);
+      }
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      restoreFromCache(canvas);
+    }
+  };
+
+  const openLightbox = () => {
+    if (editingItemRef.current) {
+      commitEditingText();
+    }
+    setLightboxZoom(1.2);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    if (editingItemRef.current) {
+      commitEditingText();
+    }
+    setIsLightboxOpen(false);
+  };
+
+  useEffect(() => {
+    if (isLightboxOpen) {
+      const timer = setTimeout(() => {
+        handleLightboxImageLoad();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isLightboxOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isLightboxOpen && !editingItemRef.current) {
+        closeLightbox();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        if (!editingItemRef.current && isAnnotating && strokeHistoryRef.current.length > 0) {
+          e.preventDefault();
+          handleUndo();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, isAnnotating, handleUndo]);
+
+  // Map mouse or touch coordinate to high-res canvas coordinate
+  const getCanvasCoords = (
+    e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>,
+    canvas: HTMLCanvasElement
+  ) => {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+
+    let clientX = 0;
+    let clientY = 0;
+
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if ('clientX' in e) {
+      clientX = (e as React.MouseEvent).clientX;
+      clientY = (e as React.MouseEvent).clientY;
+    } else {
+      return null;
+    }
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+      scale: scaleX,
+    };
+  };
+
+  const startDrawing = (coords: { x: number; y: number; scale: number }, canvas: HTMLCanvasElement) => {
+    if (currentTool === 'text') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Snapshot current canvas state before stroke begins for Undo
+    try {
+      if (canvas.width > 0 && canvas.height > 0) {
+        const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        strokeHistoryRef.current.push(snapshot);
+        if (strokeHistoryRef.current.length > 10) {
+          strokeHistoryRef.current.shift();
+        }
+        setCanUndo(true);
+      }
+    } catch {
+      // Ignore potential security/taint issues with external images
+    }
+
+    isDrawingRef.current = true;
+    lastPosRef.current = { x: coords.x, y: coords.y };
+
+    const config = SIZE_CONFIG[brushSizeRef.current];
+
+    ctx.save();
+    if (currentTool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = config.eraserWidth * coords.scale;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+    } else if (currentTool === 'highlighter') {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = config.highlighterWidth * coords.scale;
+      ctx.strokeStyle = 'rgba(255, 235, 59, 0.35)';
+      ctx.fillStyle = 'rgba(255, 235, 59, 0.35)';
+    } else {
+      // Pen: Subject-reactive ink
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = config.penWidth * coords.scale;
+      ctx.strokeStyle = penColorRef.current;
+      ctx.fillStyle = penColorRef.current;
+    }
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Immediate point stamp
+    ctx.beginPath();
+    const radius = Math.max(1, ctx.lineWidth / 2);
+    ctx.arc(coords.x, coords.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  };
+
+  const drawMove = (coords: { x: number; y: number; scale: number }, canvas: HTMLCanvasElement) => {
+    if (!isDrawingRef.current || !lastPosRef.current || currentTool === 'text') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const config = SIZE_CONFIG[brushSizeRef.current];
+
+    ctx.save();
+    if (currentTool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = config.eraserWidth * coords.scale;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+    } else if (currentTool === 'highlighter') {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = config.highlighterWidth * coords.scale;
+      ctx.strokeStyle = 'rgba(255, 235, 59, 0.35)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.lineWidth = config.penWidth * coords.scale;
+      ctx.strokeStyle = penColorRef.current;
+    }
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(lastPosRef.current.x, lastPosRef.current.y);
+    ctx.lineTo(coords.x, coords.y);
+    ctx.stroke();
+    ctx.restore();
+
+    lastPosRef.current = { x: coords.x, y: coords.y };
+  };
+
+  const stopDrawing = (canvas: HTMLCanvasElement | null) => {
+    if (isDrawingRef.current) {
+      isDrawingRef.current = false;
+      lastPosRef.current = null;
+      if (canvas) {
+        syncDrawingCanvases(canvas);
+      }
+    }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>, isLightbox: boolean) => {
+    if (!isAnnotating) return;
+    if (currentTool === 'text') {
+      e.preventDefault();
+      handleCanvasClickForText(e, isLightbox);
+      return;
+    }
+    const canvas = isLightbox ? lightboxCanvasRef.current : canvasRef.current;
+    if (!canvas) return;
+    e.preventDefault();
+    const coords = getCanvasCoords(e, canvas);
+    if (coords) startDrawing(coords, canvas);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>, isLightbox: boolean) => {
+    if (!isAnnotating || !isDrawingRef.current || currentTool === 'text') return;
+    const canvas = isLightbox ? lightboxCanvasRef.current : canvasRef.current;
+    if (!canvas) return;
+    e.preventDefault();
+    const coords = getCanvasCoords(e, canvas);
+    if (coords) drawMove(coords, canvas);
+  };
+
+  const handleMouseUp = (isLightbox: boolean) => {
+    if (!isAnnotating) return;
+    const canvas = isLightbox ? lightboxCanvasRef.current : canvasRef.current;
+    stopDrawing(canvas);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>, isLightbox: boolean) => {
+    if (!isAnnotating) return;
+    if (currentTool === 'text') {
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        handleCanvasClickForText(e, isLightbox);
+      }
+      return;
+    }
+    const canvas = isLightbox ? lightboxCanvasRef.current : canvasRef.current;
+    if (!canvas) return;
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      const coords = getCanvasCoords(e, canvas);
+      if (coords) startDrawing(coords, canvas);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>, isLightbox: boolean) => {
+    if (!isAnnotating || !isDrawingRef.current || currentTool === 'text') return;
+    const canvas = isLightbox ? lightboxCanvasRef.current : canvasRef.current;
+    if (!canvas) return;
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      const coords = getCanvasCoords(e, canvas);
+      if (coords) drawMove(coords, canvas);
+    }
+  };
+
+  const handleTouchEnd = (isLightbox: boolean) => {
+    if (!isAnnotating) return;
+    const canvas = isLightbox ? lightboxCanvasRef.current : canvasRef.current;
+    stopDrawing(canvas);
+  };
+
+  const getCanvasCursor = () => {
+    if (!isAnnotating) return 'default';
+    if (currentTool === 'pen') return 'default';
+    if (currentTool === 'text') return 'text';
+    if (currentTool === 'highlighter') return HIGHLIGHTER_CURSOR;
+    if (currentTool === 'eraser') return ERASER_CURSOR;
+    return 'default';
+  };
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
+  const handleResetZoom = () => setZoom(1);
+
+  const getBadgeClass = () => {
+    switch (badgeColor) {
+      case 'emerald':
+        return 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
+      case 'indigo':
+        return 'bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30';
+      case 'amber':
+        return 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30';
+      case 'purple':
+        return 'bg-purple-500/15 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30';
+      default:
+        return 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30';
+    }
+  };
+
+  // Shared Floating Annotation Toolbar Renderer
+  const renderAnnotationToolbar = () => (
+    <div className="flex items-center gap-1 sm:gap-1.5 surface-glass px-2.5 sm:px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10 shadow-2xl select-none transition-all flex-wrap justify-center sm:flex-nowrap">
+      {/* Toggle Annotate: On/Off */}
+      <button
+        type="button"
+        onClick={toggleAnnotating}
+        title={isAnnotating ? 'Turn off annotation' : 'Turn on annotation overlay'}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all active:scale-[0.98] ${
+          isAnnotating
+            ? 'bg-cyan-500 text-white shadow-sm shadow-cyan-500/30'
+            : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/[0.1] border border-transparent dark:border-white/[0.06]'
+        }`}
+      >
+        <PenLine className="w-3.5 h-3.5" />
+        <span>{isAnnotating ? 'Annotating' : 'Annotate'}</span>
+      </button>
+
+      {isAnnotating && (
+        <>
+          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 mx-0.5" />
+
+          {/* Pen */}
+          <button
+            type="button"
+            onClick={() => switchTool('pen')}
+            title={`Pen (${SIZE_CONFIG[brushSize].penWidth}px)`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+              currentTool === 'pen'
+                ? 'bg-slate-200 dark:bg-white/[0.12] text-slate-900 dark:text-white border border-slate-300 dark:border-white/20 font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+            }`}
+          >
+            <span className="w-2.5 h-2.5 rounded-full shadow-sm inline-block" style={{ backgroundColor: penColor }} />
+            <span>Pen</span>
+          </button>
+
+          {/* Subject Reactive Palette Swatches */}
+          {currentTool === 'pen' && (
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/[0.05] p-0.5 px-1.5 rounded-full border border-slate-200/80 dark:border-white/10">
+              {[defaultSubjectColor, '#FFFFFF', '#FACC15', '#F43F5E'].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setPenColor(c)}
+                  className={`w-3.5 h-3.5 rounded-full transition-transform ${
+                    penColor === c ? 'scale-125 ring-2 ring-white/60 shadow-sm' : 'opacity-70 hover:opacity-100 hover:scale-110'
+                  }`}
+                  style={{ backgroundColor: c }}
+                  title={`Select ink color: ${c}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Highlighter */}
+          <button
+            type="button"
+            onClick={() => switchTool('highlighter')}
+            title={`Highlighter (${SIZE_CONFIG[brushSize].highlighterWidth}px Yellow)`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+              currentTool === 'highlighter'
+                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+            }`}
+          >
+            <Highlighter className="w-3.5 h-3.5 text-amber-500" />
+            <span>Highlight</span>
+          </button>
+
+          {/* Text Tool */}
+          <button
+            type="button"
+            onClick={() => switchTool('text')}
+            title={`Text (${SIZE_CONFIG[brushSize].fontSize}px Font)`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+              currentTool === 'text'
+                ? 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+            }`}
+          >
+            <Type className="w-3.5 h-3.5 text-cyan-500" />
+            <span>Text</span>
+          </button>
+
+          {/* Eraser */}
+          <button
+            type="button"
+            onClick={() => switchTool('eraser')}
+            title={`Eraser (${SIZE_CONFIG[brushSize].eraserWidth}px)`}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+              currentTool === 'eraser'
+                ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/40 font-semibold'
+                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+            }`}
+          >
+            <Eraser className="w-3.5 h-3.5 text-rose-500" />
+            <span>Eraser</span>
+          </button>
+
+          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 mx-0.5" />
+
+          {/* 3-Tier Size Picker */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/[0.05] p-0.5 rounded-full border border-slate-200/80 dark:border-white/10">
+            {(['fine', 'medium', 'bold'] as const).map((tier) => {
+              const isSelected = brushSize === tier;
+              const config = SIZE_CONFIG[tier];
+              return (
+                <button
+                  key={tier}
+                  type="button"
+                  onClick={() => handleBrushSizeChange(tier)}
+                  title={`${config.label} (${config.penWidth}px Pen / ${config.fontSize}px Font)`}
+                  className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                    isSelected
+                      ? 'bg-white dark:bg-slate-800 shadow-sm border border-slate-300 dark:border-white/15 scale-105'
+                      : 'hover:bg-slate-200/60 dark:hover:bg-white/10 opacity-60 hover:opacity-100'
+                  }`}
+                >
+                  <span
+                    className={`rounded-full transition-colors ${
+                      isSelected
+                        ? currentTool === 'eraser'
+                          ? 'bg-rose-500'
+                          : currentTool === 'highlighter'
+                            ? 'bg-amber-400'
+                            : 'bg-cyan-500'
+                        : 'bg-slate-500 dark:bg-slate-400'
+                    } ${config.dotClass}`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 mx-0.5" />
+
+          {/* Undo Button */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleUndo}
+            disabled={!canUndo}
+            title="Undo drawing stroke (Ctrl+Z)"
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+              canUndo
+                ? 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                : 'text-slate-400 dark:text-slate-600 opacity-40 cursor-not-allowed'
+            }`}
+          >
+            <Undo2 className="w-3.5 h-3.5" />
+            <span>Undo</span>
+          </button>
+
+          {/* Clear Button */}
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleClearCanvas}
+            title="Clear all annotations on this question"
+            className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all active:scale-[0.98]"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear</span>
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  // Shared Text Annotations & Auto-Expanding Inline Input Renderer
+  const renderTextAnnotations = (isLightbox: boolean) => {
+    if (!enableAnnotation) return null;
+
+    const activeImg = isLightbox ? lightboxImgRef.current : imgRef.current;
+    const currentWidth = activeImg?.clientWidth || (isLightbox ? 900 : 700);
+    const scaleFactor = Math.max(0.6, Math.min(2.0, currentWidth / 700));
+
+    return (
+      <>
+        {textAnnotations.map((item) => {
+          if (editingItem?.id === item.id) return null;
+          const displayFontSize = Math.round(item.fontSize * scaleFactor);
+          return (
+            <div
+              key={item.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isAnnotating) {
+                  if (currentTool === 'eraser') {
+                    deleteAnnotation(item.id);
+                  } else {
+                    startEditing(item, isLightbox);
+                  }
+                }
+              }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                if (isAnnotating) {
+                  startEditing(item, isLightbox);
+                }
+              }}
+              className={`absolute z-20 font-sans select-none whitespace-pre leading-tight transition-all ${
+                isAnnotating
+                  ? currentTool === 'eraser'
+                    ? 'cursor-pointer hover:line-through hover:opacity-60'
+                    : 'cursor-pointer hover:border-b hover:border-current'
+                  : 'pointer-events-none'
+              }`}
+              style={{
+                left: `${item.xPercent}%`,
+                top: `${item.yPercent}%`,
+                fontSize: `${displayFontSize}px`,
+                color: penColor,
+              }}
+              title={
+                isAnnotating
+                  ? currentTool === 'eraser'
+                    ? 'Click to delete note'
+                    : 'Click or double-click to edit note'
+                  : undefined
+              }
+            >
+              {item.text}
+            </div>
+          );
+        })}
+
+        {/* Dynamic Auto-Expanding Inline Input while Typing */}
+        {isAnnotating && editingItem && editingInLightbox === isLightbox && (
+          <input
+            ref={inputRef}
+            type="text"
+            value={editingItem.text}
+            onChange={(e) => {
+              const newText = e.target.value;
+              setEditingItem((prev) => (prev ? { ...prev, text: newText } : null));
+              if (editingItemRef.current) {
+                editingItemRef.current.text = newText;
+              }
+            }}
+            onBlur={commitEditingText}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
+                e.preventDefault();
+                commitEditingText();
+              } else if (e.key === 'Escape') {
+                e.stopPropagation();
+                e.nativeEvent.stopImmediatePropagation();
+                e.preventDefault();
+                commitEditingText();
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            placeholder="Type note..."
+            autoFocus
+            className="absolute z-30 bg-transparent border-b outline-none p-0 m-0 font-sans shadow-none whitespace-pre text-base"
+            style={{
+              left: `${editingItem.xPercent}%`,
+              top: `${editingItem.yPercent}%`,
+              fontSize: `${Math.round(editingItem.fontSize * scaleFactor)}px`,
+              width: `${Math.max(8, editingItem.text.length + 1)}ch`,
+              maxWidth: '90%',
+              color: penColor,
+              borderColor: penColor,
+            }}
+          />
+        )}
+      </>
+    );
+  };
+
+  const ambientGlowClass =
+    badgeColor === 'amber'
+      ? 'from-amber-500/10 via-amber-500/5 to-transparent'
+      : badgeColor === 'indigo'
+      ? 'from-indigo-500/12 via-indigo-500/5 to-transparent'
+      : 'from-cyan-500/10 via-sky-500/5 to-transparent';
+
+  return (
+    <div className="flex-1 flex flex-col h-full w-full min-h-[300px] bg-slate-100/60 dark:bg-dark-950/80 overflow-hidden transition-colors">
+      {/* Canvas Header */}
+      <div
+        onPointerMove={handleSpotlightMove}
+        onPointerLeave={handleSpotlightLeave}
+        style={getSubjectSpotlightStyle(badgeColor, 260)}
+        className="spotlight-surface h-10 px-3 sm:px-4 border-b border-slate-200 dark:border-white/[0.07] bg-white/85 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-between shrink-0 select-none shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+      >
+        <div className="relative z-10 flex items-center gap-1.5 sm:gap-2 overflow-hidden flex-wrap sm:flex-nowrap">
+          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{title}</span>
+          {badgeText && (
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border shrink-0 font-mono tabular-nums ${getBadgeClass()}`}>
+              {badgeText}
+            </span>
+          )}
+          {extraBadge}
+        </div>
+
+        {/* Zoom & Lightbox Controls */}
+        {src && !hasError && (
+          <div className="relative z-10 flex items-center gap-0.5 sm:gap-1 bg-slate-100 dark:bg-white/[0.04] rounded-lg p-0.5 border border-slate-200 dark:border-white/[0.08] shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+            {enableAnnotation && (
+              <>
+                <button
+                  type="button"
+                  onClick={toggleAnnotating}
+                  title={isAnnotating ? 'Turn off annotation overlay' : 'Draw / annotate on question'}
+                  className={`p-1 sm:p-1.5 rounded transition-all active:scale-95 ${
+                    isAnnotating
+                      ? 'bg-cyan-500 text-white shadow-sm'
+                      : 'hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <div className="w-px h-3.5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+              </>
+            )}
+            <button
+              type="button"
+              onClick={handleZoomOut}
+              title="Zoom out"
+              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+            >
+              <ZoomOut className="w-3.5 h-3.5" />
+            </button>
+            <span className="text-[10px] font-mono tabular-nums text-slate-600 dark:text-slate-400 px-1 select-none min-w-[2.5rem] sm:min-w-[3rem] text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              type="button"
+              onClick={handleZoomIn}
+              title="Zoom in"
+              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-px h-3.5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+            <button
+              type="button"
+              onClick={handleResetZoom}
+              title="Reset Zoom"
+              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-px h-3.5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+            <button
+              type="button"
+              onClick={openLightbox}
+              title="Full-screen Lightbox (inspect intricate mechanisms & graphs)"
+              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Canvas Viewport */}
+      <div 
+        ref={containerRef}
+        className="flex-1 w-full min-h-0 overflow-y-auto overflow-x-auto p-3 sm:p-5 flex items-start justify-center bg-slate-100/50 dark:bg-[#07090D] bg-drafting-grid relative"
+        style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
+      >
+        {/* Subtle Subject-Reactive Radial Ambient Glow in Top Center */}
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[560px] h-[220px] bg-gradient-to-b ${ambientGlowClass} blur-3xl rounded-full z-0`}
+        />
+
+        {!src || hasError ? (
+          <div className="relative z-10 m-auto flex flex-col items-center justify-center text-center p-6 sm:p-8 max-w-md rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 backdrop-blur-md shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-dark-850 border border-slate-300 dark:border-white/10 flex items-center justify-center text-slate-500 mb-3">
+              <FileQuestion className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">{placeholderTitle}</h4>
+            {citationDisplay && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 mb-2">
+                Citation: {citationDisplay}
+              </span>
+            )}
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">{placeholderMessage}</p>
+            {src && (
+              <button
+                type="button"
+                onClick={handleRetryImage}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm transition-all active:scale-95"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Retry Loading Asset</span>
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="relative z-10 flex flex-col justify-start items-center pt-1 pb-12 w-full max-w-full">
+            {/* Minimal Floating Annotation Controls */}
+            {enableAnnotation && (
+              <div className="sticky top-2 z-10 mb-3.5 flex items-center justify-center pointer-events-auto">
+                {renderAnnotationToolbar()}
+              </div>
+            )}
+
+            <div
+              className="flex justify-center w-full"
+              style={zoom > 1 ? { minWidth: `${Math.round(zoom * 100)}%` } : undefined}
+            >
+              <div 
+                className={`relative max-w-full transition-transform duration-100 ease-out origin-top rounded-xl overflow-hidden shadow-[0_12px_40px_-10px_rgba(0,0,0,0.65)] ring-1 ring-slate-200 dark:ring-white/10 bg-white ${
+                  isImageLoading ? 'w-full max-w-3xl min-h-[280px]' : ''
+                } ${!isAnnotating ? 'cursor-pointer' : ''}`}
+                style={{ transform: `scale(${zoom})` }}
+                onClick={() => {
+                  if (!isAnnotating && zoom === 1) {
+                    openLightbox();
+                  }
+                }}
+                title={!isAnnotating ? "Click or tap to inspect in full-screen lightbox" : undefined}
+              >
+                {isImageLoading && (
+                  <div className="absolute inset-0 z-10 bg-slate-100 dark:bg-slate-900 animate-pulse flex items-center justify-center min-h-[280px] pointer-events-none">
+                    <div className="w-8 h-8 rounded-full border-2 border-cyan-500/20 border-t-cyan-500 animate-spin" />
+                  </div>
+                )}
+                <img
+                  ref={imgRef}
+                  src={resolvedSrc}
+                  alt={title}
+                  crossOrigin="anonymous"
+                  onLoad={handleImageLoad}
+                  onError={handleImageError}
+                  className={`w-full max-w-full h-auto object-contain block select-none pointer-events-none bg-white ${
+                    isImageLoading ? 'opacity-0' : 'opacity-100'
+                  }`}
+                />
+                {enableAnnotation && (
+                  <canvas
+                    ref={canvasRef}
+                    onMouseDown={(e) => handleMouseDown(e, false)}
+                    onMouseMove={(e) => handleMouseMove(e, false)}
+                    onMouseUp={() => handleMouseUp(false)}
+                    onMouseLeave={() => handleMouseUp(false)}
+                    onTouchStart={(e) => handleTouchStart(e, false)}
+                    onTouchMove={(e) => handleTouchMove(e, false)}
+                    onTouchEnd={() => handleTouchEnd(false)}
+                    onTouchCancel={() => handleTouchEnd(false)}
+                    className={`absolute inset-0 w-full h-full ${
+                      isAnnotating ? 'pointer-events-auto touch-none' : 'pointer-events-none'
+                    }`}
+                    style={{
+                      cursor: getCanvasCursor(),
+                    }}
+                  />
+                )}
+
+                {/* Re-Editable Text Annotations Overlay */}
+                {renderTextAnnotations(false)}
+              </div>
+            </div>
+            {children}
+          </div>
+        )}
+      </div>
+
+      {/* Full-Screen Lightbox Modal */}
+      {isLightboxOpen && src && !hasError && (
+        <div 
+          className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex flex-col animate-in fade-in duration-150"
+          onClick={closeLightbox}
+        >
+          {/* Lightbox Header */}
+          <div 
+            className="h-14 px-4 sm:px-6 border-b border-dark-800 bg-dark-900/90 flex items-center justify-between shrink-0 select-none"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
+              <span className="text-sm font-bold text-white truncate">{title}</span>
+              {badgeText && (
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border shrink-0 ${getBadgeClass()}`}>
+                  {badgeText}
+                </span>
+              )}
+              <span className="text-xs text-slate-400 hidden sm:inline">• High-Resolution View</span>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Lightbox Zoom Controls */}
+              <div className="flex items-center gap-1 bg-dark-800 rounded-lg p-1 border border-dark-750">
+                <button
+                  type="button"
+                  onClick={() => setLightboxZoom((prev) => Math.max(prev - 0.25, 0.5))}
+                  title="Zoom Out"
+                  className="p-1.5 rounded hover:bg-dark-700 text-slate-300"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-xs font-mono text-slate-300 px-1.5 min-w-[3rem] text-center">
+                  {Math.round(lightboxZoom * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setLightboxZoom((prev) => Math.min(prev + 0.25, 3.5))}
+                  title="Zoom In"
+                  className="p-1.5 rounded hover:bg-dark-700 text-slate-300"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLightboxZoom(1)}
+                  title="Reset 100%"
+                  className="p-1.5 rounded hover:bg-dark-700 text-slate-400 hover:text-slate-200"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Close Button (44px target) */}
+              <button
+                type="button"
+                onClick={closeLightbox}
+                className="w-10 h-10 rounded-xl bg-dark-800 hover:bg-dark-750 border border-dark-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                title="Close lightbox (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Lightbox Body / Viewport */}
+          <div 
+            className="flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start cursor-zoom-out bg-drafting-grid"
+            onClick={closeLightbox}
+            style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
+          >
+            {/* Annotation Toolbar in Lightbox */}
+            {enableAnnotation && (
+              <div 
+                className="sticky top-2 z-30 mb-3 flex items-center justify-center pointer-events-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {renderAnnotationToolbar()}
+              </div>
+            )}
+
+            <div 
+              className="bg-white rounded-xl shadow-2xl p-2 max-w-5xl transition-transform duration-100 ease-out origin-top cursor-default"
+              style={{ transform: `scale(${lightboxZoom})` }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="relative max-w-full overflow-hidden rounded-lg">
+                <img
+                  ref={lightboxImgRef}
+                  src={resolvedSrc}
+                  alt={title}
+                  crossOrigin="anonymous"
+                  onLoad={handleLightboxImageLoad}
+                  className="w-full max-w-full h-auto object-contain block select-none pointer-events-none"
+                />
+                {enableAnnotation && (
+                  <canvas
+                    ref={lightboxCanvasRef}
+                    onMouseDown={(e) => handleMouseDown(e, true)}
+                    onMouseMove={(e) => handleMouseMove(e, true)}
+                    onMouseUp={() => handleMouseUp(true)}
+                    onMouseLeave={() => handleMouseUp(true)}
+                    onTouchStart={(e) => handleTouchStart(e, true)}
+                    onTouchMove={(e) => handleTouchMove(e, true)}
+                    onTouchEnd={() => handleTouchEnd(true)}
+                    onTouchCancel={() => handleTouchEnd(true)}
+                    className={`absolute inset-0 w-full h-full ${
+                      isAnnotating ? 'pointer-events-auto touch-none' : 'pointer-events-none'
+                    }`}
+                    style={{
+                      cursor: getCanvasCursor(),
+                    }}
+                  />
+                )}
+                {renderTextAnnotations(true)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ImageCanvas;
