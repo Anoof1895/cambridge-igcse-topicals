@@ -701,7 +701,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="text-[10px] text-zinc-500">Qs</span>
           </div>
 
-          <div className="flex items-center bg-white/[0.04] p-0.5 rounded-lg border border-white/[0.08] h-8 shrink-0">
+          <div className="hidden md:inline-flex items-center bg-white/[0.04] p-0.5 rounded-lg border border-white/[0.08] h-8 shrink-0">
             <button
               type="button"
               onClick={() => onViewModeChange('question-only')}
