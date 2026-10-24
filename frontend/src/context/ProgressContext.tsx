@@ -109,13 +109,14 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
       const currentAnswer = updates.user_answer !== undefined 
         ? updates.user_answer 
-        : (answersRef.current[questionId] || null);
+        : (answersRef.current[questionId] ?? null);
 
       const record = {
         user_id: userId,
         question_id: questionId,
         status: currentStatus,
         is_bookmarked: currentIsBookmarked,
+        user_answer: currentAnswer ?? null,
         updated_at: new Date().toISOString(),
       };
 
@@ -124,12 +125,7 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           .from('user_question_states')
           .upsert(record, { onConflict: 'user_id,question_id' });
 
-        if (error && (error.code === '42P01' || error.message?.includes('does not exist'))) {
-          // Graceful fallback if database table is named user_progress
-          await supabase
-            .from('user_progress')
-            .upsert({ ...record, user_answer: currentAnswer }, { onConflict: 'user_id,question_id' });
-        } else if (error) {
+        if (error) {
           console.warn('[CloudSync] Upsert error for', questionId, error.message);
         }
       } catch (err: any) {
@@ -173,23 +169,10 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setIsSyncing(true);
       try {
         // Fetch remote records from Supabase
-        let remoteRows: any[] | null = null;
-        let { data, error: fetchErr } = await supabase
+        const { data: remoteRows, error: fetchErr } = await supabase
           .from('user_question_states')
           .select('*')
           .eq('user_id', userId);
-
-        if (fetchErr && (fetchErr.code === '42P01' || fetchErr.message?.includes('does not exist'))) {
-          // Fallback to user_progress
-          const fallbackRes = await supabase
-            .from('user_progress')
-            .select('*')
-            .eq('user_id', userId);
-          remoteRows = fallbackRes.data;
-          fetchErr = fallbackRes.error;
-        } else {
-          remoteRows = data;
-        }
 
         if (fetchErr) {
           console.warn('[CloudSync] Could not fetch remote progress:', fetchErr.message);
@@ -258,18 +241,11 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (recordsToMigrate.length > 0) {
           for (let i = 0; i < recordsToMigrate.length; i += 50) {
             const batch = recordsToMigrate.slice(i, i + 50);
-            let { error: batchErr } = await supabase
+            const { error: batchErr } = await supabase
               .from('user_question_states')
               .upsert(batch, { onConflict: 'user_id,question_id' });
 
-            if (batchErr && (batchErr.code === '42P01' || batchErr.message?.includes('does not exist'))) {
-              const { error: fallbackErr } = await supabase
-                .from('user_progress')
-                .upsert(batch, { onConflict: 'user_id,question_id' });
-              if (fallbackErr) {
-                console.warn('[CloudSync] Fallback batch error:', fallbackErr.message);
-              }
-            } else if (batchErr) {
+            if (batchErr) {
               console.warn('[CloudSync] Batch migration error:', batchErr.message);
             }
           }

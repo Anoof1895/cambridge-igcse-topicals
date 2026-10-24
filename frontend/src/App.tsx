@@ -542,14 +542,6 @@ export const App: React.FC = () => {
       setDatasetError(null);
       fetch('/dataset_chemistry.json')
         .then((res) => {
-          if (!res.ok) return fetch('/dataset_chem.json');
-          return res;
-        })
-        .then((res) => {
-          if (!res.ok) return fetch('/dataset.json');
-          return res;
-        })
-        .then((res) => {
           if (!res.ok) return [];
           return res.json();
         })
@@ -570,10 +562,6 @@ export const App: React.FC = () => {
       setLoadingSubject('biology');
       setDatasetError(null);
       fetch('/dataset_biology.json')
-        .then((res) => {
-          if (!res.ok) return fetch('/dataset_bio.json');
-          return res;
-        })
         .then((res) => {
           if (!res.ok) return [];
           return res.json();

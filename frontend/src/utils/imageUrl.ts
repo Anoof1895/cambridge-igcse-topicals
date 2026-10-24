@@ -12,11 +12,29 @@ export const IMAGE_BASE_URL: string = (
   ''
 ).replace(/\/+$/, '');
 
+/** Safely URI-encodes each path segment without double-encoding. */
+function encodePathSegments(rawPath: string): string {
+  const [pathname, query] = rawPath.split('?');
+  const encodedPathname = pathname
+    .split('/')
+    .map((segment) => {
+      if (!segment) return '';
+      try {
+        return encodeURIComponent(decodeURIComponent(segment));
+      } catch {
+        return encodeURIComponent(segment);
+      }
+    })
+    .join('/');
+  return query ? `${encodedPathname}?${query}` : encodedPathname;
+}
+
 /** Normalizes a dataset image path to a root-relative local URL. */
 export function getLocalImageUrl(path: string | null | undefined): string {
   if (!path) return '';
   if (path.startsWith('http://') || path.startsWith('https://')) return path;
-  return path.startsWith('/') ? path : `/${path}`;
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return encodePathSegments(normalized);
 }
 
 /**

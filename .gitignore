@@ -32,6 +32,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Scratch & One-off Audit Reports
+scratch/
+test_pipeline.py
+pipeline/audit_report.html
+
 # Ensure datasets are tracked
 !frontend/public/dataset_*.json
 !frontend/public/dataset.json

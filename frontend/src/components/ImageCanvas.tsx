@@ -23,8 +23,9 @@ import {
 } from '../utils/spotlight';
 
 // Module-scoped in-memory LRU cache for annotations across question navigation & view mode toggles
-// Kept purely in RAM (max 25 questions per session); zero localStorage, sessionStorage, or backend persistence
-const MAX_CACHE_ENTRIES = 25;
+// Kept purely in RAM (max 8 questions per session); zero localStorage, sessionStorage, or backend persistence
+const MAX_CACHE_ENTRIES = 8;
+const MAX_UNDO_SNAPSHOTS = 3;
 const inMemoryDrawingCache = new Map<string, HTMLCanvasElement>();
 
 function touchAndEnforceLRU<K, V>(map: Map<K, V>, key: K, value: V, limit: number = MAX_CACHE_ENTRIES) {
@@ -226,7 +227,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
   const handleImageError = () => {
     setIsImageLoading(false);
-    if (!useLocalFallback && localSrc && localSrc !== cdnSrc) {
+    if (import.meta.env.DEV && !useLocalFallback && localSrc && localSrc !== cdnSrc) {
       setUseLocalFallback(true);
       setIsImageLoading(true);
     } else {
@@ -575,7 +576,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
     probe.onerror = () => {
       if (cancelled) return;
       setIsImageLoading(false);
-      if (!useLocalFallback && localSrc && localSrc !== cdnSrc) {
+      if (import.meta.env.DEV && !useLocalFallback && localSrc && localSrc !== cdnSrc) {
         setUseLocalFallback(true);
         setIsImageLoading(true);
       } else {
@@ -725,7 +726,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
       if (canvas.width > 0 && canvas.height > 0) {
         const snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
         strokeHistoryRef.current.push(snapshot);
-        if (strokeHistoryRef.current.length > 10) {
+        if (strokeHistoryRef.current.length > MAX_UNDO_SNAPSHOTS) {
           strokeHistoryRef.current.shift();
         }
         setCanUndo(true);
