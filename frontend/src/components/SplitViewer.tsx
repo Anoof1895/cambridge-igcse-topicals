@@ -11,7 +11,6 @@ import {
   ExternalLink, 
   List, 
   CheckCircle2,
-  AlertTriangle,
   RotateCcw
 } from 'lucide-react';
 import { QuestionItem, ViewMode, MasteryStatus } from '../types';
@@ -340,14 +339,13 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
             </span>
           )}
 
-          {/* Obsolete Syllabus Removal Notice */}
+          {/* Obsolete Syllabus Removal Notice (Full descriptive badge in canvas header) */}
           {meta?.isObsolete && (
             <span
               title={question.obsolete_reason || meta?.obsoleteReason || 'Tests content removed in official Cambridge syllabus revisions'}
-              className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0 max-w-[320px] truncate"
+              className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0 max-w-[380px] truncate"
             >
-              <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0" />
-              <span className="truncate">Obsolete: {question.obsolete_reason || meta?.obsoleteReason || 'Removed in current syllabus'}</span>
+              <span className="truncate">⚠️ Obsolete: {question.obsolete_reason || meta?.obsoleteReason || 'Removed in current syllabus'}</span>
             </span>
           )}
 

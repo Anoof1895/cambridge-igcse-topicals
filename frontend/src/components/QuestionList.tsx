@@ -6,7 +6,6 @@ import {
   ChevronRight,
   List,
   X,
-  AlertTriangle,
   Calculator,
   Ban
 } from 'lucide-react';
@@ -252,42 +251,40 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     return [...questions].sort(sortQuestionsLatestFirst);
   }, [questions]);
 
-  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [currentPage, setCurrentPage] = useState<number>(() => {
+    if (selectedQuestionId && sortedQuestions.length > 0) {
+      const idx = sortedQuestions.findIndex((q) => q.id === selectedQuestionId);
+      if (idx !== -1) return Math.floor(idx / PAGE_SIZE) + 1;
+    }
+    return 1;
+  });
   const listRef = useRef<HTMLDivElement>(null);
-  const prevSelectedIdRef = useRef<string | null>(selectedQuestionId);
-  const firstQuestionId = sortedQuestions[0]?.id;
-  const prevFirstIdRef = useRef<string | undefined>(firstQuestionId);
+  const prevTabRef = useRef<'all' | 'bookmarked'>(activeTab);
 
   const totalPages = Math.max(1, Math.ceil(sortedQuestions.length / PAGE_SIZE));
 
-  // Sync currentPage when active question changes
+  // Sync currentPage when active question or sorted filtered list changes (including initial reload hydration)
   useEffect(() => {
-    if (selectedQuestionId !== prevSelectedIdRef.current) {
-      prevSelectedIdRef.current = selectedQuestionId;
-      if (selectedQuestionId) {
-        const idx = sortedQuestions.findIndex((q) => q.id === selectedQuestionId);
-        if (idx !== -1) {
-          const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
-          setCurrentPage(targetPage);
-        }
-      }
+    if (!selectedQuestionId || sortedQuestions.length === 0) return;
+    const idx = sortedQuestions.findIndex((q) => q.id === selectedQuestionId);
+    if (idx !== -1) {
+      const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
+      setCurrentPage(targetPage);
     }
   }, [selectedQuestionId, sortedQuestions]);
 
-  // Handle filter changes
+  // Scroll the active question card into view when active question or page changes
   useEffect(() => {
-    if (firstQuestionId !== prevFirstIdRef.current) {
-      prevFirstIdRef.current = firstQuestionId;
-      if (selectedQuestionId) {
-        const idx = sortedQuestions.findIndex((q) => q.id === selectedQuestionId);
-        if (idx !== -1) {
-          setCurrentPage(Math.floor(idx / PAGE_SIZE) + 1);
-          return;
-        }
+    if (!selectedQuestionId || !listRef.current) return;
+    const raf = requestAnimationFrame(() => {
+      const safeId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(selectedQuestionId) : selectedQuestionId;
+      const activeEl = listRef.current?.querySelector<HTMLElement>(`[data-question-id="${safeId}"]`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       }
-      setCurrentPage(1);
-    }
-  }, [firstQuestionId, selectedQuestionId, sortedQuestions]);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [selectedQuestionId, currentPage, sortedQuestions.length]);
 
   // Reset to page 1 if current page is out of bounds
   useEffect(() => {
@@ -296,9 +293,12 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     }
   }, [currentPage, totalPages]);
 
-  // Reset to page 1 when switching tabs
+  // Reset to page 1 only when switching tabs (not on initial mount)
   useEffect(() => {
-    setCurrentPage(1);
+    if (prevTabRef.current !== activeTab) {
+      prevTabRef.current = activeTab;
+      setCurrentPage(1);
+    }
   }, [activeTab]);
 
   const handlePageChange = (page: number) => {
@@ -360,9 +360,9 @@ export const QuestionList: React.FC<QuestionListProps> = ({
       {/* Question List Sidebar */}
       <aside 
         className={`
-          border-r border-slate-200 dark:border-white/[0.07] bg-white/95 lg:bg-slate-50/70 dark:bg-[#07090D]/95 lg:dark:bg-[#07090D]/75 backdrop-blur-xl flex flex-col shrink-0 select-none overflow-hidden transition-transform duration-200
-          fixed inset-y-0 left-0 z-40 w-84 max-w-[88vw] shadow-2xl lg:shadow-none
-          lg:static lg:w-84 lg:z-auto lg:translate-x-0
+          border-r border-slate-200 dark:border-white/[0.07] bg-white/95 lg:bg-slate-50/70 dark:bg-[#07090D]/95 lg:dark:bg-[#07090D]/75 backdrop-blur-xl flex flex-col w-72 2xl:w-80 shrink-0 flex-none select-none overflow-hidden transition-transform duration-200
+          fixed inset-y-0 left-0 z-40 max-w-[88vw] shadow-2xl lg:shadow-none
+          lg:static lg:w-72 2xl:w-80 lg:z-auto lg:translate-x-0
           ${isDrawerOpen ? 'translate-x-0 flex' : '-translate-x-full lg:translate-x-0 hidden lg:flex'}
         `}
       >
@@ -491,6 +491,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
               return (
                 <div
                   key={q.id}
+                  data-question-id={q.id}
                   onPointerMove={handleSpotlightMove}
                   onPointerLeave={handleSpotlightLeave}
                   style={getSubjectSpotlightStyle(qSubject, 280)}
@@ -500,7 +501,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                       onCloseDrawer();
                     }
                   }}
-                  className={`spotlight-surface group relative rounded-xl py-2.5 px-3.5 cursor-pointer transition-all duration-150 border-y border-r border-l-4 ${
+                  className={`spotlight-surface group relative min-w-0 overflow-hidden rounded-xl py-2.5 px-3.5 cursor-pointer transition-all duration-150 border-y border-r border-l-4 ${
                     isSelected
                       ? `${selectedCardAccent} text-slate-900 dark:text-white`
                       : 'bg-white dark:bg-[#0B0E16]/70 border-slate-200/80 dark:border-white/[0.06] border-l-transparent hover:bg-slate-50 dark:hover:bg-white/[0.03] hover:border-slate-300 dark:hover:border-white/10 hover:border-l-slate-400 dark:hover:border-l-slate-600 text-slate-700 dark:text-slate-300 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'
@@ -566,14 +567,13 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                         </span>
                       )}
 
-                      {/* Obsolete Syllabus Removal Badge */}
+                      {/* Obsolete Syllabus Removal Badge (Compact in Sidebar) */}
                       {meta.isObsolete && (
-                        <span 
-                          title={q.obsolete_reason || meta.obsoleteReason || "Tests content removed in official Cambridge syllabus revisions"}
-                          className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 max-w-[280px] truncate"
+                        <span
+                          className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0"
+                          title={q.obsolete_reason || meta.obsoleteReason || 'Tests content removed in official Cambridge syllabus revisions'}
                         >
-                          <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0" />
-                          <span className="truncate">Obsolete: {q.obsolete_reason || meta.obsoleteReason || "Removed in current syllabus"}</span>
+                          ⚠️ Obsolete
                         </span>
                       )}
                     </div>

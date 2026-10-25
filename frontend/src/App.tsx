@@ -28,8 +28,12 @@ const ViewLoadingFallback: React.FC = () => (
   </div>
 );
 
-// URL hash router helper: parses view and optional ?q=question_id
-const parseHashRoute = (): { view: AppView; questionId: string | null } => {
+// URL hash router helper: parses view, optional ?q=question_id, and active filter search params
+const parseHashRoute = (): {
+  view: AppView;
+  questionId: string | null;
+  urlFilters: Partial<FilterState>;
+} => {
   try {
     const fullHash = window.location.hash || '';
     const [hashPath, hashQuery] = fullHash.split('?');
@@ -59,14 +63,96 @@ const parseHashRoute = (): { view: AppView; questionId: string | null } => {
     }
 
     let questionId: string | null = null;
+    const urlFilters: Partial<FilterState> = {};
+
     if (hashQuery) {
       const params = new URLSearchParams(hashQuery);
       questionId = params.get('q');
+
+      const paperParam = params.get('paper');
+      if (paperParam) {
+        const units = paperParam
+          .split(',')
+          .map((p) => p.trim())
+          .filter(Boolean)
+          .map((p) => (p.toLowerCase().startsWith('paper') ? p.toLowerCase() : `paper${p}`));
+        if (units.length > 0) {
+          urlFilters.selectedUnits = units;
+          if (!params.get('tier') && units.some((u) => u === 'paper1' || u === 'paper3')) {
+            urlFilters.selectedTier = 'all';
+          }
+        }
+      }
+
+      const subtopicParams = params.getAll('subtopic');
+      if (subtopicParams.length > 0) {
+        const subs = subtopicParams
+          .flatMap((s) => s.split('|'))
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (subs.length > 0) {
+          urlFilters.selectedSubtopics = subs;
+        }
+      }
+
+      const typeParam = params.get('type');
+      if (typeParam === 'mcq' || typeParam === 'theory' || typeParam === 'all') {
+        urlFilters.questionType = typeParam;
+      }
+
+      const obsParam = params.get('obsolete');
+      if (obsParam === 'show' || obsParam === 'true' || obsParam === '1') {
+        urlFilters.hideObsolete = false;
+      } else if (obsParam === 'hide' || obsParam === 'false' || obsParam === '0') {
+        urlFilters.hideObsolete = true;
+      }
+
+      const tierParam = params.get('tier');
+      if (tierParam === 'core' || tierParam === 'extended' || tierParam === 'practical' || tierParam === 'all') {
+        urlFilters.selectedTier = tierParam;
+      }
+
+      const yearParam = params.get('year');
+      if (yearParam) {
+        const yrs = yearParam.split(',').map((y) => y.trim()).filter(Boolean);
+        if (yrs.length > 0) urlFilters.selectedYears = yrs;
+      }
+
+      const seriesParam = params.get('series');
+      if (seriesParam) {
+        const srs = seriesParam.split(',').map((s) => s.trim()).filter(Boolean);
+        if (srs.length > 0) urlFilters.selectedSeries = srs;
+      }
+
+      const variantParam = params.get('variant');
+      if (variantParam === '1' || variantParam === '2' || variantParam === '3') {
+        urlFilters.variant = Number(variantParam) as 1 | 2 | 3;
+      }
+
+      const statusParam = params.get('status');
+      if (statusParam === 'unattempted' || statusParam === 'review' || statusParam === 'mastered') {
+        urlFilters.statusFilter = statusParam;
+      }
+
+      const bookmarkedParam = params.get('bookmarked');
+      if (bookmarkedParam === '1' || bookmarkedParam === 'true') {
+        urlFilters.bookmarkedOnly = true;
+      }
+
+      const searchParam = params.get('search');
+      if (searchParam) {
+        urlFilters.searchQuery = searchParam;
+      }
+
+      const eraParam = params.get('era');
+      if (eraParam === '2025-2028' || eraParam === '2019-2024' || eraParam === '2020-2024' || eraParam === 'all') {
+        urlFilters.syllabusEra = eraParam;
+      }
     }
 
-    return { view, questionId };
+    return { view, questionId, urlFilters };
   } catch {
-    return { view: 'home', questionId: null };
+    return { view: 'home', questionId: null, urlFilters: {} };
   }
 };
 
@@ -238,35 +324,22 @@ export const App: React.FC = () => {
   // Listen to popstate / hashchange for browser back and forward navigation
   useEffect(() => {
     const handleHashChange = () => {
-      const { view, questionId } = parseHashRoute();
+      const { view, questionId, urlFilters } = parseHashRoute();
       setCurrentView((prev) => (prev !== view ? view : prev));
       if (questionId) {
         setSelectedQuestionId(questionId);
+      }
+      if (Object.keys(urlFilters).length > 0) {
+        setFilters((prev) => ({ ...prev, ...urlFilters }));
+        if (urlFilters.bookmarkedOnly !== undefined) {
+          setActiveTab(urlFilters.bookmarkedOnly ? 'bookmarked' : 'all');
+        }
       }
     };
 
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
-
-  // Sync selected question ID to URL hash in topical view
-  useEffect(() => {
-    if (!currentView.endsWith('-topical')) return;
-    if (!selectedQuestionId) return;
-
-    const basePath = currentView === 'mathematics-topical'
-      ? '#/mathematics/topical'
-      : currentView === 'physics-topical'
-      ? '#/physics/topical'
-      : currentView === 'biology-topical'
-      ? '#/biology/topical'
-      : '#/chemistry/topical';
-
-    const newHash = `${basePath}?q=${encodeURIComponent(selectedQuestionId)}`;
-    if (window.location.hash !== newHash) {
-      window.history.replaceState(null, '', newHash);
-    }
-  }, [currentView, selectedQuestionId]);
 
   // Dynamic Browser Tab Title
   useEffect(() => {
@@ -299,8 +372,25 @@ export const App: React.FC = () => {
     return mathQuestions || [];
   }, [activeSubject, mathQuestions, physQuestions, chemQuestions, bioQuestions]);
 
-  // Default view: Question Only mode so answers aren't spoiled
-  const [viewMode, setViewMode] = useState<ViewMode>('question-only');
+  // Persist viewMode across page reloads (defaults to 'split' on desktop screens if no saved preference)
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    try {
+      const saved = localStorage.getItem('igcse_view_mode');
+      if (saved === 'split') return 'split';
+      if (saved === 'question-only' || saved === 'question') return 'question-only';
+      if (saved === 'ms-only' || saved === 'mark_scheme') return 'ms-only';
+    } catch {}
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      return 'split';
+    }
+    return 'question-only';
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('igcse_view_mode', viewMode);
+    } catch {}
+  }, [viewMode]);
 
   // Cloud-synced bookmarks and question statuses from ProgressContext
   const { 
@@ -588,29 +678,123 @@ export const App: React.FC = () => {
   }, [activeSubject, currentView, mathQuestions, physQuestions, chemQuestions, bioQuestions]);
 
   // Active drawer tab: 'all' | 'bookmarked'
-  const [activeTab, setActiveTab] = useState<'all' | 'bookmarked'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'bookmarked'>(
+    initialRoute.current.urlFilters.bookmarkedOnly ? 'bookmarked' : 'all'
+  );
 
   // Responsive question list drawer state (< 1024px)
   const [isQuestionDrawerOpen, setIsQuestionDrawerOpen] = useState<boolean>(false);
 
-  // Filter state for Cambridge IGCSE topical explorer (Defaults to 'extended' tier)
+  // Filter state for Cambridge IGCSE topical explorer (hydrated from URL search params on initial load)
   const [filters, setFilters] = useState<FilterState>(() => {
     const savedEra = (localStorage.getItem('cambridge_math_era') as SyllabusEra) || 'all';
+    const uf = initialRoute.current.urlFilters;
     return {
-      syllabusEra: savedEra,
-      hideObsolete: true,
-      selectedTier: 'extended',
-      variant: 'all',
-      selectedUnits: [],
-      selectedSubtopics: [],
-      selectedYears: [],
-      selectedSeries: [],
-      searchQuery: '',
-      statusFilter: 'all',
-      questionType: 'all',
-      bookmarkedOnly: false,
+      syllabusEra: uf.syllabusEra ?? savedEra,
+      hideObsolete: uf.hideObsolete ?? true,
+      selectedTier: uf.selectedTier ?? 'extended',
+      variant: uf.variant ?? 'all',
+      selectedUnits: uf.selectedUnits ?? [],
+      selectedSubtopics: uf.selectedSubtopics ?? [],
+      selectedYears: uf.selectedYears ?? [],
+      selectedSeries: uf.selectedSeries ?? [],
+      searchQuery: uf.searchQuery ?? '',
+      statusFilter: uf.statusFilter ?? 'all',
+      questionType: uf.questionType ?? 'all',
+      bookmarkedOnly: uf.bookmarkedOnly ?? false,
     };
   });
+
+  // Ensure that if initial URL specifies ?q=questionId, filters do not hide that question on load
+  const initialQuestionEnsuredRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedQuestionId || questions.length === 0) return;
+    if (initialQuestionEnsuredRef.current === selectedQuestionId) return;
+    const targetQ = questions.find((q) => q.id === selectedQuestionId);
+    if (!targetQ) return;
+    initialQuestionEnsuredRef.current = selectedQuestionId;
+
+    const meta = getCambridgeMetadata(targetQ);
+    setFilters((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      if (meta.isObsolete && prev.hideObsolete !== false) {
+        next.hideObsolete = false;
+        changed = true;
+      }
+      if (
+        prev.selectedTier === 'extended' &&
+        (meta.tier === 'core' || meta.paperNum === 1 || meta.paperNum === 3)
+      ) {
+        next.selectedTier = 'all';
+        changed = true;
+      }
+      return changed ? next : prev;
+    });
+  }, [questions, selectedQuestionId]);
+
+  // Sync active filters and selected question ID to URL hash search params in topical view
+  useEffect(() => {
+    if (!currentView.endsWith('-topical')) return;
+
+    const basePath = currentView === 'mathematics-topical'
+      ? '#/mathematics/topical'
+      : currentView === 'physics-topical'
+      ? '#/physics/topical'
+      : currentView === 'biology-topical'
+      ? '#/biology/topical'
+      : '#/chemistry/topical';
+
+    const params = new URLSearchParams();
+    if (filters.selectedUnits.length > 0) {
+      params.set(
+        'paper',
+        filters.selectedUnits.map((u) => u.replace(/^paper/i, '')).join(',')
+      );
+    }
+    if (filters.selectedSubtopics.length > 0) {
+      filters.selectedSubtopics.forEach((s) => params.append('subtopic', s));
+    }
+    if (filters.questionType && filters.questionType !== 'all') {
+      params.set('type', filters.questionType);
+    }
+    if (filters.hideObsolete === false) {
+      params.set('obsolete', 'show');
+    }
+    if (filters.selectedTier && filters.selectedTier !== 'extended') {
+      params.set('tier', filters.selectedTier);
+    }
+    if (filters.selectedYears.length > 0) {
+      params.set('year', filters.selectedYears.join(','));
+    }
+    if (filters.selectedSeries.length > 0) {
+      params.set('series', filters.selectedSeries.join(','));
+    }
+    if (filters.variant && filters.variant !== 'all') {
+      params.set('variant', String(filters.variant));
+    }
+    if (activeSubject === 'mathematics' && filters.syllabusEra && filters.syllabusEra !== 'all') {
+      params.set('era', filters.syllabusEra);
+    }
+    if (filters.statusFilter && filters.statusFilter !== 'all') {
+      params.set('status', filters.statusFilter);
+    }
+    if (filters.bookmarkedOnly) {
+      params.set('bookmarked', '1');
+    }
+    if (filters.searchQuery.trim()) {
+      params.set('search', filters.searchQuery.trim());
+    }
+    if (selectedQuestionId) {
+      params.set('q', selectedQuestionId);
+    }
+
+    const queryStr = params.toString();
+    const newHash = queryStr ? `${basePath}?${queryStr}` : basePath;
+    if (window.location.hash !== newHash) {
+      window.history.replaceState(null, '', newHash);
+    }
+  }, [currentView, selectedQuestionId, filters, activeSubject]);
 
   const prevSubjectRef = useRef<Subject>(activeSubject);
   useEffect(() => {
