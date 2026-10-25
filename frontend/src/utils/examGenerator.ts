@@ -253,8 +253,8 @@ export function autoGenerateExam(
     // 1. Must have marks > 0
     if ((q.marks || 0) <= 0) return false;
 
-    // 2. Obsolete filter (Sciences 2020-2022 removed content)
-    if (hideObsolete && q.obsolete) return false;
+    // 2. Obsolete filter (Tests removed Cambridge syllabus content)
+    if (hideObsolete && (q.is_obsolete || q.obsolete)) return false;
 
     // 3. Calculator allowed filter
     if (calculatorAllowed !== undefined && calculatorAllowed !== null) {
@@ -319,7 +319,7 @@ export function autoGenerateExam(
 
   if (candidates.length === 0) {
     // If over-filtered, fall back to valid pool without strict topic constraints
-    candidates = pool.filter((q) => (q.marks || 0) > 0 && (!hideObsolete || !q.obsolete));
+    candidates = pool.filter((q) => (q.marks || 0) > 0 && (!hideObsolete || !(q.is_obsolete || q.obsolete)));
   }
   if (candidates.length === 0) {
     return { selected: [], actualMarks: 0 };

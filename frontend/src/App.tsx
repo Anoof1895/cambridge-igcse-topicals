@@ -121,7 +121,8 @@ const normalizeQuestions = (data: unknown[]): QuestionItem[] => {
       topic: q.topic || 'General',
       subtopic: q.subtopic || subtopics[0] || q.topic || 'General',
       subtopics,
-      obsolete: Boolean(q.obsolete),
+      is_obsolete: Boolean(q.is_obsolete ?? q.obsolete),
+      obsolete: Boolean(q.is_obsolete ?? q.obsolete),
       obsolete_reason: q.obsolete_reason ?? null,
       calculator_allowed: q.calculator_allowed ?? q.calculator ?? true,
       hasStem: Boolean(q.hasStem),
@@ -701,12 +702,10 @@ export const App: React.FC = () => {
         }
       }
 
-      // 2. Sciences Pre-2023 Obsolete Filter
-      if (activeSubject !== 'mathematics') {
-        const hideObsolete = filters.hideObsolete ?? true;
-        if (hideObsolete && meta.isObsolete) {
-          return false;
-        }
+      // 2. Syllabus Obsolete Filter (applies to all subjects based on official removals)
+      const hideObsolete = filters.hideObsolete ?? true;
+      if (hideObsolete && meta.isObsolete) {
+        return false;
       }
 
       // 3. Cambridge Tier Filter ('all' | 'core' | 'extended' | 'practical')

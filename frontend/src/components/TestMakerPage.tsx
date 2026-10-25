@@ -320,7 +320,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     if (calcFilter !== 'all') count++;
     if (marksFilter !== 'all') count++;
     if (isMath && filters.syllabusEra && filters.syllabusEra !== 'all') count++;
-    if (!isMath && filters.hideObsolete === false) count++;
+    if (filters.hideObsolete === false) count++;
     return count;
   }, [
     selectedPaperNums,
@@ -387,8 +387,8 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         if (qVar !== Number(filters.variant)) return false;
       }
 
-      // Obsolete filter (Sciences pre-2023 deprecated content)
-      if (!isMath && filters.hideObsolete && q.obsolete) return false;
+      // Obsolete filter (Tests removed Cambridge syllabus content)
+      if (filters.hideObsolete && (q.is_obsolete || q.obsolete)) return false;
 
       // Tier filter
       if (filters.selectedTier && filters.selectedTier !== 'all') {
@@ -684,11 +684,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       if (preset.isMcqOnly && !q.is_mcq) return false;
       if (!preset.isMcqOnly && preset.id.includes('theory') && q.is_mcq) return false;
       if (preset.calculatorAllowed === false && q.calculator_allowed !== false) return false;
-      if (q.obsolete) return false;
+      if (q.is_obsolete || q.obsolete) return false;
       return true;
     });
 
-    const activePool = pool.length >= 5 ? pool : questions.filter((q) => !q.obsolete);
+    const activePool = pool.length >= 5 ? pool : questions.filter((q) => !(q.is_obsolete || q.obsolete));
 
     const { selected, actualMarks } = autoGenerateExam(activePool, {
       targetMarks: preset.targetMarks,
@@ -1138,28 +1138,54 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {isMath ? 'Syllabus Era' : 'Legacy Content'}
+                      {isMath ? 'Syllabus Era' : 'Removed Syllabus Content'}
                     </label>
                   </div>
                   {isMath ? (
-                    <div className="grid grid-cols-3 bg-slate-100 dark:bg-dark-800 p-0.5 rounded-lg text-xs font-semibold">
-                      {(['2025-2028', '2019-2024', 'all'] as const).map((era) => (
-                        <button
-                          key={era}
-                          type="button"
-                          onClick={() => {
-                            setFilters((prev) => ({ ...prev, syllabusEra: era }));
-                            setCurrentPage(1);
-                          }}
-                          className={`py-1 px-1 rounded-md text-center text-[10.5px] truncate transition-all ${
-                            (filters.syllabusEra === era || (era === '2019-2024' && filters.syllabusEra === '2020-2024'))
-                              ? 'bg-amber-500 text-dark-950 font-bold shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                          }`}
-                        >
-                          {era === '2025-2028' ? 'Current 25–28' : era === '2019-2024' ? 'Old 19–24' : 'All Syllabi'}
-                        </button>
-                      ))}
+                    <div className="space-y-1.5">
+                      <div className="grid grid-cols-3 bg-slate-100 dark:bg-dark-800 p-0.5 rounded-lg text-xs font-semibold">
+                        {(['2025-2028', '2019-2024', 'all'] as const).map((era) => (
+                          <button
+                            key={era}
+                            type="button"
+                            onClick={() => {
+                              setFilters((prev) => ({ ...prev, syllabusEra: era }));
+                              setCurrentPage(1);
+                            }}
+                            className={`py-1 px-1 rounded-md text-center text-[10.5px] truncate transition-all ${
+                              (filters.syllabusEra === era || (era === '2019-2024' && filters.syllabusEra === '2020-2024'))
+                                ? 'bg-amber-500 text-dark-950 font-bold shadow-sm'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                            }`}
+                          >
+                            {era === '2025-2028' ? 'Current 25–28' : era === '2019-2024' ? 'Old 19–24' : 'All Syllabi'}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilters((prev) => ({ ...prev, hideObsolete: !prev.hideObsolete }));
+                          setCurrentPage(1);
+                        }}
+                        className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
+                          filters.hideObsolete
+                            ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
+                            : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                        }`}
+                      >
+                        {filters.hideObsolete ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <span>Obsolete Hidden</span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span>Showing Obsolete Content</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   ) : (
                     <button
@@ -1177,12 +1203,12 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       {filters.hideObsolete ? (
                         <>
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                          <span>Pre-2023 Obsolete Hidden</span>
+                          <span>Obsolete Hidden</span>
                         </>
                       ) : (
                         <>
                           <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                          <span>Showing Deprecated Content</span>
+                          <span>Showing Obsolete Content</span>
                         </>
                       )}
                     </button>
@@ -1469,7 +1495,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 </span>
               )}
 
-              {!isMath && filters.hideObsolete === false && (
+              {filters.hideObsolete === false && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-[10px] text-amber-700 dark:text-amber-300">
                   Showing Obsolete
                   <button

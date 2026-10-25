@@ -217,9 +217,9 @@ export const TopBar: React.FC<TopBarProps> = ({
     if (filters.selectedTier && filters.selectedTier !== 'extended') count++;
     if (filters.variant && filters.variant !== 'all') count++;
     if (filters.statusFilter !== 'all') count++;
-    if (!isMath && filters.hideObsolete === false) count++;
+    if (filters.hideObsolete === false) count++;
     return count;
-  }, [filters.selectedYears, filters.selectedSeries, filters.selectedTier, filters.variant, filters.statusFilter, filters.hideObsolete, isMath]);
+  }, [filters.selectedYears, filters.selectedSeries, filters.selectedTier, filters.variant, filters.statusFilter, filters.hideObsolete]);
 
   const toggleYear = (yStr: string) => {
     const current = filters.selectedYears;
@@ -321,31 +321,29 @@ export const TopBar: React.FC<TopBarProps> = ({
             </div>
           )}
 
-          {/* Primary 2b: Sciences Pre-2023 Obsolete Toggle */}
-          {!isMath && (
-            <button
-              type="button"
-              onClick={() => onFilterChange({ hideObsolete: !hideObsoleteActive })}
-              title="Toggle Pre-2023 deprecated science syllabus questions"
-              className={`whitespace-nowrap shrink-0 h-8 px-3 text-xs font-medium inline-flex items-center gap-1.5 rounded-lg border transition-all ${
-                hideObsoleteActive
-                  ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                  : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-              }`}
-            >
-              {hideObsoleteActive ? (
-                <>
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                  <span>Pre-2023 Hidden</span>
-                </>
-              ) : (
-                <>
-                  <AlertTriangle className="w-3 h-3 text-amber-500" />
-                  <span>Showing Deprecated</span>
-                </>
-              )}
-            </button>
-          )}
+          {/* Primary 2b: Obsolete Syllabus Filter Toggle */}
+          <button
+            type="button"
+            onClick={() => onFilterChange({ hideObsolete: !hideObsoleteActive })}
+            title="Filter out questions testing content removed from current Cambridge syllabus"
+            className={`whitespace-nowrap shrink-0 h-8 px-3 text-xs font-medium inline-flex items-center gap-1.5 rounded-lg border transition-all ${
+              hideObsoleteActive
+                ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
+                : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+            }`}
+          >
+            {hideObsoleteActive ? (
+              <>
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                <span>Obsolete Hidden</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3 h-3 text-amber-500" />
+                <span>Showing Obsolete</span>
+              </>
+            )}
+          </button>
 
           {/* Primary 3: Paper Component Multi-Select Dropdown */}
           <FilterMultiSelect
@@ -870,26 +868,24 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
               )}
 
-              {/* Science Obsolete Content Toggle (Mobile) */}
-              {!isMath && (
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
-                    Pre-2023 Removed Syllabus Content
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => onFilterChange({ hideObsolete: !hideObsoleteActive })}
-                    className={`w-full py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all ${
-                      hideObsoleteActive
-                        ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                        : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-                    }`}
-                  >
-                    <span>Hide Pre-2023 Obsolete Content</span>
-                    <span className="font-bold">{hideObsoleteActive ? 'ON' : 'OFF'}</span>
-                  </button>
-                </div>
-              )}
+              {/* Obsolete Content Toggle (Mobile) */}
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                  Removed Syllabus Content
+                </label>
+                <button
+                  type="button"
+                  onClick={() => onFilterChange({ hideObsolete: !hideObsoleteActive })}
+                  className={`w-full py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all ${
+                    hideObsoleteActive
+                      ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
+                      : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                  }`}
+                >
+                  <span>Hide Obsolete Content</span>
+                  <span className="font-bold">{hideObsoleteActive ? 'ON' : 'OFF'}</span>
+                </button>
+              </div>
 
               {/* Tier Selector (Mobile) */}
               <div>

@@ -135,7 +135,8 @@ export interface Question {
   mark_scheme_image_url: string;
   is_mcq: boolean;
   correct_answer?: 'A' | 'B' | 'C' | 'D';
-  obsolete?: boolean; // For pre-2023 deprecated science topics / pre-2020 math
+  is_obsolete?: boolean; // Strictly true if question tests removed Cambridge syllabus concepts
+  obsolete?: boolean; // Maintained for backward compatibility
   obsolete_reason?: string | null; // Reason why question is obsolete under Cambridge syllabus revisions
 }
 
@@ -188,6 +189,7 @@ export interface QuestionItem extends Partial<Omit<Question, 'series' | 'correct
   key?: string;
   correctAnswer?: string;
   correct_answer?: 'A' | 'B' | 'C' | 'D' | string;
+  is_obsolete?: boolean;
   obsolete?: boolean;
   obsolete_reason?: string | null;
 }
@@ -225,7 +227,7 @@ export interface FilterState {
   minMarks?: number | null;
   maxMarks?: number | null;
   searchQuery: string;
-  hideObsolete?: boolean; // For science pre-2023 questions
+  hideObsolete?: boolean; // Filter out questions testing removed Cambridge syllabus concepts across all subjects
 
   // Interactive workspace filter controls
   selectedUnits: string[];     // Checked paper components / units; empty means all

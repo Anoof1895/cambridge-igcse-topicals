@@ -493,7 +493,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                 </li>
                 <li className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                  <span>Pre-2023 obsolete filtering (logic gates, manometers)</span>
+                  <span>Syllabus exclusion filtering (logic gates, manometers, etc.)</span>
                 </li>
                 <li className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />

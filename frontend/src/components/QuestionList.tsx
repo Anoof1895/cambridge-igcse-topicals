@@ -89,8 +89,8 @@ export const getCambridgeMetadata = (q: QuestionItem) => {
   const calcAllowed = isCalculatorAllowed(q);
   const isNonCalc = !calcAllowed;
 
-  // Obsolete (Pre-2023 Sciences / Pre-2020 Math)
-  const isObsolete = Boolean(q.obsolete);
+  // Obsolete (Pre-cutoff syllabus removals)
+  const isObsolete = Boolean(q.is_obsolete ?? q.obsolete);
   const obsoleteReason = q.obsolete_reason;
 
   return {
@@ -566,14 +566,14 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                         </span>
                       )}
 
-                      {/* Pre-2023 Obsolete Topic Badge for Sciences / Pre-2020 Math */}
+                      {/* Obsolete Syllabus Removal Badge */}
                       {meta.isObsolete && (
                         <span 
                           title={q.obsolete_reason || meta.obsoleteReason || "Tests content removed in official Cambridge syllabus revisions"}
-                          className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30"
+                          className="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 max-w-[280px] truncate"
                         >
-                          <AlertTriangle className="w-2.5 h-2.5 text-amber-500" />
-                          Pre-2023 Deprecated
+                          <AlertTriangle className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+                          <span className="truncate">Obsolete: {q.obsolete_reason || meta.obsoleteReason || "Removed in current syllabus"}</span>
                         </span>
                       )}
                     </div>
