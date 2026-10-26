@@ -29,6 +29,7 @@ import {
   Award,
   Layers,
   Columns,
+  GripVertical,
 } from 'lucide-react';
 import {
   QuestionItem,
@@ -54,6 +55,7 @@ import {
 } from '../utils/spotlight';
 import {
   autoGenerateExam,
+  fisherYatesShuffle,
   ExamStructure,
   SmartGenerateMode,
 } from '../utils/examGenerator';
@@ -210,6 +212,46 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     }
   }, [includeFormalHeader, includeSourceTags, includeHeaderFooter]);
 
+  // Per-Subject Cart Persistence Helper (Record<string, string[]> in localStorage under 'igcse_quiz_carts')
+  const persistSubjectCartToStorage = (subj: Subject, ids: string[]) => {
+    try {
+      const raw = localStorage.getItem('igcse_quiz_carts');
+      const parsed: Record<string, string[]> = raw ? JSON.parse(raw) : {};
+      parsed[subj] = ids;
+      localStorage.setItem('igcse_quiz_carts', JSON.stringify(parsed));
+    } catch {
+      // Ignore storage quota or private-mode errors
+    }
+  };
+
+  const updateCartOrder = (newIds: string[]) => {
+    onReorderCart(newIds);
+    persistSubjectCartToStorage(activeSubject, newIds);
+  };
+
+  useEffect(() => {
+    persistSubjectCartToStorage(activeSubject, cartQuestionIds);
+  }, [activeSubject, cartQuestionIds]);
+
+  // Native HTML5 Drag-and-Drop Reordering State & Refs
+  const draggedIndexRef = useRef<number | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  // Generator Constraint Relaxation / Target Warning Toast
+  const [generatorWarning, setGeneratorWarning] = useState<string | null>(null);
+  const generatorWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showGeneratorWarning = (message: string) => {
+    setGeneratorWarning(message);
+    if (generatorWarningTimerRef.current) {
+      clearTimeout(generatorWarningTimerRef.current);
+    }
+    generatorWarningTimerRef.current = setTimeout(() => {
+      setGeneratorWarning(null);
+    }, 6000);
+  };
+
   // Lightweight Undo Stack for Cart Destruction Protection
   const [cartUndoStack, setCartUndoStack] = useState<string[][]>([]);
   const [showUndoToast, setShowUndoToast] = useState<boolean>(false);
@@ -231,7 +273,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     if (cartUndoStack.length === 0) return;
     const previousCart = cartUndoStack[cartUndoStack.length - 1];
     setCartUndoStack((stack) => stack.slice(0, -1));
-    onReorderCart(previousCart);
+    updateCartOrder(previousCart);
     if (previousCart.length > 0) {
       setPreviewQuestionId(previousCart[0]);
     }
@@ -246,6 +288,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     return () => {
       if (undoToastTimerRef.current) {
         clearTimeout(undoToastTimerRef.current);
+      }
+      if (generatorWarningTimerRef.current) {
+        clearTimeout(generatorWarningTimerRef.current);
       }
     };
   }, []);
@@ -343,6 +388,12 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     setIsPresetsModalOpen(false);
     setExamStructure(isMath ? 'theory_only' : 'authentic');
     setPreviewQuestionId(questions[0]?.id || null);
+    setCartUndoStack([]);
+    setShowUndoToast(false);
+    setGeneratorWarning(null);
+    draggedIndexRef.current = null;
+    setDraggedIndex(null);
+    setDragOverIndex(null);
 
     const isDefaultTitle = Object.values(DEFAULT_EXAM_TITLES).includes(testTitle);
     if (isDefaultTitle || !testTitle) {
@@ -749,33 +800,17 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       syllabusEra: (preset.syllabusEra as SyllabusEra) || prev.syllabusEra,
     }));
 
-    const pool = questions.filter((q) => {
-      if (preset.syllabusEra && preset.syllabusEra !== 'all') {
-        const qYear = q.year || 2025;
-        if (preset.syllabusEra === '2025-2028' && (qYear < 2025 || qYear > 2026)) return false;
-        if ((preset.syllabusEra === '2019-2024' || preset.syllabusEra === '2020-2024') && (qYear < 2019 || qYear > 2024)) return false;
-      }
-      if (preset.tier && preset.tier !== 'practical' && q.tier && q.tier !== preset.tier) {
-        if (preset.tier === 'extended' && q.paper !== 2 && q.paper !== 4 && q.paper !== 6) return false;
-        if (preset.tier === 'core' && q.paper !== 1 && q.paper !== 3) return false;
-      }
-      if (paperNum && q.paper !== paperNum) return false;
-      if (preset.isMcqOnly && !q.is_mcq) return false;
-      if (!preset.isMcqOnly && preset.id.includes('theory') && q.is_mcq) return false;
-      if (preset.calculatorAllowed === false && q.calculator_allowed !== false) return false;
-      if (q.is_obsolete || q.obsolete) return false;
-      return true;
-    });
-
-    const activePool = pool.length >= 5 ? pool : questions.filter((q) => !(q.is_obsolete || q.obsolete));
-
-    const { selected, actualMarks } = autoGenerateExam(activePool, {
+    const { selected, actualMarks, relaxedConstraints } = autoGenerateExam(questions, {
+      subject: activeSubject,
       targetMarks: preset.targetMarks,
       questionCount: preset.questionCount,
       mode: 'balanced',
       structure,
       selectedComponents: paperNum ? [paperNum] : undefined,
       tier: preset.tier,
+      syllabusEra: (preset.syllabusEra as SyllabusEra) || filters.syllabusEra,
+      selectedTopics: filters.selectedUnits,
+      selectedSubtopics: filters.selectedSubtopics,
       calculatorAllowed: preset.calculatorAllowed,
       isMcqOnly: preset.isMcqOnly,
       hideObsolete: true,
@@ -788,9 +823,18 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         pushCartUndoState(cartQuestionIds);
       }
       const newIds = selected.map((q) => q.id);
-      onReorderCart(newIds);
+      updateCartOrder(newIds);
       setPreviewQuestionId(newIds[0]);
       setLastGeneratedInfo(`${selected.length} Qs • ${actualMarks}m`);
+      if (relaxedConstraints.length > 0 || actualMarks !== preset.targetMarks) {
+        const reasonText =
+          relaxedConstraints.length > 0
+            ? `Relaxed soft constraints: ${relaxedConstraints.join(', ')}`
+            : `Closest valid total: ${actualMarks}m / ${preset.targetMarks}m (hard constraints preserved)`;
+        showGeneratorWarning(reasonText);
+      }
+    } else {
+      showGeneratorWarning('No questions matched hard constraints for this preset.');
     }
   };
 
@@ -803,15 +847,19 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       .filter((q) => !cartQuestionIds.includes(q.id));
 
     if (basePool.length === 0) {
-      alert('No remaining questions match your active filters. Try broadening your filters or clearing subtopics.');
+      showGeneratorWarning('No remaining questions match your active filters.');
       return;
     }
 
-    const { selected, actualMarks } = autoGenerateExam(basePool, {
+    const { selected, actualMarks, relaxedConstraints } = autoGenerateExam(basePool, {
+      subject: activeSubject,
       targetMarks: neededMarks,
       mode: generateMode,
       structure: examStructure,
       tier: filters.selectedTier,
+      syllabusEra: filters.syllabusEra,
+      selectedTopics: filters.selectedUnits,
+      selectedSubtopics: filters.selectedSubtopics,
       selectedComponents: selectedPaperNums.length > 0 ? selectedPaperNums : undefined,
       calculatorAllowed: calcFilter === 'non-calc' ? false : calcFilter === 'calc' ? true : undefined,
       hideObsolete: filters.hideObsolete,
@@ -820,31 +868,42 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     });
 
     if (selected.length === 0) {
-      alert('Could not match remaining questions to target marks. Try relaxing your filters.');
+      showGeneratorWarning('Could not match remaining questions without violating hard constraints.');
       return;
     }
 
     const newIds = [...cartQuestionIds, ...selected.map((q) => q.id)];
-    onReorderCart(newIds);
+    updateCartOrder(newIds);
     if (!previewQuestionId && selected.length > 0) {
       setPreviewQuestionId(selected[0].id);
     }
     setLastGeneratedInfo(`+${selected.length} Qs • +${actualMarks}m added`);
+    if (relaxedConstraints.length > 0 || actualMarks !== neededMarks) {
+      const reasonText =
+        relaxedConstraints.length > 0
+          ? `Relaxed soft constraints: ${relaxedConstraints.join(', ')}`
+          : `Added closest valid total (+${actualMarks}m / +${neededMarks}m) while preserving hard constraints.`;
+      showGeneratorWarning(reasonText);
+    }
   };
 
   // Fresh Auto-Generate Quiz Handler
   const handleSmartGenerate = () => {
     const pool = filteredPool.length > 0 ? filteredPool : questions;
     if (pool.length === 0) {
-      alert('No questions available in the current filter pool. Please relax your filters.');
+      showGeneratorWarning('No questions available in the current filter pool.');
       return;
     }
 
-    const { selected, actualMarks } = autoGenerateExam(pool, {
+    const { selected, actualMarks, relaxedConstraints } = autoGenerateExam(pool, {
+      subject: activeSubject,
       targetMarks,
       mode: generateMode,
       structure: examStructure,
       tier: filters.selectedTier,
+      syllabusEra: filters.syllabusEra,
+      selectedTopics: filters.selectedUnits,
+      selectedSubtopics: filters.selectedSubtopics,
       selectedComponents: selectedPaperNums.length > 0 ? selectedPaperNums : undefined,
       calculatorAllowed: calcFilter === 'non-calc' ? false : calcFilter === 'calc' ? true : undefined,
       hideObsolete: filters.hideObsolete,
@@ -853,7 +912,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     });
 
     if (selected.length === 0) {
-      alert('Could not match questions to target marks. Please broaden your filters.');
+      showGeneratorWarning('Could not match questions without violating hard constraints.');
       return;
     }
 
@@ -861,22 +920,30 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       pushCartUndoState(cartQuestionIds);
     }
     const newIds = selected.map((q) => q.id);
-    onReorderCart(newIds);
+    updateCartOrder(newIds);
     setPreviewQuestionId(newIds[0]);
     onSetTestTitle(`${DEFAULT_EXAM_TITLES[activeSubject]} (${actualMarks}m)`);
     setLastGeneratedInfo(`${selected.length} Qs • ${actualMarks}m`);
+    if (relaxedConstraints.length > 0 || actualMarks !== targetMarks) {
+      const reasonText =
+        relaxedConstraints.length > 0
+          ? `Relaxed soft constraints: ${relaxedConstraints.join(', ')}`
+          : `Closest valid total (${actualMarks}m / ${targetMarks}m) — hard constraints preserved.`;
+      showGeneratorWarning(reasonText);
+    }
   };
 
   const handleClearCartWithUndo = () => {
     if (cartQuestionIds.length === 0) return;
     pushCartUndoState(cartQuestionIds);
     onClearCart();
+    persistSubjectCartToStorage(activeSubject, []);
   };
 
   const handleShuffleCart = () => {
     if (cartQuestionIds.length <= 1) return;
-    const shuffled = [...cartQuestionIds].sort(() => Math.random() - 0.5);
-    onReorderCart(shuffled);
+    const shuffled = fisherYatesShuffle(cartQuestionIds);
+    updateCartOrder(shuffled);
   };
 
   const handleMoveUp = (index: number) => {
@@ -885,7 +952,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     const temp = newIds[index - 1];
     newIds[index - 1] = newIds[index];
     newIds[index] = temp;
-    onReorderCart(newIds);
+    updateCartOrder(newIds);
   };
 
   const handleMoveDown = (index: number) => {
@@ -894,7 +961,54 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     const temp = newIds[index + 1];
     newIds[index + 1] = newIds[index];
     newIds[index] = temp;
-    onReorderCart(newIds);
+    updateCartOrder(newIds);
+  };
+
+  // Native HTML5 Drag-and-Drop Reordering Handlers
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    draggedIndexRef.current = index;
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    try {
+      e.dataTransfer.setData('text/plain', String(index));
+    } catch {
+      // Ignore browser-specific setData restrictions
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.preventDefault();
+    if (draggedIndexRef.current !== null && draggedIndexRef.current !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, dropIndex: number) => {
+    e.preventDefault();
+    const fromIndex = draggedIndexRef.current;
+    draggedIndexRef.current = null;
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+    if (fromIndex === null || fromIndex === dropIndex) return;
+
+    const newIds = [...cartQuestionIds];
+    const [movedId] = newIds.splice(fromIndex, 1);
+    newIds.splice(dropIndex, 0, movedId);
+    updateCartOrder(newIds);
+  };
+
+  const handleDragEnd = () => {
+    draggedIndexRef.current = null;
+    setDraggedIndex(null);
+    setDragOverIndex(null);
   };
 
   // PDF Export Handlers
@@ -2278,6 +2392,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               const isFirst = idx === 0;
               const isLast = idx === cartQuestions.length - 1;
               const isPreviewed = previewQuestionId === q.id;
+              const isDragging = draggedIndex === idx;
+              const isDropTarget =
+                dragOverIndex === idx && draggedIndex !== null && draggedIndex !== idx;
+              const dropIndicatorClass = isDropTarget
+                ? draggedIndex < idx
+                  ? 'border-b-2 border-b-indigo-500 scale-[1.01] ring-1 ring-indigo-500/30'
+                  : 'border-t-2 border-t-indigo-500 scale-[1.01] ring-1 ring-indigo-500/30'
+                : '';
               const qNum =
                 q.question_number ??
                 q.questionNumber ??
@@ -2287,6 +2409,12 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               return (
                 <div
                   key={q.id}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDragEnter={(e) => handleDragEnter(e, idx)}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  onDragEnd={handleDragEnd}
                   onClick={() => {
                     setPreviewQuestionId(q.id);
                     if (window.innerWidth < 1024) {
@@ -2296,13 +2424,21 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       setIsCartDrawerOpen(false);
                     }
                   }}
-                  className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer ${
-                    isPreviewed
+                  className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer select-none ${
+                    isDragging
+                      ? 'opacity-50 border-dashed border-indigo-500/60 bg-indigo-500/5'
+                      : isPreviewed
                       ? `${accentClasses.bgLight} ${accentClasses.border} shadow-sm`
                       : 'bg-slate-50 hover:bg-slate-100 dark:bg-[#0B0E16]/80 dark:hover:bg-white/[0.04] border-slate-200 dark:border-white/[0.07]'
-                  }`}
+                  } ${dropIndicatorClass}`}
                 >
-                  <div className="flex items-center gap-2 overflow-hidden">
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span
+                      title="Drag to reorder question"
+                      className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing shrink-0 flex items-center"
+                    >
+                      <GripVertical className="w-3.5 h-3.5" />
+                    </span>
                     <span className="w-5 h-5 rounded-md bg-slate-200 dark:bg-white/[0.08] flex items-center justify-center font-mono tabular-nums font-bold text-[10px] text-slate-700 dark:text-slate-300 shrink-0">
                       {idx + 1}
                     </span>
@@ -2591,6 +2727,28 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         durationMinutes={targetTimeMinutes}
         subject={activeSubject}
       />
+
+      {/* Generator Relaxed Constraint / Closest Marks Warning Toast */}
+      {generatorWarning && (
+        <div
+          role="alert"
+          aria-live="polite"
+          className={`fixed ${
+            showUndoToast && cartUndoStack.length > 0 ? 'bottom-16' : 'bottom-5'
+          } left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-amber-950/95 dark:bg-amber-900/95 text-amber-100 text-xs font-medium shadow-2xl border border-amber-500/40 max-w-md`}
+        >
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span className="truncate">{generatorWarning}</span>
+          <button
+            type="button"
+            onClick={() => setGeneratorWarning(null)}
+            aria-label="Dismiss warning notification"
+            className="text-amber-300 hover:text-white transition-colors ml-1 shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* 5-Second Cart Destruction Protection Undo Toast */}
       {showUndoToast && cartUndoStack.length > 0 && (

@@ -60,12 +60,6 @@ interface LoadedQuestionCanvas {
   structure: CanvasStructure;
 }
 
-function appendCacheBuster(url: string): string {
-  if (!url || url.startsWith('blob:') || url.startsWith('data:')) return url;
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}pdf_cb=${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-}
-
 /**
  * Step 1 & Step 2: Scans horizontal rows across the question canvas and groups non-white rows
  * (merging tiny internal gaps < 8px) into structural ContentStrips and WhiteGaps.
@@ -490,7 +484,8 @@ function isSliceEntirelyWhite(
 }
 
 /**
- * Slices a rectangular region [startY, startY + sliceH) from a source canvas into a PNG dataUrl.
+ * Slices a rectangular region [startY, startY + sliceH) from a source canvas into a JPEG dataUrl (quality 0.88)
+ * and immediately frees the temporary slice canvas memory.
  */
 function extractCanvasSliceDataUrl(
   sourceCanvas: HTMLCanvasElement,
@@ -502,15 +497,22 @@ function extractCanvasSliceDataUrl(
   sliceCanvas.width = width;
   sliceCanvas.height = sliceH;
   const sliceCtx = sliceCanvas.getContext('2d');
-  if (!sliceCtx) return '';
+  if (!sliceCtx) {
+    sliceCanvas.width = 0;
+    sliceCanvas.height = 0;
+    return '';
+  }
   sliceCtx.fillStyle = '#FFFFFF';
   sliceCtx.fillRect(0, 0, width, sliceH);
   sliceCtx.drawImage(sourceCanvas, 0, startY, width, sliceH, 0, 0, width, sliceH);
-  return sliceCanvas.toDataURL('image/png');
+  const dataUrl = sliceCanvas.toDataURL('image/jpeg', 0.88);
+  sliceCanvas.width = 0;
+  sliceCanvas.height = 0;
+  return dataUrl;
 }
 
 /**
- * Loads an image via fetch/blob or Image element onto an offscreen white-backed 2D canvas
+ * Loads an image via browser-cached fetch/blob or Image element onto an offscreen white-backed 2D canvas
  * so pixel-level whitespace seam detection can be performed dynamically per page.
  */
 async function loadQuestionCanvas(rawUrl: string): Promise<LoadedQuestionCanvas> {
@@ -523,14 +525,12 @@ async function loadQuestionCanvas(rawUrl: string): Promise<LoadedQuestionCanvas>
   let imageSourceUrl = '';
   let objectUrlToRevoke: string | null = null;
 
-  // 1. Primary path: fetch as Blob with cache: 'no-store' + cache-busting query parameter
+  // 1. Primary path: fetch as Blob leveraging browser HTTP cache (no forced no-store cache-busters)
   const candidateUrls = Array.from(new Set([fullUrl, localUrl, rawUrl].filter(Boolean)));
   for (const candidate of candidateUrls) {
     try {
-      const fetchUrl = candidate.startsWith('http') ? appendCacheBuster(candidate) : candidate;
-      const res = await fetch(fetchUrl, {
+      const res = await fetch(candidate, {
         mode: 'cors',
-        cache: 'no-store',
         credentials: 'omit',
       });
       if (res.ok) {
@@ -546,9 +546,9 @@ async function loadQuestionCanvas(rawUrl: string): Promise<LoadedQuestionCanvas>
     }
   }
 
-  // 2. Fallback path: cache-busted direct URL
+  // 2. Fallback path: direct URL
   if (!imageSourceUrl) {
-    imageSourceUrl = fullUrl.startsWith('http') ? appendCacheBuster(fullUrl) : fullUrl || localUrl;
+    imageSourceUrl = fullUrl || localUrl;
   }
 
   return new Promise((resolve, reject) => {
@@ -585,6 +585,51 @@ async function loadQuestionCanvas(rawUrl: string): Promise<LoadedQuestionCanvas>
     };
     img.src = imageSourceUrl;
   });
+}
+
+/**
+ * Bounded concurrency sliding-window prefetch pool (default concurrency: 3).
+ * Downloads and prepares up to `concurrency` question crops ahead of the current index
+ * while preserving strict page order and bounding active offscreen canvas memory.
+ */
+function createCanvasPrefetchPool(
+  urls: (string | null | undefined)[],
+  concurrency: number = 3
+): (index: number) => Promise<LoadedQuestionCanvas> {
+  const inFlight = new Map<number, Promise<LoadedQuestionCanvas>>();
+  let nextToStart = 0;
+
+  const enqueueUpTo = (limitIndex: number) => {
+    const targetEnd = Math.min(urls.length, limitIndex);
+    while (nextToStart < targetEnd) {
+      const idx = nextToStart++;
+      const u = urls[idx];
+      if (u) {
+        const p = loadQuestionCanvas(u);
+        // Attach no-op catch so pre-fetched rejections don't trigger unhandledrejection before awaited
+        p.catch(() => {});
+        inFlight.set(idx, p);
+      }
+    }
+  };
+
+  // Prime initial window of `concurrency` items
+  enqueueUpTo(concurrency);
+
+  return (index: number): Promise<LoadedQuestionCanvas> => {
+    // Advance sliding window so `concurrency` items stay in flight ahead of `index`
+    enqueueUpTo(index + concurrency + 1);
+    const existing = inFlight.get(index);
+    if (existing) {
+      inFlight.delete(index);
+      return existing;
+    }
+    const raw = urls[index];
+    if (!raw) {
+      return Promise.reject(new Error('Empty image URL'));
+    }
+    return loadQuestionCanvas(raw);
+  };
 }
 
 function getSubjectFormalTitle(qSample?: QuestionItem): { code: string; name: string } {
@@ -811,7 +856,10 @@ export async function generateQuestionPaperPDF({
     cursorY += 10;
   }
 
-  // --- Questions Iteration ---
+  // --- Questions Iteration (with bounded concurrency: 3 prefetch pool) ---
+  const qpUrls = questions.map((q) => resolveQuestionImageUrl(q));
+  const getNextQuestionCanvas = createCanvasPrefetchPool(qpUrls, 3);
+
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
     const qNumberLabel = `Question ${i + 1}`;
@@ -822,10 +870,11 @@ export async function generateQuestionPaperPDF({
       onProgress(i + 1, questions.length, `Formatting Question ${i + 1} of ${questions.length}...`);
     }
 
-    const rawQuestionPath = resolveQuestionImageUrl(q);
+    let qCanvasToRelease: HTMLCanvasElement | null = null;
 
     try {
-      const { canvas: qCanvas, ctx: qCtx, width: qW, height: qH, structure: qStructure } = await loadQuestionCanvas(rawQuestionPath);
+      const { canvas: qCanvas, ctx: qCtx, width: qW, height: qH, structure: qStructure } = await getNextQuestionCanvas(i);
+      qCanvasToRelease = qCanvas;
       const naturalWidthMm = Math.min(180, (qW / 150) * 25.4);
       const pxPerMm = qW / naturalWidthMm;
       const fullImgHeightMm = qH / pxPerMm;
@@ -919,7 +968,7 @@ export async function generateQuestionPaperPDF({
 
         // Draw Question Image aligned left at natural DPI scale (capped at 1.0x)
         const imgX = marginX;
-        doc.addImage(sliceDataUrl, 'PNG', imgX, cursorY, imgW, imgH, undefined, 'FAST');
+        doc.addImage(sliceDataUrl, 'JPEG', imgX, cursorY, imgW, imgH, undefined, 'FAST');
 
         cursorY += imgH + 9;
         currentY = nextCutY;
@@ -936,6 +985,11 @@ export async function generateQuestionPaperPDF({
       doc.setTextColor(0, 0, 0);
       doc.text(`${qNumberLabel} [Image could not be rendered: ${q.id}]`, marginX, cursorY + 4);
       cursorY += 15;
+    } finally {
+      if (qCanvasToRelease) {
+        qCanvasToRelease.width = 0;
+        qCanvasToRelease.height = 0;
+      }
     }
   }
 
@@ -1081,7 +1135,10 @@ export async function generateMarkSchemePDF({
     cursorY += 10;
   }
 
-  // --- Mark Scheme Questions Iteration ---
+  // --- Mark Scheme Questions Iteration (with bounded concurrency: 3 prefetch pool) ---
+  const msUrls = questions.map((q) => resolveMarkSchemeImageUrl(q));
+  const getNextMsCanvas = createCanvasPrefetchPool(msUrls, 3);
+
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i];
     const qNumberLabel = `Question ${i + 1} Mark Scheme`;
@@ -1092,7 +1149,7 @@ export async function generateMarkSchemePDF({
       onProgress(i + 1, questions.length, `Formatting Mark Scheme for Question ${i + 1}...`);
     }
 
-    const rawMarkSchemePath = resolveMarkSchemeImageUrl(q);
+    const rawMarkSchemePath = msUrls[i];
 
     // If MCQ with answer letter known, render quick answer pill if image is missing
     if (!rawMarkSchemePath) {
@@ -1109,8 +1166,11 @@ export async function generateMarkSchemePDF({
       continue;
     }
 
+    let msCanvasToRelease: HTMLCanvasElement | null = null;
+
     try {
-      const { canvas: msCanvas, ctx: msCtx, width: msW, height: msH, structure: msStructure } = await loadQuestionCanvas(rawMarkSchemePath);
+      const { canvas: msCanvas, ctx: msCtx, width: msW, height: msH, structure: msStructure } = await getNextMsCanvas(i);
+      msCanvasToRelease = msCanvas;
       const naturalWidthMm = Math.min(180, (msW / 150) * 25.4);
       const pxPerMm = msW / naturalWidthMm;
       const fullImgHeightMm = msH / pxPerMm;
@@ -1199,7 +1259,7 @@ export async function generateMarkSchemePDF({
 
         // Draw MS Image aligned left at natural DPI scale (capped at 1.0x)
         const imgX = marginX;
-        doc.addImage(sliceDataUrl, 'PNG', imgX, cursorY, imgW, imgH, undefined, 'FAST');
+        doc.addImage(sliceDataUrl, 'JPEG', imgX, cursorY, imgW, imgH, undefined, 'FAST');
 
         cursorY += imgH + 9;
         currentY = nextCutY;
@@ -1216,6 +1276,11 @@ export async function generateMarkSchemePDF({
       doc.setTextColor(0, 0, 0);
       doc.text(`${qNumberLabel} [Image could not be rendered: ${q.id}]`, marginX, cursorY + 4);
       cursorY += 14;
+    } finally {
+      if (msCanvasToRelease) {
+        msCanvasToRelease.width = 0;
+        msCanvasToRelease.height = 0;
+      }
     }
   }
 

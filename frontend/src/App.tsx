@@ -401,50 +401,43 @@ export const App: React.FC = () => {
   } = useProgress();
   const { isAuthModalOpen, closeAuthModal } = useAuth();
 
-  // Persisted custom test maker carts separated by subject
-  const [mathTestCart, setMathTestCart] = useState<string[]>(() => {
+  // Persisted custom test maker carts separated by subject (key: igcse_quiz_carts)
+  const [subjectCarts, setSubjectCarts] = useState<Record<Subject, string[]>>(() => {
+    const fallback: Record<Subject, string[]> = {
+      mathematics: [],
+      physics: [],
+      chemistry: [],
+      biology: [],
+    };
     try {
-      const saved = localStorage.getItem('cambridge_math_test_cart');
-      return saved ? JSON.parse(saved) : [];
+      const legacyMath = localStorage.getItem('cambridge_math_test_cart');
+      const legacyPhys = localStorage.getItem('cambridge_phys_test_cart');
+      const legacyChem = localStorage.getItem('cambridge_chem_test_cart');
+      const legacyBio = localStorage.getItem('cambridge_bio_test_cart');
+      if (legacyMath) fallback.mathematics = JSON.parse(legacyMath) || [];
+      if (legacyPhys) fallback.physics = JSON.parse(legacyPhys) || [];
+      if (legacyChem) fallback.chemistry = JSON.parse(legacyChem) || [];
+      if (legacyBio) fallback.biology = JSON.parse(legacyBio) || [];
+
+      const savedMap = localStorage.getItem('igcse_quiz_carts');
+      if (savedMap) {
+        const parsed = JSON.parse(savedMap);
+        if (parsed && typeof parsed === 'object') {
+          return {
+            mathematics: Array.isArray(parsed.mathematics) ? parsed.mathematics : fallback.mathematics,
+            physics: Array.isArray(parsed.physics) ? parsed.physics : fallback.physics,
+            chemistry: Array.isArray(parsed.chemistry) ? parsed.chemistry : fallback.chemistry,
+            biology: Array.isArray(parsed.biology) ? parsed.biology : fallback.biology,
+          };
+        }
+      }
     } catch {
-      return [];
+      // Ignore storage parse errors
     }
+    return fallback;
   });
 
-  const [physTestCart, setPhysTestCart] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('cambridge_phys_test_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [chemTestCart, setChemTestCart] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('cambridge_chem_test_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [bioTestCart, setBioTestCart] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('cambridge_bio_test_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const testCart = activeSubject === 'physics'
-    ? physTestCart
-    : activeSubject === 'chemistry'
-    ? chemTestCart
-    : activeSubject === 'biology'
-    ? bioTestCart
-    : mathTestCart;
+  const testCart = subjectCarts[activeSubject] || [];
 
   const [mathTestTitle, setMathTestTitle] = useState<string>(() => {
     try {
@@ -499,20 +492,16 @@ export const App: React.FC = () => {
   }, [activeSubject]);
 
   useEffect(() => {
-    localStorage.setItem('cambridge_math_test_cart', JSON.stringify(mathTestCart));
-  }, [mathTestCart]);
-
-  useEffect(() => {
-    localStorage.setItem('cambridge_phys_test_cart', JSON.stringify(physTestCart));
-  }, [physTestCart]);
-
-  useEffect(() => {
-    localStorage.setItem('cambridge_chem_test_cart', JSON.stringify(chemTestCart));
-  }, [chemTestCart]);
-
-  useEffect(() => {
-    localStorage.setItem('cambridge_bio_test_cart', JSON.stringify(bioTestCart));
-  }, [bioTestCart]);
+    try {
+      localStorage.setItem('igcse_quiz_carts', JSON.stringify(subjectCarts));
+      localStorage.setItem('cambridge_math_test_cart', JSON.stringify(subjectCarts.mathematics));
+      localStorage.setItem('cambridge_phys_test_cart', JSON.stringify(subjectCarts.physics));
+      localStorage.setItem('cambridge_chem_test_cart', JSON.stringify(subjectCarts.chemistry));
+      localStorage.setItem('cambridge_bio_test_cart', JSON.stringify(subjectCarts.biology));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [subjectCarts]);
 
   useEffect(() => {
     localStorage.setItem('cambridge_math_test_title', mathTestTitle);
@@ -531,51 +520,26 @@ export const App: React.FC = () => {
   }, [bioTestTitle]);
 
   const handleAddToCart = useCallback((id: string) => {
-    if (activeSubject === 'physics') {
-      setPhysTestCart((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    } else if (activeSubject === 'chemistry') {
-      setChemTestCart((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    } else if (activeSubject === 'biology') {
-      setBioTestCart((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    } else {
-      setMathTestCart((prev) => (prev.includes(id) ? prev : [...prev, id]));
-    }
+    setSubjectCarts((prev) => {
+      const current = prev[activeSubject] || [];
+      if (current.includes(id)) return prev;
+      return { ...prev, [activeSubject]: [...current, id] };
+    });
   }, [activeSubject]);
 
   const handleRemoveFromCart = useCallback((id: string) => {
-    if (activeSubject === 'physics') {
-      setPhysTestCart((prev) => prev.filter((item) => item !== id));
-    } else if (activeSubject === 'chemistry') {
-      setChemTestCart((prev) => prev.filter((item) => item !== id));
-    } else if (activeSubject === 'biology') {
-      setBioTestCart((prev) => prev.filter((item) => item !== id));
-    } else {
-      setMathTestCart((prev) => prev.filter((item) => item !== id));
-    }
+    setSubjectCarts((prev) => {
+      const current = prev[activeSubject] || [];
+      return { ...prev, [activeSubject]: current.filter((item) => item !== id) };
+    });
   }, [activeSubject]);
 
   const handleClearCart = useCallback(() => {
-    if (activeSubject === 'physics') {
-      setPhysTestCart([]);
-    } else if (activeSubject === 'chemistry') {
-      setChemTestCart([]);
-    } else if (activeSubject === 'biology') {
-      setBioTestCart([]);
-    } else {
-      setMathTestCart([]);
-    }
+    setSubjectCarts((prev) => ({ ...prev, [activeSubject]: [] }));
   }, [activeSubject]);
 
   const handleReorderCart = useCallback((newIds: string[]) => {
-    if (activeSubject === 'physics') {
-      setPhysTestCart(newIds);
-    } else if (activeSubject === 'chemistry') {
-      setChemTestCart(newIds);
-    } else if (activeSubject === 'biology') {
-      setBioTestCart(newIds);
-    } else {
-      setMathTestCart(newIds);
-    }
+    setSubjectCarts((prev) => ({ ...prev, [activeSubject]: newIds }));
   }, [activeSubject]);
 
   // On-demand dataset loading per active subject (avoids fetching all concurrently on cold start)
