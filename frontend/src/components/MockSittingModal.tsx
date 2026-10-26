@@ -89,6 +89,31 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
     return () => clearInterval(interval);
   }, [isOpen, isTimerRunning, isExamSubmitted]);
 
+  // Escape Key Confirmation Protection
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (showSubmitConfirm) {
+          setShowSubmitConfirm(false);
+          return;
+        }
+        if (
+          window.confirm(
+            'Are you sure you want to exit your mock exam? Your progress will be lost.'
+          )
+        ) {
+          onClose();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, showSubmitConfirm, onClose]);
+
   if (!isOpen || questions.length === 0) return null;
 
   const activeQuestion = questions[currentIndex];

@@ -175,9 +175,80 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
   const [isExportingQP, setIsExportingQP] = useState<boolean>(false);
   const [isExportingMS, setIsExportingMS] = useState<boolean>(false);
   const [exportStatus, setExportStatus] = useState<string>('');
-  const [includeFormalHeader, setIncludeFormalHeader] = useState<boolean>(false);
-  const [includeSourceTags, setIncludeSourceTags] = useState<boolean>(false);
-  const [includeHeaderFooter, setIncludeHeaderFooter] = useState<boolean>(false);
+  const [includeFormalHeader, setIncludeFormalHeader] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('includeCover');
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+  const [includeSourceTags, setIncludeSourceTags] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('includeCitations');
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+  const [includeHeaderFooter, setIncludeHeaderFooter] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('includeHeaderFooter');
+      return saved !== null ? JSON.parse(saved) : false;
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('includeCover', JSON.stringify(includeFormalHeader));
+      localStorage.setItem('includeCitations', JSON.stringify(includeSourceTags));
+      localStorage.setItem('includeHeaderFooter', JSON.stringify(includeHeaderFooter));
+    } catch {
+      // Ignore storage quota or private-mode errors
+    }
+  }, [includeFormalHeader, includeSourceTags, includeHeaderFooter]);
+
+  // Lightweight Undo Stack for Cart Destruction Protection
+  const [cartUndoStack, setCartUndoStack] = useState<string[][]>([]);
+  const [showUndoToast, setShowUndoToast] = useState<boolean>(false);
+  const undoToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const pushCartUndoState = (prevIds: string[]) => {
+    if (prevIds.length === 0) return;
+    setCartUndoStack((stack) => [...stack.slice(-9), [...prevIds]]);
+    setShowUndoToast(true);
+    if (undoToastTimerRef.current) {
+      clearTimeout(undoToastTimerRef.current);
+    }
+    undoToastTimerRef.current = setTimeout(() => {
+      setShowUndoToast(false);
+    }, 5000);
+  };
+
+  const handleUndoCartReplace = () => {
+    if (cartUndoStack.length === 0) return;
+    const previousCart = cartUndoStack[cartUndoStack.length - 1];
+    setCartUndoStack((stack) => stack.slice(0, -1));
+    onReorderCart(previousCart);
+    if (previousCart.length > 0) {
+      setPreviewQuestionId(previousCart[0]);
+    }
+    setShowUndoToast(false);
+    if (undoToastTimerRef.current) {
+      clearTimeout(undoToastTimerRef.current);
+      undoToastTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (undoToastTimerRef.current) {
+        clearTimeout(undoToastTimerRef.current);
+      }
+    };
+  }, []);
 
   // In-Browser Sitting Mode & Full Paper Presets Modals
   const [isSittingModalOpen, setIsSittingModalOpen] = useState<boolean>(false);
@@ -536,21 +607,29 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
   // Global Keyboard Navigation in Test Maker
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore key events if the user is typing in an input or textarea
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+
+      // Ignore key events if the user is interacting with form inputs, selects, buttons, or checkboxes
       const target = e.target as HTMLElement | null;
+      const tagName = target?.tagName?.toUpperCase();
       if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
+        tagName === 'INPUT' ||
+        tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' ||
+        tagName === 'BUTTON' ||
+        target?.getAttribute('role') === 'checkbox' ||
+        target?.closest('button, select, input, textarea, [role="checkbox"]') ||
         target?.isContentEditable
       ) {
         return;
       }
 
-      // Escape always closes open popovers or modals
+      // Escape closes open popovers or presets modal (MockSittingModal handles its own Escape with confirmation)
       if (e.key === 'Escape') {
         setIsFilterPopoverOpen(false);
         setIsPresetsModalOpen(false);
-        setIsSittingModalOpen(false);
         return;
       }
 
@@ -705,6 +784,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     });
 
     if (selected.length > 0) {
+      if (cartQuestionIds.length > 0) {
+        pushCartUndoState(cartQuestionIds);
+      }
       const newIds = selected.map((q) => q.id);
       onReorderCart(newIds);
       setPreviewQuestionId(newIds[0]);
@@ -775,11 +857,20 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       return;
     }
 
+    if (cartQuestionIds.length > 0) {
+      pushCartUndoState(cartQuestionIds);
+    }
     const newIds = selected.map((q) => q.id);
     onReorderCart(newIds);
     setPreviewQuestionId(newIds[0]);
     onSetTestTitle(`${DEFAULT_EXAM_TITLES[activeSubject]} (${actualMarks}m)`);
     setLastGeneratedInfo(`${selected.length} Qs • ${actualMarks}m`);
+  };
+
+  const handleClearCartWithUndo = () => {
+    if (cartQuestionIds.length === 0) return;
+    pushCartUndoState(cartQuestionIds);
+    onClearCart();
   };
 
   const handleShuffleCart = () => {
@@ -1974,7 +2065,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={onClearCart}
+                    onClick={handleClearCartWithUndo}
                     className="text-[11px] text-rose-500 hover:text-rose-400 font-medium transition-colors"
                   >
                     Clear All
@@ -2500,6 +2591,32 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         durationMinutes={targetTimeMinutes}
         subject={activeSubject}
       />
+
+      {/* 5-Second Cart Destruction Protection Undo Toast */}
+      {showUndoToast && cartUndoStack.length > 0 && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-medium shadow-2xl border border-white/15 animate-in fade-in slide-in-from-bottom-3 duration-150"
+        >
+          <span>Cart replaced —</span>
+          <button
+            type="button"
+            onClick={handleUndoCartReplace}
+            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-colors active:scale-95"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowUndoToast(false)}
+            aria-label="Dismiss undo notification"
+            className="text-slate-400 hover:text-white transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

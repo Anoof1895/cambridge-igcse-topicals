@@ -18,6 +18,7 @@ export type PdfExportOptions = PDFExportOptions;
 export interface RowMetrics {
   y: number;
   isWhite: boolean;
+  darkPixelCount: number;
   minX: number;
   maxX: number;
   transitions: number;
@@ -46,6 +47,7 @@ export interface WhiteGap {
 export interface CanvasStructure {
   width: number;
   height: number;
+  rows: RowMetrics[];
   strips: ContentStrip[];
   gaps: WhiteGap[];
 }
@@ -74,14 +76,14 @@ export function analyzeCanvasStructure(
   height: number
 ): CanvasStructure {
   if (width <= 0 || height <= 0) {
-    return { width, height, strips: [], gaps: [] };
+    return { width, height, rows: [], strips: [], gaps: [] };
   }
 
   let imageData: ImageData;
   try {
     imageData = ctx.getImageData(0, 0, width, height);
   } catch {
-    return { width, height, strips: [], gaps: [] };
+    return { width, height, rows: [], strips: [], gaps: [] };
   }
 
   const data = imageData.data;
@@ -91,12 +93,34 @@ export function analyzeCanvasStructure(
   const midXStart = Math.floor(width * 0.35);
   const midXEnd = Math.floor(width * 0.78);
 
-  const rows: RowMetrics[] = new Array(height);
-
-  // Step 1: Row Analysis Across the Image (scanning every pixel x += 1 so 1px vertical axes/gridlines are never missed)
+  // Pre-pass: Mask out vertical border lines (columns with >80% dark pixels)
+  const colDarkCounts = new Uint32Array(width);
   for (let y = 0; y < height; y++) {
     const rowOffset = y * width * 4;
-    let isWhite = true;
+    for (let x = xMargin; x < width - xMargin; x++) {
+      const idx = rowOffset + x * 4;
+      if (data[idx] < 242 || data[idx + 1] < 242 || data[idx + 2] < 242) {
+        colDarkCounts[x]++;
+      }
+    }
+  }
+
+  const borderThreshold = Math.floor(height * 0.8);
+  const isMaskedColumn = new Uint8Array(width);
+  for (let x = xMargin; x < width - xMargin; x++) {
+    if (colDarkCounts[x] > borderThreshold) {
+      isMaskedColumn[x] = 1;
+    }
+  }
+
+  const rows: RowMetrics[] = new Array(height);
+  const rowWidth = Math.max(1, width - xMargin * 2);
+  const whitespaceThreshold = Math.max(2, Math.floor(0.002 * rowWidth));
+
+  // Step 1: Row Analysis Across the Image using per-row ink-count threshold
+  for (let y = 0; y < height; y++) {
+    const rowOffset = y * width * 4;
+    let darkPixelCount = 0;
     let minX = width;
     let maxX = 0;
     let transitions = 0;
@@ -104,14 +128,15 @@ export function analyzeCanvasStructure(
     let midDarkCount = 0;
 
     for (let x = xMargin; x < width - xMargin; x++) {
+      if (isMaskedColumn[x]) continue;
+
       const idx = rowOffset + x * 4;
       const r = data[idx];
       const g = data[idx + 1];
       const b = data[idx + 2];
 
-      // Strict whitespace check: a row is blank ONLY if 0 pixels have min(R, G, B) < 242
       if (r < 242 || g < 242 || b < 242) {
-        isWhite = false;
+        darkPixelCount++;
       }
 
       const isDark = r < 220 || g < 220 || b < 220;
@@ -131,9 +156,12 @@ export function analyzeCanvasStructure(
       }
     }
 
+    const isWhite = darkPixelCount <= whitespaceThreshold;
+
     rows[y] = {
       y,
       isWhite,
+      darkPixelCount,
       minX,
       maxX,
       transitions,
@@ -249,7 +277,7 @@ export function analyzeCanvasStructure(
     }
   }
 
-  return { width, height, strips, gaps };
+  return { width, height, rows, strips, gaps };
 }
 
 /**
@@ -270,8 +298,8 @@ export function findBestSplitY(
   if (targetCutY >= imageHeight || width <= 0) return Math.min(targetCutY, imageHeight);
 
   const structure = cachedStructure ?? analyzeCanvasStructure(ctx, width, imageHeight);
-  const { strips, gaps } = structure;
-  if (strips.length === 0 || gaps.length === 0) return targetCutY;
+  const { rows, strips, gaps } = structure;
+  if (strips.length === 0) return targetCutY;
 
   const minCutY = currentY + Math.min(200, Math.floor((targetCutY - currentY) * 0.4));
 
@@ -297,10 +325,6 @@ export function findBestSplitY(
       if (prevStrip && !prevStrip.isAnswerOrMarkStrip && prevStrip.height <= 65) {
         return false;
       }
-      // Also reject if secondStrip is a standalone [1] mark or answer line that belongs to nextStrip
-      // and nextStrip + secondStrip would be split across the page break (secondStrip.y1 > targetCutY)
-      // Wait: if we cut at `gap`, both nextStrip and secondStrip move to the next page!
-      // However, if gap is inside a prompt before the answer block (prevStrip is not an answer strip), reject it.
     }
 
     if (
@@ -409,6 +433,29 @@ export function findBestSplitY(
   // return the top of the straddled strip so we never hard-cut through the middle of the graph.
   if (straddledDiagramIdx !== -1 && strips[straddledDiagramIdx].y0 > currentY) {
     return strips[straddledDiagramIdx].y0;
+  }
+
+  // Hard-cut fallback: calculate a 5-row moving sum of ink across [minCutY, targetCutY]
+  // and cut at the lowest ink valley instead of blindly cutting at targetCutY.
+  if (rows && rows.length > 0) {
+    const valleyStart = Math.max(currentY + 12, Math.min(minCutY, targetCutY - 5));
+    const valleyEnd = Math.min(imageHeight - 3, targetCutY);
+    if (valleyEnd >= valleyStart) {
+      let bestValleyY = targetCutY;
+      let minValleyInk = Infinity;
+      for (let y = valleyStart; y <= valleyEnd; y++) {
+        let sum5 = 0;
+        for (let dy = -2; dy <= 2; dy++) {
+          const ry = Math.min(imageHeight - 1, Math.max(0, y + dy));
+          sum5 += rows[ry]?.darkPixelCount ?? 0;
+        }
+        if (sum5 <= minValleyInk) {
+          minValleyInk = sum5;
+          bestValleyY = y;
+        }
+      }
+      return Math.max(currentY + 8, bestValleyY);
+    }
   }
 
   return targetCutY;
@@ -628,142 +675,140 @@ export async function generateQuestionPaperPDF({
 
   let cursorY = marginTop;
 
-  if (includeHeaderFooter) {
-    if (includeFormalHeader) {
-      // --- Page 1 Authentic Cambridge IGCSE Examination Header ---
-      // 1. Institution Header
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.text('CAMBRIDGE ASSESSMENT INTERNATIONAL EDUCATION', marginX, cursorY + 3.5);
+  if (includeFormalHeader) {
+    // --- Page 1 Authentic Cambridge IGCSE Examination Header ---
+    // 1. Institution Header
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.text('CAMBRIDGE ASSESSMENT INTERNATIONAL EDUCATION', marginX, cursorY + 3.5);
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.text('Cambridge IGCSE™', marginX + printableWidth - doc.getTextWidth('Cambridge IGCSE™'), cursorY + 3.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Cambridge IGCSE™', marginX + printableWidth - doc.getTextWidth('Cambridge IGCSE™'), cursorY + 3.5);
 
-      cursorY += 7;
+    cursorY += 7;
 
-      // 2. Subject Title & Code
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      doc.text(`${subjectName} ${subjectCode}`, marginX, cursorY + 5);
+    // 2. Subject Title & Code
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(`${subjectName} ${subjectCode}`, marginX, cursorY + 5);
 
-      // 3. Mock Paper Title
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10.5);
-      const truncatedTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
-      doc.text(truncatedTitle, marginX, cursorY + 11);
+    // 3. Mock Paper Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    const truncatedTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
+    doc.text(truncatedTitle, marginX, cursorY + 11);
 
-      // 4. Metadata Bar (Time allowed, Total marks, Date)
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(60, 60, 60);
-      const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-      doc.text(
-        `Time allowed: ${timeAllowedStr}   |   Total Marks: ${totalMarks}   |   Date: ${dateStr}`,
-        marginX,
-        cursorY + 17
-      );
+    // 4. Metadata Bar (Time allowed, Total marks, Date)
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.text(
+      `Time allowed: ${timeAllowedStr}   |   Total Marks: ${totalMarks}   |   Date: ${dateStr}`,
+      marginX,
+      cursorY + 17
+    );
 
-      cursorY += 21;
+    cursorY += 21;
 
-      // 5. Candidate Info Box (Clean 0.3mm minimalist outline)
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.3);
-      doc.rect(marginX, cursorY, printableWidth, 14);
+    // 5. Candidate Info Box (Clean 0.3mm minimalist outline)
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.rect(marginX, cursorY, printableWidth, 14);
 
-      // Candidate Name line
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('CANDIDATE NAME:', marginX + 3, cursorY + 5.5);
-      doc.setDrawColor(180, 180, 180);
-      doc.setLineWidth(0.2);
-      doc.line(marginX + 33, cursorY + 6.5, marginX + 94, cursorY + 6.5);
+    // Candidate Name line
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('CANDIDATE NAME:', marginX + 3, cursorY + 5.5);
+    doc.setDrawColor(180, 180, 180);
+    doc.setLineWidth(0.2);
+    doc.line(marginX + 33, cursorY + 6.5, marginX + 94, cursorY + 6.5);
 
-      // Centre Number boxes
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('CENTRE NUMBER:', marginX + 98, cursorY + 5.5);
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.25);
-      let boxX = marginX + 130;
-      for (let b = 0; b < 5; b++) {
-        doc.rect(boxX + b * 5.5, cursorY + 2, 4.5, 5);
-      }
-
-      // Candidate Number boxes
-      doc.text('CANDIDATE NUMBER:', marginX + 98, cursorY + 11.5);
-      boxX = marginX + 135;
-      for (let b = 0; b < 4; b++) {
-        doc.rect(boxX + b * 5.5, cursorY + 8, 4.5, 5);
-      }
-
-      cursorY += 17;
-
-      // 6. Prominent Calculator Notice Box
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(isNonCalculatorExam ? 0.45 : 0.25);
-      doc.rect(marginX, cursorY, printableWidth, 6.5);
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      if (isNonCalculatorExam) {
-        doc.setTextColor(0, 0, 0);
-        doc.text('CALCULATORS: Calculators must NOT be used in this paper.', marginX + 3, cursorY + 4.5);
-      } else {
-        doc.setTextColor(0, 0, 0);
-        doc.text('CALCULATORS: A scientific calculator should be used where appropriate.', marginX + 3, cursorY + 4.5);
-      }
-
-      cursorY += 9.5;
-
-      // 7. Instructions Box (Official Cambridge examination rubrics)
-      doc.setDrawColor(120, 120, 120);
-      doc.setLineWidth(0.25);
-      doc.rect(marginX, cursorY, printableWidth, 23);
-
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7.5);
-      doc.setTextColor(0, 0, 0);
-      doc.text('INSTRUCTIONS', marginX + 3, cursorY + 4);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.text('• Answer all questions.', marginX + 3, cursorY + 8);
-      doc.text('• Use a black or dark blue pen. You may use an HB pencil for any diagrams or graphs.', marginX + 3, cursorY + 11.5);
-      doc.text('• Write your name, centre number and candidate number in the boxes at the top of the page.', marginX + 3, cursorY + 15);
-      doc.text('• Write your answer to each question in the space provided. Do not use an erasable pen or correction fluid.', marginX + 3, cursorY + 18.5);
-      doc.text('• The number of marks for each question or part question is shown in brackets [ ]. Show all necessary working.', marginX + 3, cursorY + 22);
-
-      cursorY += 27;
-
-      // 8. Solid Black Rule Separator (1.5pt line)
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.line(marginX, cursorY, marginX + printableWidth, cursorY);
-
-      cursorY += 6;
-    } else {
-      // --- Compact Worksheet Mode ---
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9.5);
-      doc.setTextColor(0, 0, 0);
-      const compactTitle = title.length > 55 ? title.substring(0, 52) + '...' : title;
-      doc.text(compactTitle, marginX, cursorY + 4);
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
-      doc.setTextColor(70, 70, 70);
-      const metaStr = `Total Marks: ${totalMarks}  |  Time: ${timeAllowedStr}`;
-      doc.text(metaStr, marginX + printableWidth - doc.getTextWidth(metaStr), cursorY + 4);
-
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.4);
-      doc.line(marginX, cursorY + 6.5, marginX + printableWidth, cursorY + 6.5);
-
-      cursorY += 10;
+    // Centre Number boxes
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text('CENTRE NUMBER:', marginX + 98, cursorY + 5.5);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.25);
+    let boxX = marginX + 130;
+    for (let b = 0; b < 5; b++) {
+      doc.rect(boxX + b * 5.5, cursorY + 2, 4.5, 5);
     }
+
+    // Candidate Number boxes
+    doc.text('CANDIDATE NUMBER:', marginX + 98, cursorY + 11.5);
+    boxX = marginX + 135;
+    for (let b = 0; b < 4; b++) {
+      doc.rect(boxX + b * 5.5, cursorY + 8, 4.5, 5);
+    }
+
+    cursorY += 17;
+
+    // 6. Prominent Calculator Notice Box
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(isNonCalculatorExam ? 0.45 : 0.25);
+    doc.rect(marginX, cursorY, printableWidth, 6.5);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    if (isNonCalculatorExam) {
+      doc.setTextColor(0, 0, 0);
+      doc.text('CALCULATORS: Calculators must NOT be used in this paper.', marginX + 3, cursorY + 4.5);
+    } else {
+      doc.setTextColor(0, 0, 0);
+      doc.text('CALCULATORS: A scientific calculator should be used where appropriate.', marginX + 3, cursorY + 4.5);
+    }
+
+    cursorY += 9.5;
+
+    // 7. Instructions Box (Official Cambridge examination rubrics)
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineWidth(0.25);
+    doc.rect(marginX, cursorY, printableWidth, 23);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text('INSTRUCTIONS', marginX + 3, cursorY + 4);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.text('• Answer all questions.', marginX + 3, cursorY + 8);
+    doc.text('• Use a black or dark blue pen. You may use an HB pencil for any diagrams or graphs.', marginX + 3, cursorY + 11.5);
+    doc.text('• Write your name, centre number and candidate number in the boxes at the top of the page.', marginX + 3, cursorY + 15);
+    doc.text('• Write your answer to each question in the space provided. Do not use an erasable pen or correction fluid.', marginX + 3, cursorY + 18.5);
+    doc.text('• The number of marks for each question or part question is shown in brackets [ ]. Show all necessary working.', marginX + 3, cursorY + 22);
+
+    cursorY += 27;
+
+    // 8. Solid Black Rule Separator (1.5pt line)
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(marginX, cursorY, marginX + printableWidth, cursorY);
+
+    cursorY += 6;
+  } else if (includeHeaderFooter) {
+    // --- Compact Worksheet Mode ---
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(0, 0, 0);
+    const compactTitle = title.length > 55 ? title.substring(0, 52) + '...' : title;
+    doc.text(compactTitle, marginX, cursorY + 4);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(70, 70, 70);
+    const metaStr = `Total Marks: ${totalMarks}  |  Time: ${timeAllowedStr}`;
+    doc.text(metaStr, marginX + printableWidth - doc.getTextWidth(metaStr), cursorY + 4);
+
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    doc.line(marginX, cursorY + 6.5, marginX + printableWidth, cursorY + 6.5);
+
+    cursorY += 10;
   }
 
   // --- Questions Iteration ---
@@ -781,7 +826,8 @@ export async function generateQuestionPaperPDF({
 
     try {
       const { canvas: qCanvas, ctx: qCtx, width: qW, height: qH, structure: qStructure } = await loadQuestionCanvas(rawQuestionPath);
-      const pxPerMm = qW / printableWidth;
+      const naturalWidthMm = Math.min(180, (qW / 150) * 25.4);
+      const pxPerMm = qW / naturalWidthMm;
       const fullImgHeightMm = qH / pxPerMm;
       const headerBlockMm = 8;
 
@@ -838,7 +884,7 @@ export async function generateQuestionPaperPDF({
         }
 
         const sliceDataUrl = extractCanvasSliceDataUrl(qCanvas, qW, currentY, sliceHeightPx);
-        const imgW = printableWidth;
+        const imgW = naturalWidthMm;
         const imgH = sliceHeightPx / pxPerMm;
         const currentLabel = isContinuation ? `${qNumberLabel} (continued)` : qNumberLabel;
 
@@ -871,8 +917,8 @@ export async function generateQuestionPaperPDF({
 
         cursorY += 8;
 
-        // Draw Question Image centered
-        const imgX = marginX + (printableWidth - imgW) / 2;
+        // Draw Question Image aligned left at natural DPI scale (capped at 1.0x)
+        const imgX = marginX;
         doc.addImage(sliceDataUrl, 'PNG', imgX, cursorY, imgW, imgH, undefined, 'FAST');
 
         cursorY += imgH + 9;
@@ -958,83 +1004,81 @@ export async function generateMarkSchemePDF({
 
   let cursorY = marginTop;
 
-  if (includeHeaderFooter) {
-    if (includeFormalHeader) {
-      // --- Page 1 Formal Exam Mark Scheme Header ---
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.text('CAMBRIDGE ASSESSMENT INTERNATIONAL EDUCATION', marginX, cursorY + 3.5);
+  if (includeFormalHeader) {
+    // --- Page 1 Formal Exam Mark Scheme Header ---
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.text('CAMBRIDGE ASSESSMENT INTERNATIONAL EDUCATION', marginX, cursorY + 3.5);
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.text('Cambridge IGCSE™ — MARK SCHEME', marginX + printableWidth - doc.getTextWidth('Cambridge IGCSE™ — MARK SCHEME'), cursorY + 3.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Cambridge IGCSE™ — MARK SCHEME', marginX + printableWidth - doc.getTextWidth('Cambridge IGCSE™ — MARK SCHEME'), cursorY + 3.5);
 
-      cursorY += 7;
+    cursorY += 7;
 
-      // Exam Title
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      doc.text(`${subjectName} ${subjectCode}`, marginX, cursorY + 5);
+    // Exam Title
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(`${subjectName} ${subjectCode}`, marginX, cursorY + 5);
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(10.5);
-      const truncatedTitle = title.length > 55 ? title.substring(0, 52) + '...' : title;
-      doc.text(`Mark Scheme: ${truncatedTitle}`, marginX, cursorY + 11);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    const truncatedTitle = title.length > 55 ? title.substring(0, 52) + '...' : title;
+    doc.text(`Mark Scheme: ${truncatedTitle}`, marginX, cursorY + 11);
 
-      // Metadata Bar
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(60, 60, 60);
-      const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-      doc.text(`Questions: ${questions.length}   |   Maximum Mark: ${totalMarks}   |   Published: ${dateStr}`, marginX, cursorY + 17);
+    // Metadata Bar
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.text(`Questions: ${questions.length}   |   Maximum Mark: ${totalMarks}   |   Published: ${dateStr}`, marginX, cursorY + 17);
 
-      cursorY += 21;
+    cursorY += 21;
 
-      // Generic Marking Guidance Box
-      doc.setDrawColor(100, 100, 100);
-      doc.setLineWidth(0.25);
-      doc.rect(marginX, cursorY, printableWidth, 14);
+    // Generic Marking Guidance Box
+    doc.setDrawColor(100, 100, 100);
+    doc.setLineWidth(0.25);
+    doc.rect(marginX, cursorY, printableWidth, 14);
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(7.5);
-      doc.setTextColor(0, 0, 0);
-      doc.text('GENERIC MARKING PRINCIPLES', marginX + 3, cursorY + 4);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(0, 0, 0);
+    doc.text('GENERIC MARKING PRINCIPLES', marginX + 3, cursorY + 4);
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(6.8);
-      doc.text('• Marks must be awarded in line with the specific content points and marking criteria outlined.', marginX + 3, cursorY + 7.5);
-      doc.text('• Method marks (M) are awarded for correct strategy. Accuracy marks (A) require prior method.', marginX + 3, cursorY + 10.5);
-      doc.text('• In science papers, allow error carried forward (ECF) where intermediate values are consistently used.', marginX + 3, cursorY + 13.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.8);
+    doc.text('• Marks must be awarded in line with the specific content points and marking criteria outlined.', marginX + 3, cursorY + 7.5);
+    doc.text('• Method marks (M) are awarded for correct strategy. Accuracy marks (A) require prior method.', marginX + 3, cursorY + 10.5);
+    doc.text('• In science papers, allow error carried forward (ECF) where intermediate values are consistently used.', marginX + 3, cursorY + 13.5);
 
-      cursorY += 18;
+    cursorY += 18;
 
-      // Solid Rule Separator
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.5);
-      doc.line(marginX, cursorY, marginX + printableWidth, cursorY);
+    // Solid Rule Separator
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(marginX, cursorY, marginX + printableWidth, cursorY);
 
-      cursorY += 6;
-    } else {
-      // --- Worksheet Mode Mark Scheme Header ---
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9.5);
-      doc.setTextColor(0, 0, 0);
-      const compactTitle = `${title.length > 50 ? title.substring(0, 47) + '...' : title} — Mark Scheme`;
-      doc.text(compactTitle, marginX, cursorY + 4);
+    cursorY += 6;
+  } else if (includeHeaderFooter) {
+    // --- Worksheet Mode Mark Scheme Header ---
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(0, 0, 0);
+    const compactTitle = `${title.length > 50 ? title.substring(0, 47) + '...' : title} — Mark Scheme`;
+    doc.text(compactTitle, marginX, cursorY + 4);
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
-      doc.setTextColor(70, 70, 70);
-      const metaStr = `Questions: ${questions.length}  |  Total Marks: ${totalMarks}`;
-      doc.text(metaStr, marginX + printableWidth - doc.getTextWidth(metaStr), cursorY + 4);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(70, 70, 70);
+    const metaStr = `Questions: ${questions.length}  |  Total Marks: ${totalMarks}`;
+    doc.text(metaStr, marginX + printableWidth - doc.getTextWidth(metaStr), cursorY + 4);
 
-      doc.setDrawColor(0, 0, 0);
-      doc.setLineWidth(0.4);
-      doc.line(marginX, cursorY + 6.5, marginX + printableWidth, cursorY + 6.5);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    doc.line(marginX, cursorY + 6.5, marginX + printableWidth, cursorY + 6.5);
 
-      cursorY += 10;
-    }
+    cursorY += 10;
   }
 
   // --- Mark Scheme Questions Iteration ---
@@ -1067,7 +1111,8 @@ export async function generateMarkSchemePDF({
 
     try {
       const { canvas: msCanvas, ctx: msCtx, width: msW, height: msH, structure: msStructure } = await loadQuestionCanvas(rawMarkSchemePath);
-      const pxPerMm = msW / printableWidth;
+      const naturalWidthMm = Math.min(180, (msW / 150) * 25.4);
+      const pxPerMm = msW / naturalWidthMm;
       const fullImgHeightMm = msH / pxPerMm;
       const headerBlockMm = 8;
 
@@ -1119,7 +1164,7 @@ export async function generateMarkSchemePDF({
         }
 
         const sliceDataUrl = extractCanvasSliceDataUrl(msCanvas, msW, currentY, sliceHeightPx);
-        const imgW = printableWidth;
+        const imgW = naturalWidthMm;
         const imgH = sliceHeightPx / pxPerMm;
         const currentLabel = isContinuation ? `${qNumberLabel} (continued)` : qNumberLabel;
 
@@ -1152,7 +1197,8 @@ export async function generateMarkSchemePDF({
 
         cursorY += 8;
 
-        const imgX = marginX + (printableWidth - imgW) / 2;
+        // Draw MS Image aligned left at natural DPI scale (capped at 1.0x)
+        const imgX = marginX;
         doc.addImage(sliceDataUrl, 'PNG', imgX, cursorY, imgW, imgH, undefined, 'FAST');
 
         cursorY += imgH + 9;
