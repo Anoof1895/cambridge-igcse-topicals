@@ -484,6 +484,113 @@ function isSliceEntirelyWhite(
 }
 
 /**
+ * Dynamically locates the original Cambridge question number (1- or 2-digit) in the left margin
+ * (`x < canvas.width * 0.075`) and replaces it in-place with the sequential quiz number.
+ */
+export function renumberQuestionCanvas(
+  canvas: HTMLCanvasElement,
+  ctx: CanvasRenderingContext2D,
+  newNumber: number
+): void {
+  const w = canvas.width;
+  const h = canvas.height;
+  if (w <= 0 || h <= 0) return;
+
+  // Scan up to 7.5% of width to comfortably encompass 2-digit numbers (e.g. 11, 20, 35)
+  // while stopping before the question stem/sub-part text which begins at >= 7.8%
+  const scanW = Math.min(w, Math.floor(w * 0.075));
+  const scanH = Math.min(h, Math.floor(w * 0.18));
+
+  let imgData: ImageData;
+  try {
+    imgData = ctx.getImageData(0, 0, scanW, scanH);
+  } catch {
+    return;
+  }
+
+  const data = imgData.data;
+
+  // 1. Find the vertical bounds (minY, maxY) of the first line of text
+  let minY = -1;
+  let maxY = -1;
+  let consecutiveBlankRows = 0;
+
+  for (let y = 0; y < scanH; y++) {
+    let rowHasDark = false;
+    for (let x = 2; x < scanW; x++) {
+      const idx = (y * scanW + x) * 4;
+      if (data[idx] < 210 && data[idx + 1] < 210 && data[idx + 2] < 210) {
+        rowHasDark = true;
+        break;
+      }
+    }
+
+    if (rowHasDark) {
+      if (minY === -1) minY = y;
+      maxY = y;
+      consecutiveBlankRows = 0;
+    } else if (minY !== -1) {
+      consecutiveBlankRows++;
+      if (consecutiveBlankRows >= 5) break;
+    }
+  }
+
+  const glyphH = maxY - minY + 1;
+  if (minY === -1 || glyphH < 10 || glyphH > 38) return;
+
+  // 2. Scan columns across the line height to find the question number and the gap before the text
+  let minX = -1;
+  let maxX = -1;
+  let blankColCount = 0;
+
+  for (let x = 2; x < scanW; x++) {
+    let colHasDark = false;
+    for (let y = minY; y <= maxY; y++) {
+      const idx = (y * scanW + x) * 4;
+      if (data[idx] < 210 && data[idx + 1] < 210 && data[idx + 2] < 210) {
+        colHasDark = true;
+        break;
+      }
+    }
+
+    if (colHasDark) {
+      if (minX === -1) minX = x;
+      maxX = x;
+      blankColCount = 0;
+    } else if (minX !== -1) {
+      blankColCount++;
+      // A gap of 5+ blank columns marks the separation between question number and text
+      if (blankColCount >= 5) break;
+    }
+  }
+
+  if (minX === -1 || maxX === -1) return;
+
+  const glyphW = maxX - minX + 1;
+  // Ensure the glyph width fits expected bounds for 1 or 2 digits (max ~55px)
+  if (glyphW < 4 || glyphW > Math.floor(w * 0.055)) return;
+
+  // 3. Clear the original question number (and leave enough room for newNumber)
+  const clearW = Math.max(glyphW + 6, newNumber >= 10 ? 38 : 24);
+  const clearH = glyphH + 6;
+
+  ctx.save();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(Math.max(0, minX - 3), Math.max(0, minY - 3), clearW, clearH);
+
+  // 4. Draw the new sequential number
+  // Lock font size to ~10.5pt physical equivalent relative to canvas width
+  const fontSizePx = Math.round(w * 0.0215);
+  ctx.font = `bold ${fontSizePx}px Arial, Helvetica, sans-serif`;
+  ctx.fillStyle = '#000000';
+  ctx.textBaseline = 'top';
+  // Align vertically with the text line
+  const drawY = minY !== -1 ? minY : Math.round(w * 0.015);
+  ctx.fillText(String(newNumber), minX, drawY);
+  ctx.restore();
+}
+
+/**
  * Slices a rectangular region [startY, startY + sliceH) from a source canvas into a JPEG dataUrl (quality 0.88)
  * and immediately frees the temporary slice canvas memory.
  */
@@ -864,7 +971,6 @@ export async function generateQuestionPaperPDF({
     const q = questions[i];
     const qNumberLabel = `Question ${i + 1}`;
     const qOriginMeta = formatOriginCitation(q);
-    const marksLabel = `[${q.marks} ${q.marks === 1 ? 'mark' : 'marks'}]`;
 
     if (onProgress) {
       onProgress(i + 1, questions.length, `Formatting Question ${i + 1} of ${questions.length}...`);
@@ -874,11 +980,12 @@ export async function generateQuestionPaperPDF({
 
     try {
       const { canvas: qCanvas, ctx: qCtx, width: qW, height: qH, structure: qStructure } = await getNextQuestionCanvas(i);
+      renumberQuestionCanvas(qCanvas, qCtx, i + 1);
       qCanvasToRelease = qCanvas;
       const naturalWidthMm = Math.min(180, (qW / 150) * 25.4);
       const pxPerMm = qW / naturalWidthMm;
       const fullImgHeightMm = qH / pxPerMm;
-      const headerBlockMm = 8;
+      const headerBlockMm = includeSourceTags ? 5 : 0;
 
       // If on a partially used page and the question doesn't fit:
       // Move to a fresh page if remaining space is < 75mm OR if the whole question fits on a single full page.
@@ -935,36 +1042,13 @@ export async function generateQuestionPaperPDF({
         const sliceDataUrl = extractCanvasSliceDataUrl(qCanvas, qW, currentY, sliceHeightPx);
         const imgW = naturalWidthMm;
         const imgH = sliceHeightPx / pxPerMm;
-        const currentLabel = isContinuation ? `${qNumberLabel} (continued)` : qNumberLabel;
-
-        // Draw Question Header
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10.5);
-        doc.setTextColor(0, 0, 0);
-        doc.text(currentLabel, marginX, cursorY + 4);
-
         if (includeSourceTags && !isContinuation) {
-          const numW = doc.getTextWidth(currentLabel);
           doc.setFont('helvetica', 'normal');
-          doc.setFontSize(8);
-          doc.setTextColor(90, 90, 90);
-          doc.text(qOriginMeta, marginX + numW + 4, cursorY + 4);
+          doc.setFontSize(7.5);
+          doc.setTextColor(120, 120, 120);
+          doc.text(qOriginMeta, marginX, cursorY + 3);
+          cursorY += 4.5;
         }
-
-        // Marks on right
-        if (!isContinuation) {
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(10);
-          doc.setTextColor(0, 0, 0);
-          doc.text(marksLabel, marginX + printableWidth - doc.getTextWidth(marksLabel), cursorY + 4);
-        }
-
-        // Separator rule
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.25);
-        doc.line(marginX, cursorY + 6, marginX + printableWidth, cursorY + 6);
-
-        cursorY += 8;
 
         // Draw Question Image aligned left at natural DPI scale (capped at 1.0x)
         const imgX = marginX;
