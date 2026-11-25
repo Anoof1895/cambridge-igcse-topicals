@@ -14,6 +14,7 @@ import {
   LayoutList
 } from 'lucide-react';
 import { Subject } from '../types';
+import { getCanonicalSubjectTheme } from '../utils/subjectTheme';
 import {
   CAMBRIDGE_MATH_FORMULAE,
   CAMBRIDGE_PHYSICS_EQUATIONS,
@@ -29,11 +30,6 @@ import { PhysicsConstants } from './reference/PhysicsConstants';
 import { CircuitSymbols } from './reference/CircuitSymbols';
 import { ChemistryReference } from './reference/ChemistryReference';
 import { BiologyReference } from './reference/BiologyReference';
-import {
-  handleSpotlightMove,
-  handleSpotlightLeave,
-  getSubjectSpotlightStyle,
-} from '../utils/spotlight';
 
 interface DataBookletDrawerProps {
   isOpen: boolean;
@@ -270,64 +266,43 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
 
   if (!isOpen) return null;
 
-  const subjectCode =
-    subject === 'mathematics'
-      ? '0580'
-      : subject === 'physics'
-      ? '0625'
-      : subject === 'chemistry'
-      ? '0620'
-      : '0610';
+  const drawerSubjectTheme = getCanonicalSubjectTheme(subject);
+  const mathTheme = getCanonicalSubjectTheme('mathematics');
+  const physTheme = getCanonicalSubjectTheme('physics');
+  const chemTheme = getCanonicalSubjectTheme('chemistry');
+  const bioTheme = getCanonicalSubjectTheme('biology');
+  const subjectCode = drawerSubjectTheme.code;
 
   return (
-    <div 
-      className="fixed inset-0 z-[60] flex justify-end bg-transparent md:pointer-events-none select-none animate-in fade-in duration-150"
+    <div
+      className="fixed inset-0 z-[60] flex justify-end bg-transparent md:pointer-events-none select-none"
       onClick={onClose}
     >
       {/* Drawer Container */}
-      <div 
+      <div
         className={`w-full ${
           isGridActive ? 'md:w-[92vw] lg:w-[980px] max-w-6xl' : 'sm:w-[500px] md:w-[580px]'
-        } h-full bg-white dark:bg-[#0B0F17] border-l border-slate-200 dark:border-white/[0.08] flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 z-10 select-text transition-[width] pointer-events-auto`}
+        } h-full bg-[var(--bg-surface)] border-l border-[var(--border-hairline)] flex flex-col z-10 select-text transition-[width] pointer-events-auto`}
+        style={{ boxShadow: 'var(--shadow-popover)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Bar */}
-        <div className="px-4 py-3.5 border-b border-slate-200 dark:border-white/[0.07] surface-glass shrink-0 space-y-3">
+        <div className="px-4 py-3.5 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] shrink-0 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
-                  subject === 'mathematics'
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                    : subject === 'physics'
-                    ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400'
-                    : subject === 'chemistry'
-                    ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400'
-                    : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                }`}
-              >
+              <div className={`w-8 h-8 rounded-md border flex items-center justify-center ${drawerSubjectTheme.badgeClass}`}>
                 <BookOpen className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h2 className="text-sm font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <h2 className="font-editorial text-sm font-semibold text-[var(--ink-primary)] tracking-tight">
                     Cambridge IGCSE Reference
                   </h2>
-                  <span
-                    className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${
-                      subject === 'mathematics'
-                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30'
-                        : subject === 'physics'
-                        ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30'
-                        : subject === 'chemistry'
-                        ? 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30'
-                        : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30'
-                    }`}
-                  >
+                  <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${drawerSubjectTheme.badgeClass}`}>
                     {subjectCode}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                <p className="text-[11px] text-[var(--ink-muted)]">
                   Official 2025–2028 formulae, constants &amp; practical notes
                 </p>
               </div>
@@ -340,7 +315,7 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] transition-colors"
                 title="Close Drawer (Esc)"
               >
                 <X className="w-4 h-4" />
@@ -348,18 +323,18 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
             </div>
           </div>
 
-          {/* 4-Subject Reactive Switcher */}
-          <div className="flex items-center bg-slate-200/70 dark:bg-[#07090D] p-0.5 rounded-lg text-xs w-full gap-0.5 border border-slate-300/40 dark:border-white/[0.06]">
+          {/* 4-Subject Switcher */}
+          <div className="flex items-center bg-[var(--bg-inset)] p-0.5 rounded-lg text-xs w-full gap-0.5 border border-[var(--border-hairline)]">
             <button
               type="button"
               onClick={() => {
                 setSubject('mathematics');
                 setMathSection('all');
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-bold transition-all truncate ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-semibold transition-colors truncate ${
                 subject === 'mathematics'
-                  ? 'bg-amber-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <Sigma className="w-3.5 h-3.5 shrink-0" />
@@ -371,10 +346,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 setSubject('physics');
                 setPhysicsTab('equations');
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-bold transition-all truncate ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-semibold transition-colors truncate ${
                 subject === 'physics'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <Zap className="w-3.5 h-3.5 shrink-0" />
@@ -386,10 +361,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 setSubject('chemistry');
                 setChemistryTab('periodic_table');
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-bold transition-all truncate ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-semibold transition-colors truncate ${
                 subject === 'chemistry'
-                  ? 'bg-cyan-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <FlaskConical className="w-3.5 h-3.5 shrink-0" />
@@ -401,10 +376,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 setSubject('biology');
                 setBiologyTab('food_tests');
               }}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-bold transition-all truncate ${
+              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-1 rounded-md font-semibold transition-colors truncate ${
                 subject === 'biology'
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <Dna className="w-3.5 h-3.5 shrink-0" />
@@ -412,9 +387,9 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
             </button>
           </div>
 
-          {/* Real-Time Search Bar */}
+          {/* Search Bar */}
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] pointer-events-none" />
             <input
               type="text"
               placeholder={
@@ -428,13 +403,13 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
               }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-[#07090D] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-9 pr-8 py-2 text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/50 transition-all shadow-inner"
+              className="w-full bg-[var(--bg-inset)] border border-[var(--border-hairline)] rounded-lg pl-9 pr-8 py-2 text-xs text-[var(--ink-primary)] placeholder-[var(--ink-caption)] focus:outline-none focus:border-[var(--border-strong)] transition-colors"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
               >
                 <X className="w-3.5 h-3.5" />
               </button>
@@ -444,16 +419,16 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
           {/* Subtopic Segmented Tabs */}
           <div>
             {subject === 'mathematics' ? (
-              <div className="flex items-center bg-slate-200/70 dark:bg-[#07090D] p-0.5 rounded-lg text-xs gap-0.5 border border-slate-300/40 dark:border-white/[0.06] overflow-x-auto">
+              <div className="flex items-center bg-[var(--bg-inset)] p-0.5 rounded-lg text-xs gap-0.5 border border-[var(--border-hairline)] overflow-x-auto">
                 {(['all', 'Mensuration', 'Algebra', 'Trigonometry', 'Statistics'] as const).map((sec) => (
                   <button
                     key={sec}
                     type="button"
                     onClick={() => setMathSection(sec)}
-                    className={`flex-1 py-1 px-1.5 rounded-md font-semibold text-center transition-all truncate text-[11px] whitespace-nowrap ${
+                    className={`flex-1 py-1 px-1.5 rounded-md font-semibold text-center transition-colors truncate text-[11px] whitespace-nowrap ${
                       mathSection === sec
-                        ? 'bg-amber-600 text-white shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                        : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                     }`}
                   >
                     {sec === 'all' ? 'All Sections' : sec}
@@ -465,10 +440,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setPhysicsTab('equations')}
-                  className={`py-1.5 px-1 rounded-lg font-semibold text-center truncate transition-all ${
+                  className={`py-1.5 px-1 rounded-md font-semibold text-center truncate transition-colors border ${
                     physicsTab === 'equations'
-                      ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/40 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                      ? physTheme.badgeClass
+                      : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] border-transparent'
                   }`}
                 >
                   Equations ({CAMBRIDGE_PHYSICS_EQUATIONS.length})
@@ -476,10 +451,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setPhysicsTab('constants')}
-                  className={`py-1.5 px-1 rounded-lg font-semibold text-center truncate transition-all ${
+                  className={`py-1.5 px-1 rounded-md font-semibold text-center truncate transition-colors border ${
                     physicsTab === 'constants'
-                      ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/40 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                      ? physTheme.badgeClass
+                      : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] border-transparent'
                   }`}
                 >
                   Constants &amp; Prefixes
@@ -487,10 +462,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setPhysicsTab('symbols')}
-                  className={`py-1.5 px-1 rounded-lg font-semibold text-center truncate transition-all ${
+                  className={`py-1.5 px-1 rounded-md font-semibold text-center truncate transition-colors border ${
                     physicsTab === 'symbols'
-                      ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-400/40 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                      ? physTheme.badgeClass
+                      : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] border-transparent'
                   }`}
                 >
                   Circuit Symbols ({CIRCUIT_SYMBOLS.length})
@@ -501,10 +476,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setChemistryTab('periodic_table')}
-                  className={`py-1.5 px-1 rounded-lg font-semibold text-center truncate transition-all ${
+                  className={`py-1.5 px-1 rounded-md font-semibold text-center truncate transition-colors border ${
                     chemistryTab === 'periodic_table'
-                      ? 'bg-cyan-50 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-400/40 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                      ? chemTheme.badgeClass
+                      : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] border-transparent'
                   }`}
                 >
                   Periodic Table (1–118)
@@ -512,10 +487,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setChemistryTab('qualitative_analysis')}
-                  className={`py-1.5 px-1 rounded-lg font-semibold text-center truncate transition-all ${
+                  className={`py-1.5 px-1 rounded-md font-semibold text-center truncate transition-colors border ${
                     chemistryTab === 'qualitative_analysis'
-                      ? 'bg-cyan-50 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-400/40 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                      ? chemTheme.badgeClass
+                      : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] border-transparent'
                   }`}
                 >
                   Qualitative Analysis Notes
@@ -526,10 +501,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setBiologyTab('food_tests')}
-                  className={`py-1.5 px-1 rounded-lg font-semibold text-center truncate transition-all ${
+                  className={`py-1.5 px-1 rounded-md font-semibold text-center truncate transition-colors border ${
                     biologyTab === 'food_tests'
-                      ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/40 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                      ? bioTheme.badgeClass
+                      : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] border-transparent'
                   }`}
                 >
                   Food Tests ({BIOLOGY_FOOD_TESTS.length})
@@ -537,10 +512,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                 <button
                   type="button"
                   onClick={() => setBiologyTab('magnification')}
-                  className={`py-1.5 px-1 rounded-lg font-semibold text-center truncate transition-all ${
+                  className={`py-1.5 px-1 rounded-md font-semibold text-center truncate transition-colors border ${
                     biologyTab === 'magnification'
-                      ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-400/40 shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                      ? bioTheme.badgeClass
+                      : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] border-transparent'
                   }`}
                 >
                   Magnification &amp; Calculator
@@ -551,23 +526,21 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
         </div>
 
         {/* Drawer Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          {/* =================================================================== */}
-          {/* 1. MATHEMATICS (0580) — OFFICIAL FORMULA SHEET                      */}
-          {/* =================================================================== */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-[var(--bg-paper)]">
+          {/* 1. MATHEMATICS (0580) */}
           {subject === 'mathematics' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+              <div className="flex items-center justify-between text-xs text-[var(--ink-muted)] px-1">
                 <span className="font-semibold">
                   Showing {filteredMathFormulae.length} of {CAMBRIDGE_MATH_FORMULAE.length} formulae
                 </span>
-                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-mono">
+                <span className={`text-[11px] font-mono ${mathTheme.textClass}`}>
                   Syllabus 2025–2028
                 </span>
               </div>
 
               {filteredMathFormulae.length === 0 ? (
-                <div className="text-center py-12 text-slate-400 text-xs">
+                <div className="text-center py-12 text-[var(--ink-muted)] text-xs">
                   No mathematical formulae matched &quot;{searchQuery}&quot;
                 </div>
               ) : (
@@ -577,39 +550,36 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                     return (
                       <div
                         key={item.id}
-                        onPointerMove={handleSpotlightMove}
-                        onPointerLeave={handleSpotlightLeave}
-                        style={getSubjectSpotlightStyle('mathematics', 320)}
-                        className="spotlight-surface p-3 flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:bg-slate-50/80 dark:hover:bg-white/[0.04] transition-colors"
+                        className="p-3 flex flex-col gap-2 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] transition-colors"
                       >
-                        <div className="relative z-10 flex items-center justify-between gap-2">
+                        <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shrink-0">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border shrink-0 ${mathTheme.badgeClass}`}>
                               {item.section}
                             </span>
-                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-semibold tracking-wide bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 shrink-0">
+                            <span className="px-1.5 py-0.5 rounded text-[9.5px] font-semibold tracking-wide bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)] shrink-0">
                               {item.unit}
                             </span>
-                            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">
+                            <span className="text-xs font-semibold text-[var(--ink-primary)] leading-snug">
                               {item.title}
                             </span>
                           </div>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(item.latex, item.id)}
-                            className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-400 hover:text-amber-600 dark:hover:text-amber-300 transition-all shrink-0"
+                            className="p-1.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors shrink-0"
                             title="Copy LaTeX formula"
                           >
-                            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                            {isCopied ? <Check className="w-3.5 h-3.5 text-[#15803D] dark:text-[#4ADE80]" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
                         </div>
 
-                        <div className="relative z-10 w-full overflow-x-auto px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#07090D] border border-slate-200/80 dark:border-white/[0.06] text-slate-900 dark:text-white flex items-center min-h-[38px]">
+                        <div className="w-full overflow-x-auto px-3 py-2 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] flex items-center min-h-[38px]">
                           <MathFormula latex={item.latex} className="text-xs sm:text-[13px] whitespace-nowrap" />
                         </div>
 
                         {item.description && (
-                          <div className="relative z-10 text-[10.5px] text-slate-500 dark:text-slate-400 italic">
+                          <div className="text-[10.5px] text-[var(--ink-muted)] italic">
                             {item.description}
                           </div>
                         )}
@@ -621,26 +591,24 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
             </div>
           )}
 
-          {/* =================================================================== */}
-          {/* 2. PHYSICS (0625) — EQUATIONS, CONSTANTS & SYMBOLS                 */}
-          {/* =================================================================== */}
+          {/* 2. PHYSICS (0625) */}
           {subject === 'physics' && (
             <div className="space-y-4">
               {physicsTab === 'equations' && (
                 <div className="space-y-4">
                   {Object.keys(groupedEquations).length === 0 ? (
-                    <div className="text-center py-12 text-slate-400 text-xs">
+                    <div className="text-center py-12 text-[var(--ink-muted)] text-xs">
                       No physics equations matched &quot;{searchQuery}&quot;
                     </div>
                   ) : (
                     Object.entries(groupedEquations).map(([topic, eqs]) => (
                       <div key={topic} className="space-y-2">
                         <div className="flex items-center gap-2 px-1">
-                          <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-                          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                          <span className={`w-2 h-2 rounded-[2px] shrink-0 ${physTheme.swatchClass}`} />
+                          <h3 className="text-xs font-bold text-[var(--ink-primary)] uppercase tracking-wider">
                             {topic}
                           </h3>
-                          <span className="text-[10px] text-slate-400 font-mono">
+                          <span className="text-[10px] text-[var(--ink-muted)] font-mono">
                             ({eqs.length})
                           </span>
                         </div>
@@ -651,36 +619,33 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                             return (
                               <div
                                 key={eq.id}
-                                onPointerMove={handleSpotlightMove}
-                                onPointerLeave={handleSpotlightLeave}
-                                style={getSubjectSpotlightStyle('physics', 320)}
-                                className="spotlight-surface p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:bg-slate-50/80 dark:hover:bg-white/[0.04] transition-colors"
+                                className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] transition-colors"
                               >
-                                <div className="relative z-10 sm:max-w-[45%] min-w-[130px] space-y-1">
+                                <div className="sm:max-w-[45%] min-w-[130px] space-y-1">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border ${physTheme.badgeClass}`}>
                                       {eq.unit}
                                     </span>
                                   </div>
-                                  <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                  <div className="text-xs font-semibold text-[var(--ink-primary)]">
                                     {eq.title}
                                   </div>
-                                  <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+                                  <div className="text-[11px] font-mono text-[var(--ink-muted)]">
                                     {eq.formula}
                                   </div>
                                 </div>
 
-                                <div className="relative z-10 flex items-center justify-between sm:justify-end gap-2 flex-1 min-w-0">
-                                  <div className="overflow-x-auto max-w-full px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#07090D] border border-slate-200/80 dark:border-white/[0.06] text-slate-900 dark:text-white flex items-center min-h-[36px]">
+                                <div className="flex items-center justify-between sm:justify-end gap-2 flex-1 min-w-0">
+                                  <div className="overflow-x-auto max-w-full px-2.5 py-1.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] flex items-center min-h-[36px]">
                                     <MathFormula latex={eq.latex} className="text-xs sm:text-sm whitespace-nowrap" />
                                   </div>
                                   <button
                                     type="button"
                                     onClick={() => copyToClipboard(eq.latex, eq.id)}
-                                    className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-all shrink-0"
+                                    className="p-1.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors shrink-0"
                                     title="Copy LaTeX formula"
                                   >
-                                    {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                    {isCopied ? <Check className="w-3.5 h-3.5 text-[#15803D] dark:text-[#4ADE80]" /> : <Copy className="w-3.5 h-3.5" />}
                                   </button>
                                 </div>
                               </div>
@@ -703,26 +668,24 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
             </div>
           )}
 
-          {/* =================================================================== */}
-          {/* 3. CHEMISTRY (0620) — PERIODIC TABLE & QUALITATIVE ANALYSIS        */}
-          {/* =================================================================== */}
+          {/* 3. CHEMISTRY (0620) */}
           {subject === 'chemistry' && (
             <div className="space-y-4">
               {chemistryTab === 'periodic_table' && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2 px-1">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-[var(--ink-muted)]">
                       Showing {filteredElements.length} elements
                     </span>
 
-                    <div className="flex items-center bg-slate-200/80 dark:bg-dark-800 p-0.5 rounded-lg text-[11px] font-semibold">
+                    <div className="flex items-center bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-[11px] font-semibold">
                       <button
                         type="button"
                         onClick={() => setPeriodicView('grid')}
-                        className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-all ${
+                        className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
                           !query && periodicView === 'grid'
-                            ? 'bg-cyan-600 text-white shadow-xs'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         <Grid className="w-3 h-3" />
@@ -731,10 +694,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => setPeriodicView('cards')}
-                        className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-all ${
+                        className={`px-2.5 py-1 rounded-md flex items-center gap-1 transition-colors ${
                           query || periodicView === 'cards'
-                            ? 'bg-cyan-600 text-white shadow-xs'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         <LayoutList className="w-3 h-3" />
@@ -743,29 +706,24 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                     </div>
                   </div>
 
-                  {/* 18-Column Interactive Grid */}
                   {!query && periodicView === 'grid' ? (
                     <div className="overflow-x-auto pb-4">
                       <div className="min-w-[760px] grid gap-0.5 select-text" style={{ gridTemplateColumns: '24px repeat(18, minmax(0, 1fr))' }}>
-                        {/* Header Row: Groups 1-18 */}
-                        <div className="h-6 flex items-center justify-center text-[9px] font-mono font-bold text-slate-400">
+                        <div className="h-6 flex items-center justify-center text-[9px] font-mono font-bold text-[var(--ink-caption)]">
                           P\G
                         </div>
                         {Array.from({ length: 18 }, (_, i) => (
-                          <div key={i + 1} className="h-6 flex items-center justify-center text-[10px] font-mono font-bold text-slate-500 dark:text-slate-400">
+                          <div key={i + 1} className="h-6 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--ink-muted)]">
                             {i + 1}
                           </div>
                         ))}
 
-                        {/* Periods 1 to 7 */}
                         {[1, 2, 3, 4, 5, 6, 7].map((periodNum) => (
                           <React.Fragment key={periodNum}>
-                            {/* Period row label */}
-                            <div className="flex items-center justify-center text-[10px] font-mono font-bold text-slate-400 border-r border-slate-200 dark:border-white/[0.08]">
+                            <div className="flex items-center justify-center text-[10px] font-mono font-bold text-[var(--ink-muted)] border-r border-[var(--border-hairline)]">
                               {periodNum}
                             </div>
 
-                            {/* 18 columns */}
                             {Array.from({ length: 18 }, (_, colIndex) => {
                               const groupNum = colIndex + 1;
                               const element = PERIODIC_ELEMENTS.find(
@@ -773,7 +731,7 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                               );
 
                               if (!element) {
-                                return <div key={colIndex} className="min-h-[50px] bg-slate-50/20 dark:bg-transparent" />;
+                                return <div key={colIndex} className="min-h-[50px] bg-transparent" />;
                               }
 
                               const isSelected = selectedElement?.atomicNumber === element.atomicNumber;
@@ -784,8 +742,8 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                                   key={element.atomicNumber}
                                   type="button"
                                   onClick={() => setSelectedElement(element)}
-                                  className={`min-h-[50px] p-1 rounded border flex flex-col justify-between text-left transition-all ${styleClass} ${
-                                    isSelected ? 'ring-2 ring-cyan-500 shadow-md scale-105 z-10' : ''
+                                  className={`min-h-[50px] p-1 rounded border flex flex-col justify-between text-left transition-colors ${styleClass} ${
+                                    isSelected ? 'ring-2 ring-[#C2410C] dark:ring-[#FB923C] z-10' : ''
                                   }`}
                                   title={`${element.name} (${element.symbol}) - Z: ${element.atomicNumber}, Ar: ${element.atomicMass}`}
                                 >
@@ -807,7 +765,6 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                       </div>
                     </div>
                   ) : (
-                    /* Cards Grid */
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                       {filteredElements.map((el) => {
                         const styleClass = getElementCategoryStyle(el.category);
@@ -816,7 +773,7 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                             key={el.atomicNumber}
                             type="button"
                             onClick={() => setSelectedElement(el)}
-                            className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1 transition-all ${styleClass}`}
+                            className={`p-2.5 rounded-lg border text-left flex flex-col justify-between gap-1 transition-colors ${styleClass}`}
                           >
                             <div className="flex items-center justify-between w-full text-xs font-mono">
                               <span className="font-bold">Z = {el.atomicNumber}</span>
@@ -837,30 +794,29 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                     </div>
                   )}
 
-                  {/* Element Details Modal / Banner */}
                   {selectedElement && (
-                    <div className="p-4 rounded-xl border border-cyan-500/40 bg-cyan-500/10 dark:bg-cyan-950/30 flex items-center justify-between gap-4 animate-in fade-in">
+                    <div className={`p-4 rounded-lg border flex items-center justify-between gap-4 ${chemTheme.badgeClass}`}>
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-cyan-600 text-white flex flex-col items-center justify-center font-mono shadow-md">
+                        <div className={`w-12 h-12 rounded-lg text-white flex flex-col items-center justify-center font-mono ${chemTheme.bgSolidClass}`}>
                           <span className="text-[10px] font-bold leading-none">{selectedElement.atomicNumber}</span>
                           <span className="text-lg font-extrabold leading-none">{selectedElement.symbol}</span>
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <div className="text-sm font-bold text-[var(--ink-primary)] flex items-center gap-2">
                             <span>{selectedElement.name}</span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-800 dark:text-cyan-200 border border-cyan-500/30">
+                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${chemTheme.badgeClass}`}>
                               Period {selectedElement.period}, Group {selectedElement.group}
                             </span>
                           </div>
-                          <div className="text-xs text-slate-600 dark:text-slate-300 font-mono mt-0.5">
-                            Relative Atomic Mass: <span className="font-bold">{selectedElement.atomicMass}</span> • Category: <span className="capitalize">{selectedElement.category}</span>
+                          <div className="text-xs text-[var(--ink-secondary)] font-mono mt-0.5">
+                            Relative Atomic Mass: <span className="font-bold">{selectedElement.atomicMass}</span> · Category: <span className="capitalize">{selectedElement.category}</span>
                           </div>
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setSelectedElement(null)}
-                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                        className="p-1 rounded-md text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -875,9 +831,7 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
             </div>
           )}
 
-          {/* =================================================================== */}
-          {/* 4. BIOLOGY (0610) — FOOD TESTS & MAGNIFICATION                     */}
-          {/* =================================================================== */}
+          {/* 4. BIOLOGY (0610) */}
           {subject === 'biology' && (
             <div className="space-y-4">
               {biologyTab === 'food_tests' && (
@@ -886,28 +840,27 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
 
               {biologyTab === 'magnification' && (
                 <div className="space-y-4">
-                  {/* Magnification Formulae Cards */}
                   <div className="space-y-2">
-                    <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider px-1">
+                    <h3 className="text-xs font-bold text-[var(--ink-primary)] uppercase tracking-wider px-1">
                       Magnification Formulae
                     </h3>
                     <div className="grid gap-2">
                       {filteredMagnificationFormulae.map((f) => (
                         <div
                           key={f.id}
-                          className="p-3 rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] flex items-center justify-between gap-3"
+                          className="p-3 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between gap-3"
                         >
                           <div>
-                            <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                            <div className="text-xs font-semibold text-[var(--ink-primary)]">
                               {f.title}
                             </div>
                             {f.description && (
-                              <div className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                              <div className="text-[10.5px] text-[var(--ink-muted)]">
                                 {f.description}
                               </div>
                             )}
                           </div>
-                          <div className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#07090D] border border-slate-200 dark:border-white/[0.06] shrink-0">
+                          <div className="px-2.5 py-1.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] shrink-0">
                             <MathFormula latex={f.latex} className="text-xs font-bold" />
                           </div>
                         </div>
@@ -915,29 +868,27 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                     </div>
                   </div>
 
-                  {/* Interactive Magnification Calculator */}
-                  <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 dark:bg-emerald-950/20 space-y-3">
+                  <div className="p-4 rounded-lg border border-[#BBF7D0] dark:border-emerald-500/30 bg-[#F0FDF4] dark:bg-emerald-950/20 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Calculator className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                        <Calculator className="w-4 h-4 text-[#15803D] dark:text-[#4ADE80]" />
+                        <h4 className="text-xs font-bold text-[var(--ink-primary)]">
                           Interactive Magnification Calculator
                         </h4>
                       </div>
-                      <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-500/15 px-2 py-0.5 rounded border border-emerald-500/30">
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${bioTheme.badgeClass}`}>
                         I = M × A
                       </span>
                     </div>
 
-                    {/* Mode Selector */}
-                    <div className="grid grid-cols-3 gap-1 bg-slate-200/70 dark:bg-[#07090D] p-0.5 rounded-lg text-[11px] font-semibold border border-slate-300/40 dark:border-white/[0.06]">
+                    <div className="grid grid-cols-3 gap-1 bg-[var(--bg-surface)] p-0.5 rounded-lg text-[11px] font-semibold border border-[var(--border-hairline)]">
                       <button
                         type="button"
                         onClick={() => setCalcMode('find_m')}
-                        className={`py-1 rounded text-center transition-all ${
+                        className={`py-1 rounded text-center transition-colors ${
                           calcMode === 'find_m'
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         Calculate M
@@ -945,10 +896,10 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => setCalcMode('find_a')}
-                        className={`py-1 rounded text-center transition-all ${
+                        className={`py-1 rounded text-center transition-colors ${
                           calcMode === 'find_a'
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         Calculate A
@@ -956,28 +907,27 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => setCalcMode('find_i')}
-                        className={`py-1 rounded text-center transition-all ${
+                        className={`py-1 rounded text-center transition-colors ${
                           calcMode === 'find_i'
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         Calculate I
                       </button>
                     </div>
 
-                    {/* Inputs */}
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {calcMode !== 'find_i' && (
                         <div>
-                          <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+                          <label className="text-[10px] font-semibold text-[var(--ink-muted)] block mb-1">
                             Image Size (I) [mm]
                           </label>
                           <input
                             type="number"
                             value={calcImageMm}
                             onChange={(e) => setCalcImageMm(e.target.value)}
-                            className="w-full bg-white dark:bg-[#07090D] border border-slate-200 dark:border-white/[0.08] rounded-lg px-2.5 py-1.5 font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                            className="w-full bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-md px-2.5 py-1.5 font-mono text-xs text-[var(--ink-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                             placeholder="e.g. 24"
                           />
                         </div>
@@ -985,14 +935,14 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
 
                       {calcMode !== 'find_a' && (
                         <div>
-                          <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+                          <label className="text-[10px] font-semibold text-[var(--ink-muted)] block mb-1">
                             Actual Size (A) [μm]
                           </label>
                           <input
                             type="number"
                             value={calcActualUm}
                             onChange={(e) => setCalcActualUm(e.target.value)}
-                            className="w-full bg-white dark:bg-[#07090D] border border-slate-200 dark:border-white/[0.08] rounded-lg px-2.5 py-1.5 font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                            className="w-full bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-md px-2.5 py-1.5 font-mono text-xs text-[var(--ink-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                             placeholder="e.g. 40"
                           />
                         </div>
@@ -1000,28 +950,27 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
 
                       {calcMode !== 'find_m' && (
                         <div>
-                          <label className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block mb-1">
+                          <label className="text-[10px] font-semibold text-[var(--ink-muted)] block mb-1">
                             Magnification (M)
                           </label>
                           <input
                             type="number"
                             value={calcMag}
                             onChange={(e) => setCalcMag(e.target.value)}
-                            className="w-full bg-white dark:bg-[#07090D] border border-slate-200 dark:border-white/[0.08] rounded-lg px-2.5 py-1.5 font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                            className="w-full bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-md px-2.5 py-1.5 font-mono text-xs text-[var(--ink-primary)] focus:outline-none focus:border-[var(--border-strong)]"
                             placeholder="e.g. 600"
                           />
                         </div>
                       )}
                     </div>
 
-                    {/* Output */}
                     {calculatedResult && (
-                      <div className="p-2.5 rounded-lg bg-emerald-500/15 dark:bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between gap-2">
+                      <div className={`p-2.5 rounded-md border flex items-center justify-between gap-2 ${bioTheme.badgeClass}`}>
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 block">
+                          <span className="text-[10px] font-bold uppercase tracking-wider block">
                             {calculatedResult.label}
                           </span>
-                          <span className="text-sm font-extrabold font-mono text-emerald-800 dark:text-emerald-200">
+                          <span className="text-sm font-extrabold font-mono text-[var(--ink-primary)]">
                             {calculatedResult.value}
                           </span>
                         </div>
@@ -1031,7 +980,7 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                       </div>
                     )}
 
-                    <div className="text-[10px] text-slate-400 italic">
+                    <div className="text-[10px] text-[var(--ink-muted)] italic">
                       Tip: 1 mm = 1000 μm. Always convert Image Size from mm to μm before dividing by Actual Size in μm.
                     </div>
                   </div>

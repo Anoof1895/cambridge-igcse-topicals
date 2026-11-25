@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  Mail, 
-  Lock, 
-  LogIn, 
-  UserPlus, 
-  Loader2, 
-  AlertCircle, 
+import {
+  X,
+  Mail,
+  Lock,
+  LogIn,
+  UserPlus,
+  Loader2,
+  AlertCircle,
   CheckCircle2,
-  Sparkles
+  BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,12 +32,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Sync default tab if it changes
   useEffect(() => {
     setTab(defaultTab);
   }, [defaultTab]);
 
-  // Reset errors when tab or open state changes
   useEffect(() => {
     if (isOpen) {
       setErrorMessage(null);
@@ -45,7 +43,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   }, [isOpen, tab]);
 
-  // Handle escape key to close
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -88,10 +85,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         if (error) {
           setErrorMessage(error.message);
         } else {
-          // If Supabase has email confirmation enabled
           if (data?.user && !data.session) {
             setSuccessMessage(
-              'Account created! A confirmation link has been sent to your email.'
+              'Account created. A confirmation link has been sent to your email.'
             );
           } else {
             onClose();
@@ -121,41 +117,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-[70] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-150 select-none"
+    <div
+      className="fixed inset-0 z-[70] bg-slate-950/50 flex items-center justify-center p-4 select-none"
       onClick={onClose}
     >
-      <div 
-        className="w-full max-w-md bg-[#0B0F19] border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+      <div
+        className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg overflow-hidden"
+        style={{ boxShadow: 'var(--shadow-popover)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-5 border-b border-zinc-800/80 flex items-center justify-between">
+        <div className="p-5 border-b border-[var(--border-hairline)] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center shadow-md shadow-cyan-500/20 text-white font-bold">
-              <Sparkles className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] flex items-center justify-center text-[var(--ink-primary)]">
+              <BookOpen className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-zinc-100 leading-tight">
+              <h3 className="font-editorial font-semibold text-base text-[var(--ink-primary)] leading-tight">
                 {tab === 'signin' ? 'Sign In to Cambridge IGCSE' : 'Create Free Account'}
               </h3>
-              <p className="text-[11px] text-zinc-400">
-                Sync bookmarks & progress across devices
+              <p className="text-[11px] text-[var(--ink-muted)]">
+                Sync bookmarks and progress across devices
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/80 transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Switcher */}
-        <div className="p-3 bg-zinc-900/60 border-b border-zinc-800/80">
-          <div className="flex items-center gap-1 bg-zinc-950/80 p-1 rounded-xl border border-zinc-800/60">
+        <div className="p-3 bg-[var(--bg-inset)] border-b border-[var(--border-hairline)]">
+          <div className="flex items-center gap-1 bg-[var(--bg-surface)] p-1 rounded-lg border border-[var(--border-hairline)]">
             <button
               type="button"
               onClick={() => {
@@ -163,10 +160,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                 tab === 'signin'
-                  ? 'bg-zinc-800 text-cyan-400 border border-zinc-700/60 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <LogIn className="w-3.5 h-3.5" />
@@ -179,10 +176,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              className={`flex-1 py-1.5 px-3 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                 tab === 'signup'
-                  ? 'bg-zinc-800 text-cyan-400 border border-zinc-700/60 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
@@ -193,31 +190,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         {/* Form Body */}
         <div className="p-5 sm:p-6 space-y-4">
-          {/* Error Banner */}
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-900/60 flex items-start gap-2.5 text-xs text-rose-300 animate-in fade-in">
-              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-start gap-2.5 text-xs text-rose-800 dark:text-rose-200">
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
               <span className="leading-relaxed">{errorMessage}</span>
             </div>
           )}
 
-          {/* Success Banner */}
           {successMessage && (
-            <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-900/60 flex items-start gap-2.5 text-xs text-emerald-300 animate-in fade-in">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg bg-[#F0FDF4] dark:bg-emerald-950/60 border border-[#BBF7D0] dark:border-emerald-800 flex items-start gap-2.5 text-xs text-[#15803D] dark:text-emerald-200">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
               <span className="leading-relaxed">{successMessage}</span>
             </div>
           )}
 
-          {/* Google OAuth Button */}
           <button
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full min-h-[44px] py-2.5 px-4 rounded-xl border border-zinc-750 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 font-semibold text-xs flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50"
+            className="w-full min-h-[42px] py-2 px-4 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] text-[var(--ink-primary)] font-semibold text-xs flex items-center justify-center gap-2.5 transition-colors disabled:opacity-50"
           >
             {googleLoading ? (
-              <Loader2 className="w-4 h-4 text-cyan-500 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--subject-accent)' }} />
             ) : (
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -241,22 +235,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <span>Continue with Google</span>
           </button>
 
-          {/* Divider */}
           <div className="relative flex items-center justify-center my-2">
-            <div className="border-t border-zinc-800 w-full" />
-            <span className="bg-[#0B0F19] px-3 text-[10px] uppercase font-bold tracking-wider text-zinc-500 absolute">
+            <div className="border-t border-[var(--border-hairline)] w-full" />
+            <span className="bg-[var(--bg-surface)] px-3 text-[10px] uppercase font-bold tracking-wider text-[var(--ink-caption)] absolute">
               or with email
             </span>
           </div>
 
-          {/* Credentials Form */}
           <form onSubmit={handleSubmit} className="space-y-3.5 pt-1">
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+              <label className="block text-xs font-semibold text-[var(--ink-secondary)] mb-1.5">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Mail className="w-4 h-4 text-[var(--ink-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="email"
                   value={email}
@@ -264,17 +256,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   placeholder="student@example.com"
                   required
                   autoComplete="email"
-                  className="w-full h-10 pl-9 pr-3.5 rounded-xl bg-zinc-900 border border-zinc-700/80 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                  className="w-full h-10 pl-9 pr-3.5 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-xs text-[var(--ink-primary)] placeholder-[var(--ink-caption)] focus:outline-none focus:border-[var(--border-strong)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+              <label className="block text-xs font-semibold text-[var(--ink-secondary)] mb-1.5">
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Lock className="w-4 h-4 text-[var(--ink-muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="password"
                   value={password}
@@ -283,7 +275,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   required
                   minLength={6}
                   autoComplete={tab === 'signin' ? 'current-password' : 'new-password'}
-                  className="w-full h-10 pl-9 pr-3.5 rounded-xl bg-zinc-900 border border-zinc-700/80 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all"
+                  className="w-full h-10 pl-9 pr-3.5 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-xs text-[var(--ink-primary)] placeholder-[var(--ink-caption)] focus:outline-none focus:border-[var(--border-strong)] transition-colors"
                 />
               </div>
             </div>
@@ -291,7 +283,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-cyan-600/25 active:scale-[0.98] disabled:opacity-50 mt-2"
+              className="w-full min-h-[42px] py-2 px-4 rounded-lg bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50 mt-2"
             >
               {loading ? (
                 <>
@@ -305,9 +297,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </form>
         </div>
 
-        {/* Footer Note */}
-        <div className="px-6 py-3.5 bg-zinc-900/40 border-t border-zinc-800/80 text-center">
-          <p className="text-[11px] text-zinc-400">
+        <div className="px-6 py-3.5 bg-[var(--bg-inset)] border-t border-[var(--border-hairline)] text-center">
+          <p className="text-[11px] text-[var(--ink-muted)]">
             {tab === 'signin' ? (
               <>
                 Don&apos;t have an account yet?{' '}
@@ -317,7 +308,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setTab('signup');
                     setErrorMessage(null);
                   }}
-                  className="font-bold text-cyan-400 hover:underline"
+                  className="font-semibold text-[var(--ink-primary)] underline underline-offset-2"
                 >
                   Create one now
                 </button>
@@ -331,7 +322,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     setTab('signin');
                     setErrorMessage(null);
                   }}
-                  className="font-bold text-cyan-400 hover:underline"
+                  className="font-semibold text-[var(--ink-primary)] underline underline-offset-2"
                 >
                   Sign in
                 </button>

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { AppView, QuestionItem, Subject } from '../types';
 import { useTheme } from '../context/ThemeContext';
+import { getCanonicalSubjectTheme } from '../utils/subjectTheme';
 
 export interface CommandPaletteProps {
   isOpen: boolean;
@@ -237,7 +238,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: 'Cambridge IGCSE Core & Extended (Papers 1–4, 2025+ Non-Calc)',
         category: 'Subject Switching',
         keywords: 'mathematics maths 0580 pure number algebra geometry trig non-calc calc',
-        icon: <Sigma className="w-4 h-4 text-amber-500" />,
+        icon: <Sigma className="w-4 h-4 text-[#7E22CE] dark:text-[#C084FC]" />,
         badge: activeSubject === 'mathematics' ? 'Current' : undefined,
         subjectAccent: 'mathematics',
         action: () => executeAndClose(() => onNavigate('mathematics-topical')),
@@ -248,7 +249,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: 'Cambridge IGCSE Core & Extended (Papers 1–4, 6)',
         category: 'Subject Switching',
         keywords: 'physics 0625 mechanics thermal waves electricity space atp',
-        icon: <Atom className="w-4 h-4 text-indigo-500" />,
+        icon: <Atom className="w-4 h-4 text-[#1D4ED8] dark:text-[#60A5FA]" />,
         badge: activeSubject === 'physics' ? 'Current' : undefined,
         subjectAccent: 'physics',
         action: () => executeAndClose(() => onNavigate('physics-topical')),
@@ -259,7 +260,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: 'Cambridge IGCSE Core & Extended (Papers 1–4, 6)',
         category: 'Subject Switching',
         keywords: 'chemistry 0620 states atoms stoichiometry reactions acids organic atp',
-        icon: <FlaskConical className="w-4 h-4 text-cyan-500" />,
+        icon: <FlaskConical className="w-4 h-4 text-[#C2410C] dark:text-[#FB923C]" />,
         badge: activeSubject === 'chemistry' ? 'Current' : undefined,
         subjectAccent: 'chemistry',
         action: () => executeAndClose(() => onNavigate('chemistry-topical')),
@@ -270,7 +271,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: 'Cambridge IGCSE Core & Extended (Papers 1–4, 6)',
         category: 'Subject Switching',
         keywords: 'biology 0610 cells organisms nutrition transport genetics ecology atp',
-        icon: <Dna className="w-4 h-4 text-emerald-500" />,
+        icon: <Dna className="w-4 h-4 text-[#15803D] dark:text-[#4ADE80]" />,
         badge: activeSubject === 'biology' ? 'Current' : undefined,
         subjectAccent: 'biology',
         action: () => executeAndClose(() => onNavigate('biology-topical')),
@@ -283,7 +284,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: '0580 formulas, Periodic Table, constants & analysis notes',
         category: 'Quick Actions',
         keywords: 'data booklet formula sheet tables periodic table constants notes',
-        icon: <BookOpen className="w-4 h-4 text-emerald-500" />,
+        icon: <BookOpen className="w-4 h-4 text-[#15803D] dark:text-[#4ADE80]" />,
         shortcut: 'D',
         action: () => executeAndClose(onToggleDataBooklet),
       },
@@ -293,16 +294,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: 'Clear all paper, subtopic, year, and tier filters',
         category: 'Quick Actions',
         keywords: 'reset clear all filters remove selection',
-        icon: <FilterX className="w-4 h-4 text-rose-500" />,
+        icon: <FilterX className="w-4 h-4 text-rose-600 dark:text-rose-400" />,
         action: () => executeAndClose(onResetFilters),
       },
       {
         id: 'action-toggle-theme',
-        title: `Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`,
-        subtitle: `Currently in ${theme === 'dark' ? 'Dark' : 'Light'} theme`,
+        title: `Switch to ${theme === 'dark' ? 'Light Editorial' : 'Dark'} Mode`,
+        subtitle: `Currently in ${theme === 'dark' ? 'Dark' : 'Light Editorial'} theme`,
         category: 'Quick Actions',
         keywords: 'theme dark mode light mode day night color toggle',
-        icon: theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />,
+        icon: theme === 'dark' ? <Sun className="w-4 h-4 text-[#FBBF24]" /> : <Moon className="w-4 h-4 text-[var(--ink-secondary)]" />,
         action: () => executeAndClose(toggleTheme),
       },
     ];
@@ -314,7 +315,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: 'Switch between Question Only and Split View (Anti-Spoil)',
         category: 'Quick Actions',
         keywords: 'mark scheme ms answers show hide toggle reveal',
-        icon: <Eye className="w-4 h-4 text-cyan-400" />,
+        icon: <Eye className="w-4 h-4 text-[var(--ink-secondary)]" />,
         shortcut: 'Space / M',
         action: () => executeAndClose(onToggleMarkScheme),
       });
@@ -327,7 +328,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         subtitle: 'Show only flagged questions saved for revision review',
         category: 'Quick Actions',
         keywords: 'bookmarks starred flagged saved review filter',
-        icon: <Bookmark className="w-4 h-4 text-amber-500" />,
+        icon: <Bookmark className="w-4 h-4 text-amber-600 dark:text-amber-400" />,
         shortcut: 'B',
         action: () => executeAndClose(onToggleBookmarkedOnly),
       });
@@ -392,7 +393,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           subtitle: `${q.id} • ${q.series ? q.series.toUpperCase() : ''}${q.year || ''}`,
           category: 'Questions',
           keywords: `${q.id} ${qNum} ${topic} ${subtopic}`,
-          icon: <Sparkles className="w-4 h-4 text-amber-500" />,
+          icon: <Sparkles className="w-4 h-4" style={{ color: 'var(--subject-accent)' }} />,
           badge: `${q.marks || q.total_marks || 1}m`,
           subjectAccent: activeSubject,
           action: () => executeAndClose(() => onSelectQuestion(activeSubject, q.id)),
@@ -447,16 +448,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-black/60 dark:bg-black/75 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 px-3 sm:px-4 animate-in fade-in duration-150"
+      className="fixed inset-0 z-[100] bg-slate-950/50 flex items-start justify-center pt-16 sm:pt-24 px-3 sm:px-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-white dark:bg-[#0A0D14] border border-slate-200 dark:border-white/[0.1] rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.06)] overflow-hidden flex flex-col max-h-[75vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg overflow-hidden flex flex-col max-h-[75vh]"
+        style={{ boxShadow: 'var(--shadow-popover)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
-        <div className="h-14 px-4 border-b border-slate-200 dark:border-white/[0.08] flex items-center gap-3 shrink-0">
-          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+        <div className="h-14 px-4 border-b border-[var(--border-hairline)] flex items-center gap-3 shrink-0">
+          <Search className="w-4 h-4 text-[var(--ink-muted)] shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -464,13 +466,13 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command, subject, paper (e.g. 0580/22, Vectors), or keyword..."
-            className="flex-1 bg-transparent text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-[var(--ink-primary)] placeholder-[var(--ink-caption)] focus:outline-none"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="p-1 rounded-md text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -479,16 +481,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Command List Body */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1 divide-y divide-transparent">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filteredCommands.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 dark:text-slate-500">
+            <div className="p-8 text-center text-[var(--ink-muted)]">
               <Search className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">No commands found</p>
-              <p className="text-[11px] text-slate-500 mt-1">Try searching for a subject, paper, or keyword</p>
+              <p className="text-xs font-semibold text-[var(--ink-primary)]">No commands found</p>
+              <p className="text-[11px] text-[var(--ink-muted)] mt-1">Try searching for a subject, paper, or keyword</p>
             </div>
           ) : (
             filteredCommands.map((cmd, idx) => {
               const isSelected = idx === selectedIndex;
+              const accentStyle = cmd.subjectAccent ? getCanonicalSubjectTheme(cmd.subjectAccent) : null;
               return (
                 <button
                   key={cmd.id}
@@ -498,27 +501,29 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   type="button"
                   onClick={cmd.action}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${
+                  className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-left transition-colors border ${
                     isSelected
-                      ? 'bg-amber-50 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 text-slate-900 dark:text-white shadow-sm'
-                      : 'hover:bg-slate-100 dark:hover:bg-white/[0.04] text-slate-700 dark:text-slate-300 border border-transparent'
+                      ? accentStyle
+                        ? `${accentStyle.selectedCardClass} text-[var(--ink-primary)]`
+                        : 'bg-[var(--bg-inset)] border-[var(--border-strong)] text-[var(--ink-primary)]'
+                      : 'hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 shrink-0">
+                    <div className="p-2 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] shrink-0">
                       {cmd.icon}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold truncate">{cmd.title}</span>
                         {cmd.badge && (
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-200/80 dark:bg-white/[0.08] text-slate-700 dark:text-slate-300">
+                          <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-secondary)]">
                             {cmd.badge}
                           </span>
                         )}
                       </div>
                       {cmd.subtitle && (
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                        <p className="text-[11px] text-[var(--ink-muted)] truncate mt-0.5">
                           {cmd.subtitle}
                         </p>
                       )}
@@ -529,7 +534,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                     <kbd className="kbd-keycap text-[10px] shrink-0">{cmd.shortcut}</kbd>
                   )}
                   {isSelected && (
-                    <CornerDownLeft className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <CornerDownLeft className="w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0" />
                   )}
                 </button>
               );
@@ -538,7 +543,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="h-9 px-4 border-t border-slate-200 dark:border-white/[0.08] bg-slate-50/80 dark:bg-white/[0.02] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+        <div className="h-9 px-4 border-t border-[var(--border-hairline)] bg-[var(--bg-inset)] flex items-center justify-between text-[11px] text-[var(--ink-muted)] shrink-0">
           <div className="flex items-center gap-3">
             <span>
               <kbd className="kbd-keycap mr-1">↑</kbd>

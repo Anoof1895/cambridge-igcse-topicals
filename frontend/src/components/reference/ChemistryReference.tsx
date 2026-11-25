@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { MathFormula } from '../MathFormula';
 import { QUALITATIVE_ANALYSIS_NOTES, QualitativeTestItem } from '../../constants/referenceData';
 
@@ -8,12 +9,10 @@ interface ChemistryReferenceProps {
 
 export type QualitativeCategory = 'all' | 'anion' | 'cation' | 'gas' | 'flame';
 
-// Map raw formula string into formatted LaTeX math with \text{}
 const formatIonLatex = (formula?: string): string => {
   if (!formula) return '';
   if (formula.startsWith('\\text')) return formula;
 
-  // Handle standard Cambridge formulas
   const map: Record<string, string> = {
     'CO_3^{2-}': String.raw`\text{CO}_3^{2-}`,
     'Cl^-': String.raw`\text{Cl}^-`,
@@ -45,48 +44,47 @@ const formatIonLatex = (formula?: string): string => {
   return map[formula] || String.raw`\text{${formula}}`;
 };
 
-// Render flame test color badge
 const renderFlameBadge = (ionOrGas: string) => {
   switch (ionOrGas) {
     case 'Lithium':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-500/20 text-red-300 border border-red-500/40">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/60" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-50 dark:bg-red-500/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/40">
+          <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
           Red Flame
         </span>
       );
     case 'Sodium':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 shadow-sm shadow-yellow-500/60" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-yellow-50 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-500/40">
+          <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
           Yellow Flame
         </span>
       );
     case 'Potassium':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-400/20 text-purple-300 border border-purple-400/40">
-          <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-sm shadow-purple-500/60" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-50 dark:bg-purple-400/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-400/40">
+          <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
           Lilac Flame
         </span>
       );
     case 'Calcium':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-500/20 text-orange-300 border border-orange-500/40">
-          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 shadow-sm shadow-orange-500/60" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-orange-50 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-500/40">
+          <span className="w-2.5 h-2.5 rounded-full bg-orange-500" />
           Orange-Red Flame
         </span>
       );
     case 'Barium':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-400/20 text-emerald-300 border border-emerald-400/40">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/60" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-400/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-400/40">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
           Light Green Flame
         </span>
       );
     case 'Copper(II)':
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40">
-          <span className="w-2.5 h-2.5 rounded-full bg-teal-400 shadow-sm shadow-teal-500/60" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-500/40">
+          <span className="w-2.5 h-2.5 rounded-full bg-teal-500" />
           Blue-Green Flame
         </span>
       );
@@ -95,7 +93,6 @@ const renderFlameBadge = (ionOrGas: string) => {
   }
 };
 
-// Render result visual chips (precipitates, gases, color shifts)
 const renderResultVisualChips = (item: QualitativeTestItem) => {
   const res = item.result.toLowerCase();
 
@@ -107,8 +104,8 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('white precipitate') || res.includes('white ppt')) {
     chips.push(
-      <span key="white-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-white/10 text-slate-200 border border-white/20">
-        <span className="w-2.5 h-2.5 rounded-full bg-white border border-slate-300 dark:border-white/50" />
+      <span key="white-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-[var(--bg-surface)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
+        <span className="w-2.5 h-2.5 rounded-full bg-white border border-slate-300" />
         White ppt
       </span>
     );
@@ -116,7 +113,7 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('cream precipitate')) {
     chips.push(
-      <span key="cream-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-amber-500/10 text-amber-200 border border-amber-300/30">
+      <span key="cream-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-300/30">
         <span className="w-2.5 h-2.5 rounded-full bg-[#FFF3D1] border border-amber-300" />
         Cream ppt
       </span>
@@ -125,7 +122,7 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('yellow precipitate')) {
     chips.push(
-      <span key="yellow-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-amber-400/15 text-amber-300 border border-amber-400/40">
+      <span key="yellow-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-amber-50 dark:bg-amber-400/15 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-400/40">
         <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
         Yellow ppt
       </span>
@@ -134,7 +131,7 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('light blue ppt')) {
     chips.push(
-      <span key="light-blue-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-400/30">
+      <span key="light-blue-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-sky-50 dark:bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-400/30">
         <span className="w-2.5 h-2.5 rounded-full bg-sky-400" />
         Light blue ppt
       </span>
@@ -143,7 +140,7 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('dark blue')) {
     chips.push(
-      <span key="dark-blue" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-blue-600/20 text-blue-300 border border-blue-500/40">
+      <span key="dark-blue" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-blue-50 dark:bg-blue-600/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-500/40">
         <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
         Dark blue soln
       </span>
@@ -152,7 +149,7 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('green ppt') || res.includes('grey-green ppt')) {
     chips.push(
-      <span key="green-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
+      <span key="green-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-400/30">
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
         Green ppt
       </span>
@@ -161,7 +158,7 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('red-brown ppt') || res.includes('reddish-brown')) {
     chips.push(
-      <span key="red-brown-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-amber-900/30 text-amber-200 border border-amber-700/40">
+      <span key="red-brown-ppt" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-orange-50 dark:bg-amber-900/30 text-orange-800 dark:text-amber-200 border border-orange-200 dark:border-amber-700/40">
         <span className="w-2.5 h-2.5 rounded-full bg-[#8D3B1B]" />
         Red-brown ppt
       </span>
@@ -170,10 +167,10 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('purple to colorless')) {
     chips.push(
-      <span key="purple-colorless" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-purple-500/15 text-purple-200 border border-purple-400/30">
-        <span className="w-2 h-2 rounded-full bg-purple-500" />
-        ➔
-        <span className="w-2 h-2 rounded-full bg-slate-200/50 border border-slate-300" />
+      <span key="purple-colorless" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-purple-50 dark:bg-purple-500/15 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-400/30">
+        <span className="w-2 h-2 rounded-full bg-purple-600" />
+        <ArrowRight className="w-2.5 h-2.5 shrink-0" />
+        <span className="w-2 h-2 rounded-full bg-slate-200 border border-slate-300" />
         Decolorizes
       </span>
     );
@@ -181,7 +178,7 @@ const renderResultVisualChips = (item: QualitativeTestItem) => {
 
   if (res.includes('cloudy white') || res.includes('milky')) {
     chips.push(
-      <span key="milky-white" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-white/10 text-slate-200 border border-white/20">
+      <span key="milky-white" className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10.5px] font-semibold bg-[var(--bg-surface)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
         <span className="w-2.5 h-2.5 rounded-full bg-slate-100 border border-slate-300" />
         Milky / Cloudy
       </span>
@@ -219,23 +216,23 @@ export const ChemistryReference: React.FC<ChemistryReferenceProps> = ({ searchQu
     { key: 'all', label: 'All Tests' },
     { key: 'anion', label: 'Anions' },
     { key: 'cation', label: 'Cations' },
-    { key: 'gas', label: 'Gases' }, // Note: correctly labeled "Gases", fixing "gass" typo
+    { key: 'gas', label: 'Gases' },
     { key: 'flame', label: 'Flame Tests' },
   ];
 
   return (
     <div className="space-y-3">
       {/* Qualitative Filter Tabs */}
-      <div className="flex items-center bg-slate-200/70 dark:bg-[#07090D] p-0.5 rounded-lg text-xs gap-0.5 border border-slate-300/40 dark:border-white/[0.06] overflow-x-auto">
+      <div className="flex items-center bg-[var(--bg-inset)] p-0.5 rounded-lg text-xs gap-0.5 border border-[var(--border-hairline)] overflow-x-auto">
         {categories.map((cat) => (
           <button
             key={cat.key}
             type="button"
             onClick={() => setQualitativeFilter(cat.key)}
-            className={`flex-1 py-1 px-2.5 rounded-md font-semibold text-center transition-all truncate text-[11px] ${
+            className={`flex-1 py-1 px-2.5 rounded-md font-semibold text-center transition-colors truncate text-[11px] ${
               qualitativeFilter === cat.key
-                ? 'bg-cyan-600 text-white shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
             }`}
           >
             {cat.label}
@@ -245,7 +242,7 @@ export const ChemistryReference: React.FC<ChemistryReferenceProps> = ({ searchQu
 
       {/* Tests Count */}
       <div className="flex items-center justify-between px-1">
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-xs text-[var(--ink-muted)]">
           Showing {filteredTests.length} qualitative analysis tests
         </span>
       </div>
@@ -255,39 +252,36 @@ export const ChemistryReference: React.FC<ChemistryReferenceProps> = ({ searchQu
         {filteredTests.map((item) => (
           <div
             key={item.id}
-            className="p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] hover:border-cyan-500/30 transition-all space-y-2 shadow-xs"
+            className="p-3.5 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] hover:border-[var(--border-strong)] transition-colors space-y-2"
           >
-            {/* Header: Name, KaTeX Ion Formula, and Category */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-slate-900 dark:text-white">
+                <span className="text-xs font-bold text-[var(--ink-primary)]">
                   {item.ionOrGas}
                 </span>
                 {item.formulaLatex && (
-                  <div className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/20">
+                  <div className="px-2 py-0.5 rounded bg-[#FFF7ED] dark:bg-[rgba(249,115,22,0.16)] border border-[#FED7AA] dark:border-[rgba(251,146,60,0.35)]">
                     <MathFormula
                       latex={formatIonLatex(item.formulaLatex)}
-                      className="text-xs font-semibold text-cyan-600 dark:text-cyan-400"
+                      className="text-xs font-semibold text-[#C2410C] dark:text-[#FB923C]"
                     />
                   </div>
                 )}
               </div>
-              <span className="text-[9.5px] uppercase font-bold px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 shrink-0">
+              <span className="text-[9.5px] uppercase font-bold px-2 py-0.5 rounded bg-[#FFF7ED] dark:bg-[rgba(249,115,22,0.16)] text-[#C2410C] dark:text-[#FB923C] border border-[#FED7AA] dark:border-[rgba(251,146,60,0.35)] shrink-0">
                 {item.type}
               </span>
             </div>
 
-            {/* Test Instructions */}
-            <div className="text-[11.5px] text-slate-600 dark:text-slate-300 leading-snug">
-              <strong className="text-slate-800 dark:text-slate-200">Test:</strong> {item.test}
+            <div className="text-[11.5px] text-[var(--ink-secondary)] leading-snug">
+              <strong className="text-[var(--ink-primary)]">Test:</strong> {item.test}
             </div>
 
-            {/* Result Box with Visual Color Chips */}
-            <div className="text-[11.5px] space-y-1.5 p-2.5 rounded-lg bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.06]">
+            <div className="text-[11.5px] space-y-1.5 p-2.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)]">
               <div className="flex items-start justify-between gap-2">
-                <div className="text-slate-800 dark:text-slate-200">
-                  <strong className="text-emerald-700 dark:text-emerald-400">Result:</strong>{' '}
-                  <span className="text-slate-700 dark:text-slate-300">{item.result}</span>
+                <div className="text-[var(--ink-primary)]">
+                  <strong className="text-[#15803D] dark:text-[#4ADE80]">Result:</strong>{' '}
+                  <span className="text-[var(--ink-secondary)]">{item.result}</span>
                 </div>
               </div>
 
@@ -297,7 +291,7 @@ export const ChemistryReference: React.FC<ChemistryReferenceProps> = ({ searchQu
         ))}
 
         {filteredTests.length === 0 && (
-          <div className="p-6 text-center text-xs text-slate-400 italic">
+          <div className="p-6 text-center text-xs text-[var(--ink-muted)] italic">
             No qualitative tests matching &quot;{searchQuery}&quot;
           </div>
         )}

@@ -12,15 +12,13 @@ import {
   Eraser,
   Trash2,
   Type,
-  Undo2
+  Undo2,
+  Contrast
 } from 'lucide-react';
 import { Subject } from '../types';
 import { getFullImageUrl, getLocalImageUrl } from '../utils/imageUrl';
-import {
-  handleSpotlightMove,
-  handleSpotlightLeave,
-  getSubjectSpotlightStyle,
-} from '../utils/spotlight';
+import { useTheme } from '../context/ThemeContext';
+import { getCanonicalSubjectTheme } from '../utils/subjectTheme';
 
 // Module-scoped in-memory LRU cache for annotations across question navigation & view mode toggles
 // Kept purely in RAM (max 8 questions per session); zero localStorage, sessionStorage, or backend persistence
@@ -94,11 +92,23 @@ const HIGHLIGHTER_CURSOR = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.
 
 const ERASER_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='9' fill='none' stroke='%23f43f5e' stroke-width='2' stroke-dasharray='3 2'/%3E%3Ccircle cx='12' cy='12' r='1.5' fill='%23f43f5e'/%3E%3C/svg%3E") 12 12, crosshair`;
 
-function getSubjectPenColor(activeSubject?: Subject, badgeColor?: string): string {
-  if (activeSubject === 'mathematics' || badgeColor === 'amber') return '#F59E0B'; // Amber
-  if (activeSubject === 'physics' || badgeColor === 'indigo') return '#38BDF8'; // Sky/Indigo
-  if (activeSubject === 'biology' || badgeColor === 'emerald') return '#10B981'; // Emerald
-  return '#00E5FF'; // Cyan (Chemistry default)
+function getSubjectPenColor(
+  activeSubject?: Subject,
+  badgeColor?: string,
+  isDarkPaperActive: boolean = false
+): string {
+  if (isDarkPaperActive) {
+    if (activeSubject === 'mathematics' || badgeColor === 'purple' || badgeColor === 'amber') return '#C084FC';
+    if (activeSubject === 'physics' || badgeColor === 'blue' || badgeColor === 'indigo') return '#60A5FA';
+    if (activeSubject === 'biology' || badgeColor === 'emerald') return '#4ADE80';
+    if (activeSubject === 'chemistry' || badgeColor === 'orange' || badgeColor === 'cyan') return '#FB923C';
+    return '#38BDF8';
+  }
+  if (activeSubject === 'mathematics' || badgeColor === 'purple' || badgeColor === 'amber') return '#7E22CE';
+  if (activeSubject === 'physics' || badgeColor === 'blue' || badgeColor === 'indigo') return '#1D4ED8';
+  if (activeSubject === 'biology' || badgeColor === 'emerald') return '#15803D';
+  if (activeSubject === 'chemistry' || badgeColor === 'orange' || badgeColor === 'cyan') return '#C2410C';
+  return '#0F172A';
 }
 
 function formatCitationFromId(questionId?: string, explicitCitation?: string): string | null {
@@ -131,7 +141,7 @@ interface ImageCanvasProps {
   src: string | null;
   title: string;
   badgeText?: string;
-  badgeColor?: 'cyan' | 'emerald' | 'indigo' | 'amber' | 'purple';
+  badgeColor?: 'cyan' | 'emerald' | 'indigo' | 'amber' | 'purple' | 'blue' | 'orange';
   extraBadge?: React.ReactNode;
   placeholderTitle?: string;
   placeholderMessage?: string;
@@ -156,6 +166,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
   paperCitation,
   activeSubject,
 }) => {
+  const { theme, darkPaper, toggleDarkPaper, isDarkPaperActive } = useTheme();
   const [zoom, setZoom] = useState(1);
   const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
@@ -194,8 +205,15 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
   brushSizeRef.current = brushSize;
 
   const defaultSubjectColor = useMemo(
-    () => getSubjectPenColor(activeSubject, badgeColor),
-    [activeSubject, badgeColor]
+    () => getSubjectPenColor(activeSubject, badgeColor, isDarkPaperActive),
+    [activeSubject, badgeColor, isDarkPaperActive]
+  );
+  const penPaletteSwatches = useMemo(
+    () =>
+      isDarkPaperActive
+        ? [defaultSubjectColor, '#F8FAFC', '#FACC15', '#38BDF8']
+        : [defaultSubjectColor, '#0F172A', '#DC2626', '#1D4ED8'],
+    [defaultSubjectColor, isDarkPaperActive]
   );
   const [penColor, setPenColor] = useState<string>(defaultSubjectColor);
   const penColorRef = useRef<string>(penColor);
@@ -894,30 +912,35 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
   const getBadgeClass = () => {
     switch (badgeColor) {
       case 'emerald':
-        return 'bg-emerald-500/15 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
+        return getCanonicalSubjectTheme('biology').badgeClass;
+      case 'blue':
       case 'indigo':
-        return 'bg-indigo-500/15 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30';
-      case 'amber':
-        return 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30';
+        return getCanonicalSubjectTheme('physics').badgeClass;
       case 'purple':
-        return 'bg-purple-500/15 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30';
+      case 'amber':
+        return getCanonicalSubjectTheme('mathematics').badgeClass;
+      case 'orange':
+      case 'cyan':
       default:
-        return 'bg-cyan-500/15 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30';
+        return getCanonicalSubjectTheme('chemistry').badgeClass;
     }
   };
 
   // Shared Floating Annotation Toolbar Renderer
   const renderAnnotationToolbar = () => (
-    <div className="flex items-center gap-1 sm:gap-1.5 surface-glass px-2.5 sm:px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/10 shadow-2xl select-none transition-all flex-wrap justify-center sm:flex-nowrap">
+    <div
+      className="flex items-center gap-1 sm:gap-1.5 bg-[var(--bg-surface)] px-2.5 sm:px-3 py-1.5 rounded-full border border-[var(--border-hairline)] select-none transition-colors flex-wrap justify-center sm:flex-nowrap"
+      style={{ boxShadow: 'var(--shadow-popover)' }}
+    >
       {/* Toggle Annotate: On/Off */}
       <button
         type="button"
         onClick={toggleAnnotating}
         title={isAnnotating ? 'Turn off annotation' : 'Turn on annotation overlay'}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all active:scale-[0.98] ${
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
           isAnnotating
-            ? 'bg-cyan-500 text-white shadow-sm shadow-cyan-500/30'
-            : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/[0.1] border border-transparent dark:border-white/[0.06]'
+            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+            : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--ink-primary)] border border-[var(--border-hairline)]'
         }`}
       >
         <PenLine className="w-3.5 h-3.5" />
@@ -926,33 +949,33 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
       {isAnnotating && (
         <>
-          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 mx-0.5" />
+          <div className="w-px h-4 bg-[var(--border-hairline)] mx-0.5" />
 
           {/* Pen */}
           <button
             type="button"
             onClick={() => switchTool('pen')}
             title={`Pen (${SIZE_CONFIG[brushSize].penWidth}px)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'pen'
-                ? 'bg-slate-200 dark:bg-white/[0.12] text-slate-900 dark:text-white border border-slate-300 dark:border-white/20 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
+                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
             }`}
           >
-            <span className="w-2.5 h-2.5 rounded-full shadow-sm inline-block" style={{ backgroundColor: penColor }} />
+            <span className="w-2.5 h-2.5 rounded-full border border-black/15 dark:border-white/20 inline-block" style={{ backgroundColor: penColor }} />
             <span>Pen</span>
           </button>
 
-          {/* Subject Reactive Palette Swatches */}
+          {/* Ink Palette Swatches */}
           {currentTool === 'pen' && (
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/[0.05] p-0.5 px-1.5 rounded-full border border-slate-200/80 dark:border-white/10">
-              {[defaultSubjectColor, '#FFFFFF', '#FACC15', '#F43F5E'].map((c) => (
+            <div className="flex items-center gap-1 bg-[var(--bg-inset)] p-0.5 px-1.5 rounded-full border border-[var(--border-hairline)]">
+              {penPaletteSwatches.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setPenColor(c)}
-                  className={`w-3.5 h-3.5 rounded-full transition-transform ${
-                    penColor === c ? 'scale-125 ring-2 ring-white/60 shadow-sm' : 'opacity-70 hover:opacity-100 hover:scale-110'
+                  className={`w-3.5 h-3.5 rounded-full border border-black/15 dark:border-white/20 transition-transform ${
+                    penColor === c ? 'scale-125 ring-2 ring-[var(--ink-primary)]' : 'opacity-75 hover:opacity-100 hover:scale-110'
                   }`}
                   style={{ backgroundColor: c }}
                   title={`Select ink color: ${c}`}
@@ -966,13 +989,13 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             type="button"
             onClick={() => switchTool('highlighter')}
             title={`Highlighter (${SIZE_CONFIG[brushSize].highlighterWidth}px Yellow)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'highlighter'
-                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 font-semibold'
+                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
             }`}
           >
-            <Highlighter className="w-3.5 h-3.5 text-amber-500" />
+            <Highlighter className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
             <span>Highlight</span>
           </button>
 
@@ -981,13 +1004,13 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             type="button"
             onClick={() => switchTool('text')}
             title={`Text (${SIZE_CONFIG[brushSize].fontSize}px Font)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'text'
-                ? 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/40 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
+                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
             }`}
           >
-            <Type className="w-3.5 h-3.5 text-cyan-500" />
+            <Type className="w-3.5 h-3.5" style={{ color: 'var(--subject-accent)' }} />
             <span>Text</span>
           </button>
 
@@ -996,20 +1019,20 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             type="button"
             onClick={() => switchTool('eraser')}
             title={`Eraser (${SIZE_CONFIG[brushSize].eraserWidth}px)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'eraser'
-                ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/40 font-semibold'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 font-semibold'
+                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
             }`}
           >
-            <Eraser className="w-3.5 h-3.5 text-rose-500" />
+            <Eraser className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
             <span>Eraser</span>
           </button>
 
-          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 mx-0.5" />
+          <div className="w-px h-4 bg-[var(--border-hairline)] mx-0.5" />
 
           {/* 3-Tier Size Picker */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/[0.05] p-0.5 rounded-full border border-slate-200/80 dark:border-white/10">
+          <div className="flex items-center gap-1 bg-[var(--bg-inset)] p-0.5 rounded-full border border-[var(--border-hairline)]">
             {(['fine', 'medium', 'bold'] as const).map((tier) => {
               const isSelected = brushSize === tier;
               const config = SIZE_CONFIG[tier];
@@ -1021,8 +1044,8 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
                   title={`${config.label} (${config.penWidth}px Pen / ${config.fontSize}px Font)`}
                   className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
                     isSelected
-                      ? 'bg-white dark:bg-slate-800 shadow-sm border border-slate-300 dark:border-white/15 scale-105'
-                      : 'hover:bg-slate-200/60 dark:hover:bg-white/10 opacity-60 hover:opacity-100'
+                      ? 'bg-[var(--bg-surface)] border border-[var(--border-strong)] scale-105'
+                      : 'hover:bg-[var(--bg-subtle)] opacity-65 hover:opacity-100'
                   }`}
                 >
                   <span
@@ -1031,9 +1054,9 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
                         ? currentTool === 'eraser'
                           ? 'bg-rose-500'
                           : currentTool === 'highlighter'
-                            ? 'bg-amber-400'
-                            : 'bg-cyan-500'
-                        : 'bg-slate-500 dark:bg-slate-400'
+                          ? 'bg-amber-500'
+                          : 'bg-[var(--ink-primary)]'
+                        : 'bg-[var(--ink-caption)]'
                     } ${config.dotClass}`}
                   />
                 </button>
@@ -1041,7 +1064,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             })}
           </div>
 
-          <div className="w-px h-4 bg-slate-200 dark:bg-white/10 mx-0.5" />
+          <div className="w-px h-4 bg-[var(--border-hairline)] mx-0.5" />
 
           {/* Undo Button */}
           <button
@@ -1050,10 +1073,10 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             onClick={handleUndo}
             disabled={!canUndo}
             title="Undo drawing stroke (Ctrl+Z)"
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all active:scale-[0.98] ${
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
               canUndo
-                ? 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]'
-                : 'text-slate-400 dark:text-slate-600 opacity-40 cursor-not-allowed'
+                ? 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)]'
+                : 'text-[var(--ink-caption)] opacity-40 cursor-not-allowed'
             }`}
           >
             <Undo2 className="w-3.5 h-3.5" />
@@ -1066,7 +1089,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleClearCanvas}
             title="Clear all annotations on this question"
-            className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all active:scale-[0.98]"
+            className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear</span>
@@ -1182,24 +1205,12 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
     );
   };
 
-  const ambientGlowClass =
-    badgeColor === 'amber'
-      ? 'from-amber-500/10 via-amber-500/5 to-transparent'
-      : badgeColor === 'indigo'
-      ? 'from-indigo-500/12 via-indigo-500/5 to-transparent'
-      : 'from-cyan-500/10 via-sky-500/5 to-transparent';
-
   return (
-    <div className="flex-1 flex flex-col h-full w-full min-h-[300px] bg-slate-100 dark:bg-[#0B0F19] overflow-hidden transition-colors">
+    <div className="flex-1 flex flex-col h-full w-full min-h-[300px] bg-[var(--bg-inset)] overflow-hidden transition-colors">
       {/* Canvas Header */}
-      <div
-        onPointerMove={handleSpotlightMove}
-        onPointerLeave={handleSpotlightLeave}
-        style={getSubjectSpotlightStyle(badgeColor, 260)}
-        className="spotlight-surface h-10 px-3 sm:px-4 border-b border-slate-200 dark:border-white/[0.07] bg-white/85 dark:bg-slate-950/80 backdrop-blur-md flex items-center justify-between shrink-0 select-none shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
-      >
-        <div className="relative z-10 flex items-center gap-1.5 sm:gap-2 overflow-hidden flex-wrap sm:flex-nowrap">
-          <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{title}</span>
+      <div className="h-10 px-3 sm:px-4 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between shrink-0 select-none">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden flex-wrap sm:flex-nowrap">
+          <span className="text-xs font-semibold text-[var(--ink-primary)] truncate">{title}</span>
           {badgeText && (
             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border shrink-0 font-mono tabular-nums ${getBadgeClass()}`}>
               {badgeText}
@@ -1208,60 +1219,82 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
           {extraBadge}
         </div>
 
-        {/* Zoom & Lightbox Controls */}
+        {/* Annotate, Dark Paper (Dark Mode only), Zoom & Lightbox Controls */}
         {src && !hasError && (
-          <div className="relative z-10 flex items-center gap-0.5 sm:gap-1 bg-slate-100 dark:bg-white/[0.04] rounded-lg p-0.5 border border-slate-200 dark:border-white/[0.08] shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="flex items-center gap-0.5 sm:gap-1 bg-[var(--bg-inset)] rounded-lg p-0.5 border border-[var(--border-hairline)] shrink-0">
             {enableAnnotation && (
               <>
                 <button
                   type="button"
                   onClick={toggleAnnotating}
                   title={isAnnotating ? 'Turn off annotation overlay' : 'Draw / annotate on question'}
-                  className={`p-1 sm:p-1.5 rounded transition-all active:scale-95 ${
+                  className={`p-1 sm:p-1.5 rounded transition-colors ${
                     isAnnotating
-                      ? 'bg-cyan-500 text-white shadow-sm'
-                      : 'hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                      : 'hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                   }`}
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
-                <div className="w-px h-3.5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+                <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
               </>
             )}
+
+            {theme === 'dark' && (
+              <>
+                <button
+                  type="button"
+                  onClick={toggleDarkPaper}
+                  aria-pressed={darkPaper}
+                  title={darkPaper ? 'Dark Paper ON (click for white exam sheet)' : 'Dark Paper OFF (click to invert exam scan for dark reading)'}
+                  className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                    darkPaper
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                      : 'hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                  }`}
+                >
+                  <Contrast className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Dark Paper</span>
+                </button>
+                <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
+              </>
+            )}
+
             <button
               type="button"
               onClick={handleZoomOut}
               title="Zoom out"
-              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-[10px] font-mono tabular-nums text-slate-600 dark:text-slate-400 px-1 select-none min-w-[2.5rem] sm:min-w-[3rem] text-center">
+            <span className="text-[10px] font-mono tabular-nums text-[var(--ink-secondary)] px-1 select-none min-w-[2.5rem] sm:min-w-[3rem] text-center">
               {Math.round(zoom * 100)}%
             </span>
             <button
               type="button"
               onClick={handleZoomIn}
               title="Zoom in"
-              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
-            <div className="w-px h-3.5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+            <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
             <button
               type="button"
               onClick={handleResetZoom}
               title="Reset Zoom"
-              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
-            <div className="w-px h-3.5 bg-slate-200 dark:bg-white/10 mx-0.5" />
+            <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
             <button
               type="button"
               onClick={openLightbox}
               title="Full-screen Lightbox (inspect intricate mechanisms & graphs)"
-              className="p-1 sm:p-1.5 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] transition-colors"
+              style={{ color: 'var(--subject-accent)' }}
             >
               <Maximize2 className="w-3.5 h-3.5" />
             </button>
@@ -1270,34 +1303,28 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
       </div>
 
       {/* Canvas Viewport */}
-      <div 
+      <div
         ref={containerRef}
-        className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-auto px-2 sm:px-4 py-2 flex items-start justify-center bg-slate-100 dark:bg-[#0B0F19] bg-drafting-grid relative"
+        className="flex-1 w-full max-w-full min-h-0 overflow-y-auto overflow-x-auto px-2 sm:px-4 py-3 flex items-start justify-center bg-[var(--bg-inset)] relative"
         style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
       >
-        {/* Subtle Subject-Reactive Radial Ambient Glow in Top Center */}
-        <div
-          aria-hidden="true"
-          className={`pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[560px] h-[220px] bg-gradient-to-b ${ambientGlowClass} blur-3xl rounded-full z-0`}
-        />
-
         {!src || hasError ? (
-          <div className="relative z-10 m-auto flex flex-col items-center justify-center text-center p-6 sm:p-8 max-w-md rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white/80 dark:bg-slate-900/70 backdrop-blur-md shadow-lg">
-            <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-dark-850 border border-slate-300 dark:border-white/10 flex items-center justify-center text-slate-500 mb-3">
+          <div className="relative z-10 m-auto flex flex-col items-center justify-center text-center p-6 sm:p-8 max-w-md rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)]">
+            <div className="w-12 h-12 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-hairline)] flex items-center justify-center text-[var(--ink-muted)] mb-3">
               <FileQuestion className="w-6 h-6" />
             </div>
-            <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-1">{placeholderTitle}</h4>
+            <h4 className="text-sm font-semibold text-[var(--ink-primary)] mb-1">{placeholderTitle}</h4>
             {citationDisplay && (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 mb-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-mono font-semibold bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)] mb-2">
                 Citation: {citationDisplay}
               </span>
             )}
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">{placeholderMessage}</p>
+            <p className="text-xs text-[var(--ink-muted)] mb-4 leading-relaxed">{placeholderMessage}</p>
             {src && (
               <button
                 type="button"
                 onClick={handleRetryImage}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white shadow-sm transition-all active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md text-xs font-semibold bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Retry Loading Asset</span>
@@ -1308,7 +1335,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
           <div className="relative z-10 flex flex-col justify-start items-center pt-1 pb-12 w-full max-w-full">
             {/* Minimal Floating Annotation Controls */}
             {enableAnnotation && (
-              <div className="sticky top-2 z-10 mb-3.5 flex items-center justify-center pointer-events-auto">
+              <div className="sticky top-2 z-10 mb-3 flex items-center justify-center pointer-events-auto">
                 {renderAnnotationToolbar()}
               </div>
             )}
@@ -1317,34 +1344,40 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
               className="flex justify-center w-full max-w-full"
               style={zoom > 1 ? { minWidth: `${Math.round(zoom * 100)}%` } : undefined}
             >
-              <div 
-                className={`relative w-full max-w-full transition-transform duration-100 ease-out origin-top rounded-lg sm:rounded-xl overflow-hidden shadow-md dark:shadow-[0_12px_40px_-10px_rgba(0,0,0,0.65)] border border-slate-200 dark:border-slate-800 bg-white ${
-                  isImageLoading ? 'min-h-[280px]' : ''
-                } ${!isAnnotating ? 'cursor-pointer' : ''}`}
+              <div
+                className={`relative w-full max-w-full transition-transform duration-100 ease-out origin-top rounded-lg overflow-hidden border border-[var(--border-hairline)] ${
+                  isDarkPaperActive ? 'bg-[var(--bg-surface)]' : 'bg-white'
+                } ${isImageLoading ? 'min-h-[280px]' : ''} ${!isAnnotating ? 'cursor-pointer' : ''}`}
                 style={{ transform: `scale(${zoom})`, width: '100%' }}
                 onClick={() => {
                   if (!isAnnotating && zoom === 1) {
                     openLightbox();
                   }
                 }}
-                title={!isAnnotating ? "Click or tap to inspect in full-screen lightbox" : undefined}
+                title={!isAnnotating ? 'Click or tap to inspect in full-screen lightbox' : undefined}
               >
                 {isImageLoading && (
-                  <div className="absolute inset-0 z-10 bg-slate-100 dark:bg-slate-900 animate-pulse flex items-center justify-center min-h-[280px] pointer-events-none">
-                    <div className="w-8 h-8 rounded-full border-2 border-cyan-500/20 border-t-cyan-500 animate-spin" />
+                  <div className="absolute inset-0 z-10 bg-[var(--bg-inset)] animate-pulse flex items-center justify-center min-h-[280px] pointer-events-none">
+                    <div
+                      className="w-8 h-8 rounded-full border-2 border-[var(--border-hairline)] animate-spin"
+                      style={{ borderTopColor: 'var(--subject-accent)' }}
+                    />
                   </div>
                 )}
-                <img
-                  ref={imgRef}
-                  src={resolvedSrc}
-                  alt={title}
-                  crossOrigin="anonymous"
-                  onLoad={handleImageLoad}
-                  onError={handleImageError}
-                  className={`w-full max-w-full h-auto object-contain block select-none pointer-events-none bg-white ${
-                    isImageLoading ? 'opacity-0' : 'opacity-100'
-                  }`}
-                />
+                {/* Strictly isolate Dark Paper CSS filter to the <img> element only */}
+                <div className={`exam-paper-surface w-full ${isDarkPaperActive ? 'bg-[var(--bg-surface)]' : 'bg-white'}`}>
+                  <img
+                    ref={imgRef}
+                    src={resolvedSrc}
+                    alt={title}
+                    crossOrigin="anonymous"
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                    className={`w-full max-w-full h-auto object-contain block select-none pointer-events-none ${
+                      isDarkPaperActive ? 'exam-paper-dark-invert' : 'bg-white'
+                    } ${isImageLoading ? 'opacity-0' : 'opacity-100'}`}
+                  />
+                </div>
                 {enableAnnotation && (
                   <canvas
                     ref={canvasRef}
@@ -1365,7 +1398,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
                   />
                 )}
 
-                {/* Re-Editable Text Annotations Overlay */}
+                {/* Re-Editable Text Annotations Overlay (never inverted) */}
                 {renderTextAnnotations(false)}
               </div>
             </div>
@@ -1376,44 +1409,61 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
       {/* Full-Screen Lightbox Modal */}
       {isLightboxOpen && src && !hasError && (
-        <div 
-          className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex flex-col animate-in fade-in duration-150"
+        <div
+          className="fixed inset-0 z-[70] bg-slate-950/80 flex flex-col"
           onClick={closeLightbox}
         >
           {/* Lightbox Header */}
-          <div 
-            className="h-14 px-4 sm:px-6 border-b border-dark-800 bg-dark-900/90 flex items-center justify-between shrink-0 select-none"
+          <div
+            className="h-14 px-4 sm:px-6 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between shrink-0 select-none"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 sm:gap-3 overflow-hidden">
-              <span className="text-sm font-bold text-white truncate">{title}</span>
+              <span className="text-sm font-semibold text-[var(--ink-primary)] truncate">{title}</span>
               {badgeText && (
                 <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border shrink-0 ${getBadgeClass()}`}>
                   {badgeText}
                 </span>
               )}
-              <span className="text-xs text-slate-400 hidden sm:inline">• High-Resolution View</span>
+              <span className="text-xs text-[var(--ink-muted)] hidden sm:inline">High-Resolution View</span>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {theme === 'dark' && (
+                <button
+                  type="button"
+                  onClick={toggleDarkPaper}
+                  aria-pressed={darkPaper}
+                  title={darkPaper ? 'Dark Paper ON' : 'Dark Paper OFF'}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                    darkPaper
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] border-transparent font-semibold'
+                      : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
+                  }`}
+                >
+                  <Contrast className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Dark Paper</span>
+                </button>
+              )}
+
               {/* Lightbox Zoom Controls */}
-              <div className="flex items-center gap-1 bg-dark-800 rounded-lg p-1 border border-dark-750">
+              <div className="flex items-center gap-1 bg-[var(--bg-inset)] rounded-lg p-1 border border-[var(--border-hairline)]">
                 <button
                   type="button"
                   onClick={() => setLightboxZoom((prev) => Math.max(prev - 0.25, 0.5))}
                   title="Zoom Out"
-                  className="p-1.5 rounded hover:bg-dark-700 text-slate-300"
+                  className="p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-secondary)]"
                 >
                   <ZoomOut className="w-4 h-4" />
                 </button>
-                <span className="text-xs font-mono text-slate-300 px-1.5 min-w-[3rem] text-center">
+                <span className="text-xs font-mono tabular-nums text-[var(--ink-primary)] px-1.5 min-w-[3rem] text-center">
                   {Math.round(lightboxZoom * 100)}%
                 </span>
                 <button
                   type="button"
                   onClick={() => setLightboxZoom((prev) => Math.min(prev + 0.25, 3.5))}
                   title="Zoom In"
-                  className="p-1.5 rounded hover:bg-dark-700 text-slate-300"
+                  className="p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-secondary)]"
                 >
                   <ZoomIn className="w-4 h-4" />
                 </button>
@@ -1421,17 +1471,16 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
                   type="button"
                   onClick={() => setLightboxZoom(1)}
                   title="Reset 100%"
-                  className="p-1.5 rounded hover:bg-dark-700 text-slate-400 hover:text-slate-200"
+                  className="p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
               </div>
 
-              {/* Close Button (44px target) */}
               <button
                 type="button"
                 onClick={closeLightbox}
-                className="w-10 h-10 rounded-xl bg-dark-800 hover:bg-dark-750 border border-dark-700 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
+                className="w-9 h-9 rounded-lg bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] border border-[var(--border-hairline)] flex items-center justify-center text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] transition-colors"
                 title="Close lightbox (Esc)"
               >
                 <X className="w-5 h-5" />
@@ -1440,14 +1489,13 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
           </div>
 
           {/* Lightbox Body / Viewport */}
-          <div 
-            className="flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start cursor-zoom-out bg-drafting-grid"
+          <div
+            className="flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start cursor-zoom-out bg-[var(--bg-paper)]"
             onClick={closeLightbox}
             style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
           >
-            {/* Annotation Toolbar in Lightbox */}
             {enableAnnotation && (
-              <div 
+              <div
                 className="sticky top-2 z-30 mb-3 flex items-center justify-center pointer-events-auto"
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1455,20 +1503,26 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
               </div>
             )}
 
-            <div 
-              className="bg-white rounded-xl shadow-2xl p-2 max-w-5xl transition-transform duration-100 ease-out origin-top cursor-default"
+            <div
+              className={`rounded-lg border border-[var(--border-hairline)] p-2 max-w-5xl transition-transform duration-100 ease-out origin-top cursor-default ${
+                isDarkPaperActive ? 'bg-[var(--bg-surface)]' : 'bg-white'
+              }`}
               style={{ transform: `scale(${lightboxZoom})` }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative max-w-full overflow-hidden rounded-lg">
-                <img
-                  ref={lightboxImgRef}
-                  src={resolvedSrc}
-                  alt={title}
-                  crossOrigin="anonymous"
-                  onLoad={handleLightboxImageLoad}
-                  className="w-full max-w-full h-auto object-contain block select-none pointer-events-none"
-                />
+              <div className="relative max-w-full overflow-hidden rounded-md">
+                <div className={`exam-paper-surface w-full ${isDarkPaperActive ? 'bg-[var(--bg-surface)]' : 'bg-white'}`}>
+                  <img
+                    ref={lightboxImgRef}
+                    src={resolvedSrc}
+                    alt={title}
+                    crossOrigin="anonymous"
+                    onLoad={handleLightboxImageLoad}
+                    className={`w-full max-w-full h-auto object-contain block select-none pointer-events-none ${
+                      isDarkPaperActive ? 'exam-paper-dark-invert' : ''
+                    }`}
+                  />
+                </div>
                 {enableAnnotation && (
                   <canvas
                     ref={lightboxCanvasRef}

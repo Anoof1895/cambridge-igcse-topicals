@@ -92,15 +92,15 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
         onClick={() => setIsOpen((prev) => !prev)}
         onPointerMove={handleSpotlightMove}
         onPointerLeave={handleSpotlightLeave}
-        className={`spotlight-surface ${
+        className={`${
           fullWidth ? 'w-full' : ''
-        } flex items-center justify-between gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-all select-none duration-150 active:scale-[0.98] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] whitespace-nowrap ${
+        } flex items-center justify-between gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-colors select-none whitespace-nowrap ${
           selectedValues.length > 0
-            ? 'bg-amber-50 dark:bg-amber-500/15 border-amber-300 dark:border-amber-500/40 text-amber-800 dark:text-amber-300 shadow-sm shadow-amber-500/10'
-            : 'bg-slate-100 hover:bg-slate-200/70 dark:bg-white/[0.04] dark:hover:bg-white/[0.07] border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-white/15 text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+            ? 'bg-[var(--subject-bg)] border-[var(--subject-border)] text-[var(--subject-accent)] font-semibold'
+            : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
         }`}
       >
-        <div className="relative z-10 flex items-center gap-1.5 min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
           {icon}
           <span className="truncate text-left">
             {selectedValues.length === 0 ? (
@@ -113,7 +113,7 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
           </span>
         </div>
 
-        <div className="relative z-10 flex items-center gap-1 shrink-0 ml-1">
+        <div className="flex items-center gap-1 shrink-0 ml-1">
           {selectedValues.length > 0 && (
             <span
               role="button"
@@ -123,14 +123,14 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
                 if (e.key === 'Enter') handleClearAll(e);
               }}
               title={`Clear ${labelPlural.toLowerCase()}`}
-              className="w-4 h-4 rounded-full bg-cyan-700 dark:bg-cyan-500/80 hover:bg-rose-600 text-white flex items-center justify-center text-[10px] transition-colors cursor-pointer shrink-0"
+              className="w-4 h-4 rounded-full bg-[var(--action-primary-bg)] hover:bg-rose-600 text-[var(--action-primary-fg)] flex items-center justify-center text-[10px] transition-colors cursor-pointer shrink-0"
             >
               <X className="w-2.5 h-2.5" />
             </span>
           )}
 
           <ChevronDown
-            className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-150 ${
+            className={`w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 transition-transform duration-150 ${
               isOpen ? 'rotate-180' : ''
             }`}
           />
@@ -142,25 +142,26 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
         <div
           className={`absolute ${
             align === 'right' ? 'right-0' : 'left-0'
-          } top-full mt-1.5 w-64 sm:w-72 max-w-[calc(100vw-2rem)] max-h-[380px] z-50 shadow-2xl bg-white/95 dark:bg-[#0B0F19]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150`}
+          } top-full mt-1.5 w-64 sm:w-72 max-w-[calc(100vw-2rem)] max-h-[380px] z-50 bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg flex flex-col overflow-hidden`}
+          style={{ boxShadow: 'var(--shadow-popover)' }}
         >
           {/* Header Search & Actions */}
-          <div className="p-2.5 border-b border-slate-100 dark:border-dark-800 bg-slate-50/80 dark:bg-dark-900/90 shrink-0 space-y-2">
+          <div className="p-2.5 border-b border-[var(--border-hairline)] bg-[var(--bg-inset)] shrink-0 space-y-2">
             {shouldShowSearch && (
               <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] pointer-events-none" />
                 <input
                   type="text"
                   placeholder={`Search ${labelPlural.toLowerCase()}...`}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   autoFocus
-                  className="w-full bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-500 transition-colors"
+                  className="w-full bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-md pl-8 pr-3 py-1.5 text-xs text-[var(--ink-primary)] placeholder-[var(--ink-caption)] focus:outline-none focus:border-[var(--border-strong)] transition-colors"
                 />
               </div>
             )}
 
-            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 px-1">
+            <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)] px-1">
               <span>
                 {selectedValues.length} of {options.length} selected
               </span>
@@ -168,15 +169,15 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-medium transition-colors"
+                  className="text-[var(--ink-primary)] hover:underline font-medium transition-colors"
                 >
                   Select All
                 </button>
-                <span className="text-slate-300 dark:text-dark-700">•</span>
+                <span className="text-[var(--border-strong)]">·</span>
                 <button
                   type="button"
                   onClick={() => onChange([])}
-                  className="text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-medium transition-colors"
+                  className="text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium transition-colors"
                 >
                   Clear
                 </button>
@@ -187,7 +188,7 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
           {/* Options Checkbox List */}
           <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
             {filteredOptions.length === 0 ? (
-              <div className="py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+              <div className="py-6 text-center text-xs text-[var(--ink-muted)]">
                 No matching {labelPlural.toLowerCase()}
               </div>
             ) : (
@@ -197,17 +198,17 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
                   <div
                     key={opt.value}
                     onClick={() => handleToggle(opt.value)}
-                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors text-xs select-none ${
+                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors text-xs select-none border ${
                       isChecked
-                        ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-900 dark:text-white font-medium border border-amber-300 dark:border-amber-500/30'
-                        : 'hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-transparent'
+                        ? 'bg-[var(--subject-bg)] text-[var(--ink-primary)] font-medium border-[var(--subject-border)]'
+                        : 'hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-transparent'
                     }`}
                   >
                     <div
-                      className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-all ${
+                      className={`w-3.5 h-3.5 rounded flex items-center justify-center border transition-colors ${
                         isChecked
-                          ? 'bg-amber-500 border-amber-500 text-black'
-                          : 'border-slate-300 dark:border-white/20 bg-slate-100 dark:bg-white/[0.04]'
+                          ? 'bg-[var(--action-primary-bg)] border-transparent text-[var(--action-primary-fg)]'
+                          : 'border-[var(--border-strong)] bg-[var(--bg-surface)]'
                       }`}
                     >
                       {isChecked && <Check className="w-2.5 h-2.5 stroke-[3]" />}
@@ -220,7 +221,7 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
                       {opt.label}
                     </span>
                     {opt.count !== undefined && (
-                      <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-mono px-1.5 py-0.2 rounded bg-slate-100 dark:bg-white/[0.06] shrink-0">
+                      <span className="text-[10px] text-[var(--ink-muted)] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] border border-[var(--border-hairline)] shrink-0">
                         {opt.count}
                       </span>
                     )}

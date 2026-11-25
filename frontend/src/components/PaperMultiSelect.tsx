@@ -80,16 +80,16 @@ export const PaperMultiSelect: React.FC<PaperMultiSelectProps> = ({
         onClick={() => setIsOpen((prev) => !prev)}
         onPointerMove={handleSpotlightMove}
         onPointerLeave={handleSpotlightLeave}
-        className={`spotlight-surface ${
+        className={`${
           fullWidth ? 'w-full' : ''
-        } flex items-center justify-between gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-all select-none duration-150 active:scale-[0.98] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] whitespace-nowrap ${
+        } flex items-center justify-between gap-1.5 px-2.5 h-8 rounded-lg border text-xs font-medium transition-colors select-none active:scale-[0.98] whitespace-nowrap ${
           selectedPaperNums.length > 0
-            ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-sm shadow-amber-500/10'
-            : 'bg-white/[0.04] hover:bg-white/[0.07] border-white/[0.08] hover:border-white/15 text-slate-300 hover:text-white'
+            ? 'bg-[var(--subject-bg)] border-[var(--subject-border)] text-[var(--subject-accent)] font-semibold'
+            : 'bg-[var(--bg-inset)] hover:border-[var(--border-strong)] border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
         }`}
       >
         <div className="relative z-10 flex items-center gap-1.5 min-w-0 flex-1">
-          <Layers className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <Layers className="w-3.5 h-3.5 text-[var(--subject-accent)] shrink-0" />
           <span className="truncate text-left">{summaryLabel}</span>
         </div>
 
@@ -103,14 +103,14 @@ export const PaperMultiSelect: React.FC<PaperMultiSelectProps> = ({
                 onChange([]);
               }}
               title="Clear paper filter"
-              className="w-4 h-4 rounded-full bg-white/10 hover:bg-rose-500/80 text-white flex items-center justify-center text-[10px] transition-colors cursor-pointer shrink-0"
+              className="w-4 h-4 rounded-full bg-[var(--bg-surface)] border border-[var(--border-hairline)] hover:bg-rose-500 hover:border-rose-500 hover:text-white text-[var(--ink-muted)] flex items-center justify-center text-[10px] transition-colors cursor-pointer shrink-0"
             >
               <X className="w-2.5 h-2.5" />
             </span>
           )}
 
           <ChevronDown
-            className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform duration-150 ${
+            className={`w-3.5 h-3.5 text-[var(--ink-muted)] shrink-0 transition-transform duration-150 ${
               isOpen ? 'rotate-180' : ''
             }`}
           />
@@ -122,26 +122,26 @@ export const PaperMultiSelect: React.FC<PaperMultiSelectProps> = ({
         <div
           className={`absolute ${
             align === 'right' ? 'right-0' : 'left-0'
-          } top-full mt-1.5 w-64 z-50 p-2.5 rounded-xl bg-[#0B0F19]/95 backdrop-blur-xl border border-white/10 shadow-2xl space-y-2 text-white animate-in fade-in zoom-in-95 duration-150`}
+          } top-full mt-1.5 w-64 z-50 p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-popover)] space-y-2 text-[var(--ink-primary)] animate-in fade-in zoom-in-95 duration-150`}
         >
           {/* Header */}
-          <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1.5 border-b border-white/[0.08] px-1">
-            <span>
+          <div className="flex items-center justify-between text-[11px] text-[var(--ink-muted)] pb-1.5 border-b border-[var(--border-hairline)] px-1">
+            <span className="font-mono tabular-nums">
               {selectedPaperNums.length} of {options.length} selected
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => onChange(options.map((o) => o.paperNum))}
-                className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
+                className="text-[var(--subject-accent)] hover:underline font-medium transition-colors"
               >
                 Select All
               </button>
-              <span className="text-zinc-600">•</span>
+              <span className="text-[var(--ink-caption)]">•</span>
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="text-rose-400 hover:text-rose-300 font-medium transition-colors"
+                className="text-rose-600 dark:text-rose-400 hover:underline font-medium transition-colors"
               >
                 Clear
               </button>
@@ -168,18 +168,18 @@ export const PaperMultiSelect: React.FC<PaperMultiSelectProps> = ({
                       onChange([...selectedPaperNums, opt.paperNum]);
                     }
                   }}
-                  className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors text-xs select-none ${
+                  className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors text-xs select-none border ${
                     isChecked
-                      ? 'bg-amber-500/15 text-white font-medium border border-amber-500/30'
-                      : 'hover:bg-white/[0.06] text-zinc-300 border border-transparent'
+                      ? 'bg-[var(--subject-bg)] text-[var(--ink-primary)] font-semibold border-[var(--subject-border)]'
+                      : 'hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${
+                      className={`w-4 h-4 rounded flex items-center justify-center border transition-colors ${
                         isChecked
-                          ? 'bg-amber-500 border-amber-500 text-black'
-                          : 'border-white/20 bg-white/[0.04]'
+                          ? 'bg-[var(--action-primary-bg)] border-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                          : 'border-[var(--border-strong)] bg-[var(--bg-surface)]'
                       }`}
                     >
                       {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
@@ -187,7 +187,7 @@ export const PaperMultiSelect: React.FC<PaperMultiSelectProps> = ({
                     <span className="truncate">{opt.label}</span>
                   </div>
                   {countVal !== undefined && (
-                    <span className="text-[10px] text-zinc-400 font-mono px-1.5 py-0.2 rounded bg-white/[0.06] shrink-0">
+                    <span className="text-[10px] text-[var(--ink-muted)] font-mono tabular-nums px-1.5 py-0.2 rounded bg-[var(--bg-inset)] border border-[var(--border-hairline)] shrink-0">
                       {countVal}
                     </span>
                   )}

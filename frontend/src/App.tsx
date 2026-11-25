@@ -22,8 +22,8 @@ const TestMakerPage = React.lazy(() => import('./components/TestMakerPage').then
 const SplitViewer = React.lazy(() => import('./components/SplitViewer').then((m) => ({ default: m.SplitViewer })));
 
 const ViewLoadingFallback: React.FC = () => (
-  <div className="flex-1 flex flex-col items-center justify-center p-12 text-slate-500 dark:text-slate-400 gap-3">
-    <Loader2 className="w-7 h-7 text-amber-500 animate-spin" />
+  <div className="flex-1 flex flex-col items-center justify-center p-12 text-[var(--ink-muted)] gap-3">
+    <Loader2 className="w-7 h-7 animate-spin" style={{ color: 'var(--subject-accent)' }} />
     <span className="text-xs font-medium">Loading view...</span>
   </div>
 );
@@ -1160,15 +1160,15 @@ export const App: React.FC = () => {
   const accentSpotlight = useMemo(() => {
     switch (activeSubject) {
       case 'mathematics':
-        return 'rgba(249, 115, 22, 0.06)'; // Orange (0580)
+        return 'rgba(126, 34, 206, 0.06)';
       case 'physics':
-        return 'rgba(59, 130, 246, 0.06)'; // Blue (0625)
+        return 'rgba(29, 78, 216, 0.06)';
       case 'chemistry':
-        return 'rgba(6, 182, 212, 0.06)';  // Cyan (0620)
+        return 'rgba(194, 65, 12, 0.06)';
       case 'biology':
-        return 'rgba(16, 185, 129, 0.06)'; // Emerald (0610)
+        return 'rgba(21, 128, 61, 0.06)';
       default:
-        return 'rgba(249, 115, 22, 0.06)';
+        return 'rgba(194, 65, 12, 0.06)';
     }
   }, [activeSubject]);
 
@@ -1182,7 +1182,7 @@ export const App: React.FC = () => {
 
   return (
     <div
-      className="h-screen w-screen min-h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-[#080C14] dark:text-slate-100 flex flex-col relative transition-colors"
+      className="h-screen w-screen min-h-screen overflow-hidden bg-[var(--bg-paper)] text-[var(--ink-primary)] flex flex-col relative transition-colors"
       style={{
         '--accent-spotlight': accentSpotlight,
       } as React.CSSProperties}
@@ -1205,18 +1205,18 @@ export const App: React.FC = () => {
       />
 
       {isSubjectLoading ? (
-        <div className="flex-1 flex flex-col items-center justify-center bg-transparent text-slate-600 dark:text-slate-400 gap-3 relative z-10">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+        <div className="flex-1 flex flex-col items-center justify-center bg-transparent text-[var(--ink-muted)] gap-3 relative z-10">
+          <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--subject-accent)' }} />
           <p className="text-sm font-medium">
             Loading Cambridge IGCSE {activeSubject === 'mathematics' ? 'Mathematics (0580)' : activeSubject === 'physics' ? 'Physics (0625)' : activeSubject === 'biology' ? 'Biology (0610)' : 'Chemistry (0620)'} questions...
           </p>
         </div>
       ) : datasetError && currentView !== 'home' && questions.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center bg-transparent text-rose-500 dark:text-rose-400 gap-3 relative z-10">
+        <div className="flex-1 flex flex-col items-center justify-center bg-transparent text-rose-600 dark:text-rose-400 gap-3 relative z-10">
           <p className="text-sm font-medium">Error: {datasetError}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-slate-200 dark:bg-dark-800 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-dark-750 transition-colors"
+            className="px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg text-xs font-semibold text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] transition-colors"
           >
             Retry
           </button>
@@ -1231,6 +1231,7 @@ export const App: React.FC = () => {
                 questions={chemQuestions || []}
                 physicsQuestions={physQuestions || []}
                 mathematicsQuestions={mathQuestions || []}
+                biologyQuestions={bioQuestions || []}
               />
             </React.Suspense>
           )}
@@ -1349,6 +1350,7 @@ export const App: React.FC = () => {
         chemQuestions={chemQuestions}
         physQuestions={physQuestions}
         mathQuestions={mathQuestions}
+        bioQuestions={bioQuestions}
       />
       <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
       <Analytics />

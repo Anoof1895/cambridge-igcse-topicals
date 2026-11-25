@@ -7,77 +7,92 @@ export interface SpotlightPreset {
 }
 
 export const SUBJECT_SPOTLIGHT_PRESETS: Record<string, SpotlightPreset> = {
-  // 0580 Mathematics — Amber #F59E0B (rgb(245, 158, 11))
+  // 0580 Mathematics — Royal Plum #7E22CE (rgb(126, 34, 206))
   '0580': {
-    spotlightColor: 'rgba(245, 158, 11, 0.12)',
-    borderGlowColor: 'rgba(251, 191, 36, 0.45)',
-    ambientGlowColor: 'rgba(245, 158, 11, 0.09)',
+    spotlightColor: 'rgba(126, 34, 206, 0.08)',
+    borderGlowColor: 'rgba(126, 34, 206, 0.3)',
+    ambientGlowColor: 'rgba(126, 34, 206, 0.06)',
   },
   mathematics: {
-    spotlightColor: 'rgba(245, 158, 11, 0.12)',
-    borderGlowColor: 'rgba(251, 191, 36, 0.45)',
-    ambientGlowColor: 'rgba(245, 158, 11, 0.09)',
+    spotlightColor: 'rgba(126, 34, 206, 0.08)',
+    borderGlowColor: 'rgba(126, 34, 206, 0.3)',
+    ambientGlowColor: 'rgba(126, 34, 206, 0.06)',
   },
   math: {
-    spotlightColor: 'rgba(245, 158, 11, 0.12)',
-    borderGlowColor: 'rgba(251, 191, 36, 0.45)',
-    ambientGlowColor: 'rgba(245, 158, 11, 0.09)',
+    spotlightColor: 'rgba(126, 34, 206, 0.08)',
+    borderGlowColor: 'rgba(126, 34, 206, 0.3)',
+    ambientGlowColor: 'rgba(126, 34, 206, 0.06)',
+  },
+  purple: {
+    spotlightColor: 'rgba(126, 34, 206, 0.08)',
+    borderGlowColor: 'rgba(126, 34, 206, 0.3)',
+    ambientGlowColor: 'rgba(126, 34, 206, 0.06)',
   },
   amber: {
-    spotlightColor: 'rgba(245, 158, 11, 0.12)',
-    borderGlowColor: 'rgba(251, 191, 36, 0.45)',
-    ambientGlowColor: 'rgba(245, 158, 11, 0.09)',
+    spotlightColor: 'rgba(126, 34, 206, 0.08)',
+    borderGlowColor: 'rgba(126, 34, 206, 0.3)',
+    ambientGlowColor: 'rgba(126, 34, 206, 0.06)',
   },
 
-  // 0625 Physics — Sky / Indigo #6366F1 (rgb(99, 102, 241))
+  // 0625 Physics — Cobalt #1D4ED8 (rgb(29, 78, 216))
   '0625': {
-    spotlightColor: 'rgba(99, 102, 241, 0.12)',
-    borderGlowColor: 'rgba(129, 140, 248, 0.45)',
-    ambientGlowColor: 'rgba(99, 102, 241, 0.09)',
+    spotlightColor: 'rgba(29, 78, 216, 0.08)',
+    borderGlowColor: 'rgba(29, 78, 216, 0.3)',
+    ambientGlowColor: 'rgba(29, 78, 216, 0.06)',
   },
   physics: {
-    spotlightColor: 'rgba(99, 102, 241, 0.12)',
-    borderGlowColor: 'rgba(129, 140, 248, 0.45)',
-    ambientGlowColor: 'rgba(99, 102, 241, 0.09)',
+    spotlightColor: 'rgba(29, 78, 216, 0.08)',
+    borderGlowColor: 'rgba(29, 78, 216, 0.3)',
+    ambientGlowColor: 'rgba(29, 78, 216, 0.06)',
+  },
+  blue: {
+    spotlightColor: 'rgba(29, 78, 216, 0.08)',
+    borderGlowColor: 'rgba(29, 78, 216, 0.3)',
+    ambientGlowColor: 'rgba(29, 78, 216, 0.06)',
   },
   indigo: {
-    spotlightColor: 'rgba(99, 102, 241, 0.12)',
-    borderGlowColor: 'rgba(129, 140, 248, 0.45)',
-    ambientGlowColor: 'rgba(99, 102, 241, 0.09)',
+    spotlightColor: 'rgba(29, 78, 216, 0.08)',
+    borderGlowColor: 'rgba(29, 78, 216, 0.3)',
+    ambientGlowColor: 'rgba(29, 78, 216, 0.06)',
   },
 
-  // 0620 Chemistry — Cyan #06B6D4 (rgb(6, 182, 212))
+  // 0620 Chemistry — Crimson-Orange #C2410C (rgb(194, 65, 12))
   '0620': {
-    spotlightColor: 'rgba(6, 182, 212, 0.12)',
-    borderGlowColor: 'rgba(34, 211, 238, 0.45)',
-    ambientGlowColor: 'rgba(6, 182, 212, 0.09)',
+    spotlightColor: 'rgba(194, 65, 12, 0.08)',
+    borderGlowColor: 'rgba(194, 65, 12, 0.3)',
+    ambientGlowColor: 'rgba(194, 65, 12, 0.06)',
   },
   chemistry: {
-    spotlightColor: 'rgba(6, 182, 212, 0.12)',
-    borderGlowColor: 'rgba(34, 211, 238, 0.45)',
-    ambientGlowColor: 'rgba(6, 182, 212, 0.09)',
+    spotlightColor: 'rgba(194, 65, 12, 0.08)',
+    borderGlowColor: 'rgba(194, 65, 12, 0.3)',
+    ambientGlowColor: 'rgba(194, 65, 12, 0.06)',
+  },
+  orange: {
+    spotlightColor: 'rgba(194, 65, 12, 0.08)',
+    borderGlowColor: 'rgba(194, 65, 12, 0.3)',
+    ambientGlowColor: 'rgba(194, 65, 12, 0.06)',
   },
   cyan: {
-    spotlightColor: 'rgba(6, 182, 212, 0.12)',
-    borderGlowColor: 'rgba(34, 211, 238, 0.45)',
-    ambientGlowColor: 'rgba(6, 182, 212, 0.09)',
+    spotlightColor: 'rgba(194, 65, 12, 0.08)',
+    borderGlowColor: 'rgba(194, 65, 12, 0.3)',
+    ambientGlowColor: 'rgba(194, 65, 12, 0.06)',
   },
 
-  // 0610 Biology — Emerald #10B981 (rgb(16, 185, 129))
+  // 0610 Biology — Botanical Emerald #15803D (rgb(21, 128, 61))
   '0610': {
-    spotlightColor: 'rgba(16, 185, 129, 0.12)',
-    borderGlowColor: 'rgba(52, 211, 153, 0.45)',
-    ambientGlowColor: 'rgba(16, 185, 129, 0.09)',
+    spotlightColor: 'rgba(21, 128, 61, 0.08)',
+    borderGlowColor: 'rgba(21, 128, 61, 0.3)',
+    ambientGlowColor: 'rgba(21, 128, 61, 0.06)',
   },
   biology: {
-    spotlightColor: 'rgba(16, 185, 129, 0.12)',
-    borderGlowColor: 'rgba(52, 211, 153, 0.45)',
-    ambientGlowColor: 'rgba(16, 185, 129, 0.09)',
+    spotlightColor: 'rgba(21, 128, 61, 0.08)',
+    borderGlowColor: 'rgba(21, 128, 61, 0.3)',
+    ambientGlowColor: 'rgba(21, 128, 61, 0.06)',
   },
   emerald: {
-    spotlightColor: 'rgba(16, 185, 129, 0.12)',
-    borderGlowColor: 'rgba(52, 211, 153, 0.45)',
-    ambientGlowColor: 'rgba(16, 185, 129, 0.09)',
+    spotlightColor: 'rgba(21, 128, 61, 0.08)',
+    borderGlowColor: 'rgba(21, 128, 61, 0.3)',
+    ambientGlowColor: 'rgba(21, 128, 61, 0.06)',
   },
 };
 
@@ -101,62 +116,18 @@ export function getSubjectSpotlightStyle(
   return style as React.CSSProperties;
 }
 
-// Module-level passive scroll sync so stationary cursors during scroll stay locked to the hovered element
-let lastClientX = -999;
-let lastClientY = -999;
-const activeTargets = new Set<HTMLElement>();
-let scrollListenerAttached = false;
-
-function ensureScrollSyncListener() {
-  if (scrollListenerAttached || typeof window === 'undefined') return;
-  scrollListenerAttached = true;
-
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (activeTargets.size === 0 || lastClientX < 0 || lastClientY < 0) return;
-      activeTargets.forEach((el) => {
-        if (!el.isConnected) {
-          activeTargets.delete(el);
-          return;
-        }
-        const rect = el.getBoundingClientRect();
-        const x = lastClientX - rect.left;
-        const y = lastClientY - rect.top;
-        el.style.setProperty('--mouse-x', `${x}px`);
-        el.style.setProperty('--mouse-y', `${y}px`);
-      });
-    },
-    { capture: true, passive: true }
-  );
+export function registerSpotlightTarget(_el: HTMLElement, _clientX: number, _clientY: number) {
+  // Editorial design mode keeps surfaces flat without cursor glow tracking
 }
 
-export function registerSpotlightTarget(el: HTMLElement, clientX: number, clientY: number) {
-  ensureScrollSyncListener();
-  lastClientX = clientX;
-  lastClientY = clientY;
-  activeTargets.add(el);
+export function unregisterSpotlightTarget(_el: HTMLElement) {
+  // No-op in editorial mode
 }
 
-export function unregisterSpotlightTarget(el: HTMLElement) {
-  activeTargets.delete(el);
+export function handleSpotlightMove(_e: React.PointerEvent<HTMLElement>) {
+  // No-op in editorial mode
 }
 
-/**
- * Lightweight zero-rerender pointer move handler for `.spotlight-surface` elements.
- * Mutates `--mouse-x` and `--mouse-y` directly on the target element's style.
- */
-export function handleSpotlightMove(e: React.PointerEvent<HTMLElement>) {
-  if (e.pointerType && e.pointerType !== 'mouse') return;
-  const el = e.currentTarget;
-  const rect = el.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
-  el.style.setProperty('--mouse-x', `${x}px`);
-  el.style.setProperty('--mouse-y', `${y}px`);
-  registerSpotlightTarget(el, e.clientX, e.clientY);
-}
-
-export function handleSpotlightLeave(e: React.PointerEvent<HTMLElement>) {
-  unregisterSpotlightTarget(e.currentTarget);
+export function handleSpotlightLeave(_e: React.PointerEvent<HTMLElement>) {
+  // No-op in editorial mode
 }

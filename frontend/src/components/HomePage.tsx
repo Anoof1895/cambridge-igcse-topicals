@@ -4,7 +4,6 @@ import {
   Atom,
   Compass,
   FileText,
-  Layers,
   ArrowRight,
   Search,
   Printer,
@@ -13,14 +12,10 @@ import {
   Dna,
   PenTool,
   CheckCircle2,
-  Sparkles,
 } from 'lucide-react';
 import { AppView, QuestionItem } from '../types';
 import { useProgress } from '../context/ProgressContext';
-import {
-  registerSpotlightTarget,
-  unregisterSpotlightTarget,
-} from '../utils/spotlight';
+import { CANONICAL_SUBJECT_THEMES } from '../utils/subjectTheme';
 
 interface HomePageProps {
   onNavigate: (view: AppView) => void;
@@ -29,88 +24,6 @@ interface HomePageProps {
   mathematicsQuestions?: QuestionItem[];
   biologyQuestions?: QuestionItem[];
 }
-
-interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  enableTilt?: boolean;
-  spotlightColor?: string;
-  borderGlowColor?: string;
-  children: React.ReactNode;
-}
-
-const SpotlightCard: React.FC<SpotlightCardProps> = ({
-  enableTilt = false,
-  spotlightColor = 'rgba(255, 255, 255, 0.06)',
-  borderGlowColor = 'rgba(255, 255, 255, 0.35)',
-  className = '',
-  style,
-  children,
-  ...rest
-}) => {
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (e.pointerType && e.pointerType !== 'mouse') return;
-      const el = e.currentTarget;
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      el.style.setProperty('--mouse-x', `${x}px`);
-      el.style.setProperty('--mouse-y', `${y}px`);
-      registerSpotlightTarget(el, e.clientX, e.clientY);
-
-      if (enableTilt && rect.width > 0 && rect.height > 0) {
-        const pctX = x / rect.width - 0.5;
-        const pctY = y / rect.height - 0.5;
-        el.style.setProperty('--tilt-x', `${(pctY * -4).toFixed(2)}deg`);
-        el.style.setProperty('--tilt-y', `${(pctX * 4).toFixed(2)}deg`);
-      }
-    },
-    [enableTilt]
-  );
-
-  const handlePointerLeave = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      const el = e.currentTarget;
-      unregisterSpotlightTarget(el);
-      if (!enableTilt) return;
-      el.style.setProperty('--tilt-x', '0deg');
-      el.style.setProperty('--tilt-y', '0deg');
-    },
-    [enableTilt]
-  );
-
-  return (
-    <div
-      onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
-      style={
-        {
-          ...style,
-          '--spotlight-color': spotlightColor,
-          '--border-glow-color': borderGlowColor,
-        } as React.CSSProperties
-      }
-      className={`spotlight-card group relative transition-transform duration-200 ease-out ${
-        enableTilt ? 'will-change-transform [transform-style:preserve-3d]' : ''
-      } ${className}`}
-      {...rest}
-    >
-      <div
-        className="pointer-events-none absolute -inset-px rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
-        style={{
-          background: `radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--spotlight-color), transparent 65%)`,
-        }}
-      />
-      <div
-        className="pointer-events-none absolute -inset-px rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
-        style={{
-          boxShadow: `inset 0 0 0 1px var(--border-glow-color)`,
-        }}
-      />
-      {children}
-    </div>
-  );
-};
 
 export const HomePage: React.FC<HomePageProps> = ({
   onNavigate,
@@ -167,7 +80,6 @@ export const HomePage: React.FC<HomePageProps> = ({
     };
   }, [questions, physicsQuestions, mathematicsQuestions, biologyQuestions]);
 
-  // Live Mastery Progress calculation per Cambridge subject code
   const { mathCompleted, physCompleted, chemCompleted, bioCompleted } = useMemo(() => {
     let math = 0;
     let phys = 0;
@@ -219,606 +131,375 @@ export const HomePage: React.FC<HomePageProps> = ({
     );
   }, []);
 
+  const mathTheme = CANONICAL_SUBJECT_THEMES.mathematics;
+  const physTheme = CANONICAL_SUBJECT_THEMES.physics;
+  const chemTheme = CANONICAL_SUBJECT_THEMES.chemistry;
+  const bioTheme = CANONICAL_SUBJECT_THEMES.biology;
+
+  const subjectCards = [
+    {
+      key: 'mathematics',
+      title: 'Mathematics',
+      code: '0580',
+      badge: '0580 · 2025 Ready',
+      subtitle: 'Cambridge IGCSE · 0580',
+      Icon: Sigma,
+      theme: mathTheme,
+      chips: ['P1 Non-Calc', 'P2 Non-Calc', 'P3 Calc', 'P4 Calc'],
+      total: mathTotal,
+      papers: mathPapers,
+      completed: mathCompleted,
+      progressPct: mathProgressPct,
+      highlights: [
+        '2025–2028 Non-Calculator transition filter',
+        'Number, Algebra, Geometry, Stats & Trig',
+      ],
+      topicalView: 'mathematics-topical' as AppView,
+      testMakerView: 'mathematics-test-maker' as AppView,
+    },
+    {
+      key: 'physics',
+      title: 'Physics',
+      code: '0625',
+      badge: '0625 · Space Physics',
+      subtitle: 'Cambridge IGCSE · 0625',
+      Icon: Atom,
+      theme: physTheme,
+      chips: ['P1/2 MCQ', 'P3/4 Theory', 'P6 Alt Practical'],
+      total: physTotal,
+      papers: physPapers,
+      completed: physCompleted,
+      progressPct: physProgressPct,
+      highlights: [
+        'Syllabus exclusion filtering (logic gates, manometers)',
+        'Motion, Thermal, Waves, Electricity & Space',
+      ],
+      topicalView: 'physics-topical' as AppView,
+      testMakerView: 'physics-test-maker' as AppView,
+    },
+    {
+      key: 'chemistry',
+      title: 'Chemistry',
+      code: '0620',
+      badge: '0620 · Practical Ready',
+      subtitle: 'Cambridge IGCSE · 0620',
+      Icon: FlaskConical,
+      theme: chemTheme,
+      chips: ['P1/2 MCQ', 'P3/4 Theory', 'P6 Alt Practical'],
+      total: chemTotal,
+      papers: chemPapers,
+      completed: chemCompleted,
+      progressPct: chemProgressPct,
+      highlights: [
+        'Stoichiometry, Electrochemistry & Organic',
+        'Cation/anion qualitative analysis tables',
+      ],
+      topicalView: 'chemistry-topical' as AppView,
+      testMakerView: 'chemistry-test-maker' as AppView,
+    },
+    {
+      key: 'biology',
+      title: 'Biology',
+      code: '0610',
+      badge: '0610 · Genetics & Eco',
+      subtitle: 'Cambridge IGCSE · 0610',
+      Icon: Dna,
+      theme: bioTheme,
+      chips: ['P1/2 MCQ', 'P3/4 Theory', 'P6 Alt Practical'],
+      total: bioTotal,
+      papers: bioPapers,
+      completed: bioCompleted,
+      progressPct: bioProgressPct,
+      highlights: [
+        'Genetics, Inheritance, Ecology & Physiology',
+        'Biological diagrams, food tests & magnification',
+      ],
+      topicalView: 'biology-topical' as AppView,
+      testMakerView: 'biology-test-maker' as AppView,
+    },
+  ];
+
   return (
-    <div
-      className="relative flex-1 overflow-y-auto bg-transparent text-slate-900 dark:text-slate-100 min-h-screen select-none transition-colors"
-    >
-      {/* Background Grid Pattern */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-60 dark:opacity-40 pointer-events-none" />
-
-      {/* Main Container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Top Hero Pill & Heading */}
-        <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/15 dark:bg-amber-500/10 text-slate-900 dark:text-white border border-amber-500/30 dark:border-amber-500/25 mb-4 shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>2025–2028 Cambridge IGCSE Syllabus Specification Engine</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Cambridge IGCSE Workspace
-          </h1>
-
-          <p className="mt-3 text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Interactive topical revision, deterministic mock exam builder, and official mark schemes
-            engineered for Mathematics (0580), Physics (0625), Chemistry (0620), and Biology (0610).
-          </p>
-
-          {/* Quick Search Jump Trigger */}
-          <SpotlightCard
-            onClick={triggerCommandPalette}
-            spotlightColor="rgba(245, 158, 11, 0.09)"
-            borderGlowColor="rgba(245, 158, 11, 0.45)"
-            className="w-full max-w-xl mx-auto mt-6 cursor-pointer rounded-xl bg-white/90 dark:bg-[#0C101A]/90 border border-slate-200/90 dark:border-white/[0.09] hover:border-amber-500/40 dark:hover:border-white/[0.16] shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.08)] px-3.5 py-2.5 transition-all duration-200"
-          >
-            <div className="relative z-10 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Search className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 transition-transform duration-200 group-hover:scale-110" />
-                <span className="text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 text-xs sm:text-sm truncate transition-colors">
-                  Jump to any topic, subtopic, or paper (e.g. 0580/22, Vectors, 0625/41)...
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <kbd className="kbd-keycap">Ctrl K</kbd>
-              </div>
+    <div className="relative flex-1 overflow-y-auto bg-[var(--bg-paper)] text-[var(--ink-primary)] min-h-0 select-none transition-colors">
+      {/* Editorial Masthead Band */}
+      <section className="w-full border-b border-[var(--border-hairline)] bg-[var(--bg-surface)]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+            <div className="max-w-[62ch]">
+              <h1 className="font-editorial text-[30px] sm:text-[40px] font-semibold tracking-[-0.025em] leading-[1.1] text-[var(--ink-primary)]">
+                Cambridge IGCSE Workspace
+              </h1>
+              <p className="mt-3 text-[15px] leading-[1.6] text-[var(--ink-muted)]">
+                Interactive topical revision, deterministic mock exam builder, and official mark schemes
+                across Mathematics (0580), Physics (0625), Chemistry (0620), and Biology (0610).
+              </p>
             </div>
-          </SpotlightCard>
-        </div>
 
-        {/* Unified Cambridge Telemetry Ribbon */}
-        <SpotlightCard
-          spotlightColor="rgba(245, 158, 11, 0.07)"
-          borderGlowColor="rgba(148, 163, 184, 0.35)"
-          className="mt-8 w-full max-w-4xl mx-auto rounded-2xl bg-white/95 dark:bg-[#0A0E17]/90 border border-slate-200/80 dark:border-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,0.05)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden"
-        >
-          <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-200/70 dark:divide-white/[0.06]">
-            {/* Cell 1: Total Questions */}
+            <button
+              type="button"
+              onClick={triggerCommandPalette}
+              className="w-full lg:w-[340px] shrink-0 cursor-pointer rounded-lg bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] border border-[var(--border-hairline)] hover:border-[var(--border-strong)] px-3.5 py-2.5 flex items-center justify-between gap-3 text-left transition-colors"
+            >
+              <span className="flex items-center gap-2.5 min-w-0">
+                <Search className="w-4 h-4 text-[var(--ink-muted)] shrink-0" />
+                <span className="text-xs sm:text-[13px] text-[var(--ink-muted)] truncate">
+                  Jump to topic, paper (0580/22), or Q...
+                </span>
+              </span>
+              <kbd className="kbd-keycap shrink-0">Ctrl K</kbd>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Content Body */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-10">
+        {/* Hairline Telemetry Stat Strip */}
+        <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[var(--border-hairline)]">
             <div className="p-4 sm:p-5 flex flex-col justify-between">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_#fbbf24]" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                <span className={`w-2.5 h-2.5 rounded-[2px] shrink-0 ${mathTheme.swatchClass}`} />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                   Total Questions
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-mono tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[var(--ink-primary)] font-mono tabular-nums">
                 {totalQuestionsCombined.toLocaleString()}
               </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400/80 mt-1">
+              <div className="text-[12px] text-[var(--ink-caption)] mt-1">
                 4 Cambridge Subjects
               </div>
             </div>
 
-            {/* Cell 2: Past Papers */}
             <div className="p-4 sm:p-5 flex flex-col justify-between">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-[0_0_8px_#818cf8]" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                <span className={`w-2.5 h-2.5 rounded-[2px] shrink-0 ${physTheme.swatchClass}`} />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                   Past Papers
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-mono tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[var(--ink-primary)] font-mono tabular-nums">
                 {totalPapersCombined.toLocaleString()}
               </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400/80 mt-1">
-                2019 – 2026 Series (Maths/Physics) • 2021 – 2026 (Chem/Bio)
+              <div className="text-[12px] text-[var(--ink-caption)] mt-1">
+                2019–2026 Maths/Physics · 2021–2026 Sciences
               </div>
             </div>
 
-            {/* Cell 3: Syllabus Transitions */}
             <div className="p-4 sm:p-5 flex flex-col justify-between">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#22d3ee]" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                <span className={`w-2.5 h-2.5 rounded-[2px] shrink-0 ${chemTheme.swatchClass}`} />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                   Syllabus Engine
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-mono tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[var(--ink-primary)] font-mono tabular-nums">
                 2025+
               </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400/80 mt-1">
+              <div className="text-[12px] text-[var(--ink-caption)] mt-1">
                 Non-Calc P1/P2 Filter
               </div>
             </div>
 
-            {/* Cell 4: Available Marks */}
             <div className="p-4 sm:p-5 flex flex-col justify-between">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+                <span className={`w-2.5 h-2.5 rounded-[2px] shrink-0 ${bioTheme.swatchClass}`} />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">
                   Available Marks
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white font-mono tabular-nums">
+              <div className="text-2xl sm:text-[28px] font-semibold tracking-tight text-[var(--ink-primary)] font-mono tabular-nums">
                 {totalMarksCombined.toLocaleString()}
               </div>
-              <div className="text-[11px] text-slate-500 dark:text-slate-400/80 mt-1">
+              <div className="text-[12px] text-[var(--ink-caption)] mt-1">
                 Official Mark Schemes
               </div>
             </div>
           </div>
-        </SpotlightCard>
-
-        {/* Subject Portal Section Header */}
-        <div className="w-full max-w-7xl mx-auto mt-12 mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2 tracking-tight">
-              <Layers className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              <span>Cambridge IGCSE Portals</span>
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Select a subject to begin topical practice or create customized mock tests
-            </p>
-          </div>
         </div>
 
-        {/* 4 Cambridge Subjects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 w-full max-w-7xl mx-auto">
-          {/* Card 1: Mathematics (0580, Amber Signature) */}
-          <SpotlightCard
-            enableTilt
-            spotlightColor="rgba(245, 158, 11, 0.12)"
-            borderGlowColor="rgba(251, 191, 36, 0.45)"
-            className="rounded-2xl surface-card p-5 flex flex-col justify-between"
-          >
-            <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent opacity-90 z-10" />
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25 border border-amber-400/40 text-white">
-                  <Sigma className="w-5 h-5" />
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                  0580 · 2025 Ready
-                </span>
-              </div>
-
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors tracking-tight">
-                Mathematics
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-3">
-                Cambridge IGCSE (0580)
-              </p>
-
-              {/* Component Chips */}
-              <div className="flex flex-wrap gap-1 mb-4">
-                {['P1 Non-Calc', 'P2 Non-Calc', 'P3 Calc', 'P4 Calc'].map((u) => (
-                  <span
-                    key={u}
-                    className="font-mono text-[10px] tracking-wider px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.07] text-slate-700 dark:text-slate-300"
-                  >
-                    {u}
-                  </span>
-                ))}
-              </div>
-
-              <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 mb-4 tabular-nums">
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                  <span><strong>{mathTotal.toLocaleString()} Questions</strong> ({mathPapers} papers)</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                  <span>2025–2028 Non-Calculator transition filter</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                  <span>Number, Algebra, Geometry, Stats &amp; Trig</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="relative z-10 mt-auto pt-2">
-              <div className="mb-3 p-2.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.02] border border-slate-200/70 dark:border-white/[0.06]">
-                <div className="flex items-center justify-between text-[10px] font-mono tabular-nums mb-1">
-                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-amber-500" />
-                    <span>Progress</span>
-                  </span>
-                  <span className="text-slate-800 dark:text-slate-200 font-semibold">
-                    {mathCompleted.toLocaleString()} / {mathTotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
-                    style={{ width: `${mathCompleted > 0 ? Math.max(2, mathProgressPct) : 0}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-white/[0.07]">
-                <button
-                  type="button"
-                  onClick={() => onNavigate('mathematics-topical')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-white font-semibold text-xs shadow-sm transition-all"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Topical Explorer</span>
-                  <ArrowRight className="w-3 h-3 ml-auto" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('mathematics-test-maker')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200/90 dark:border-white/[0.07] transition-all"
-                >
-                  <FileText className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                  <span>Mock Builder</span>
-                </button>
-              </div>
-            </div>
-          </SpotlightCard>
-
-          {/* Card 2: Physics (0625, Indigo Signature) */}
-          <SpotlightCard
-            enableTilt
-            spotlightColor="rgba(99, 102, 241, 0.12)"
-            borderGlowColor="rgba(129, 140, 248, 0.45)"
-            className="rounded-2xl surface-card p-5 flex flex-col justify-between"
-          >
-            <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-90 z-10" />
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 flex items-center justify-center shadow-lg shadow-indigo-500/25 border border-indigo-400/40 text-white">
-                  <Atom className="w-5 h-5" />
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
-                  0625 · Space Physics
-                </span>
-              </div>
-
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors tracking-tight">
-                Physics
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-3">
-                Cambridge IGCSE (0625)
-              </p>
-
-              {/* Component Chips */}
-              <div className="flex flex-wrap gap-1 mb-4">
-                {['P1/2 MCQ', 'P3/4 Theory', 'P6 Alt Practical'].map((u) => (
-                  <span
-                    key={u}
-                    className="font-mono text-[10px] tracking-wider px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.07] text-slate-700 dark:text-slate-300"
-                  >
-                    {u}
-                  </span>
-                ))}
-              </div>
-
-              <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 mb-4 tabular-nums">
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                  <span><strong>{physTotal.toLocaleString()} Questions</strong> ({physPapers} papers)</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                  <span>Syllabus exclusion filtering (logic gates, manometers, etc.)</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                  <span>Motion, Thermal, Waves, Electricity &amp; Space</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="relative z-10 mt-auto pt-2">
-              <div className="mb-3 p-2.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.02] border border-slate-200/70 dark:border-white/[0.06]">
-                <div className="flex items-center justify-between text-[10px] font-mono tabular-nums mb-1">
-                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-indigo-500" />
-                    <span>Progress</span>
-                  </span>
-                  <span className="text-slate-800 dark:text-slate-200 font-semibold">
-                    {physCompleted.toLocaleString()} / {physTotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-sky-400"
-                    style={{ width: `${physCompleted > 0 ? Math.max(2, physProgressPct) : 0}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-white/[0.07]">
-                <button
-                  type="button"
-                  onClick={() => onNavigate('physics-topical')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white font-semibold text-xs shadow-sm transition-all"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Topical Explorer</span>
-                  <ArrowRight className="w-3 h-3 ml-auto" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('physics-test-maker')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200/90 dark:border-white/[0.07] transition-all"
-                >
-                  <FileText className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                  <span>Mock Builder</span>
-                </button>
-              </div>
-            </div>
-          </SpotlightCard>
-
-          {/* Card 3: Chemistry (0620, Cyan Signature) */}
-          <SpotlightCard
-            enableTilt
-            spotlightColor="rgba(6, 182, 212, 0.12)"
-            borderGlowColor="rgba(34, 211, 238, 0.45)"
-            className="rounded-2xl surface-card p-5 flex flex-col justify-between"
-          >
-            <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-90 z-10" />
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 border border-cyan-400/40 text-white">
-                  <FlaskConical className="w-5 h-5" />
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30">
-                  0620 · Practical Ready
-                </span>
-              </div>
-
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-cyan-600 dark:group-hover:text-cyan-300 transition-colors tracking-tight">
-                Chemistry
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-3">
-                Cambridge IGCSE (0620)
-              </p>
-
-              {/* Component Chips */}
-              <div className="flex flex-wrap gap-1 mb-4">
-                {['P1/2 MCQ', 'P3/4 Theory', 'P6 Alt Practical'].map((u) => (
-                  <span
-                    key={u}
-                    className="font-mono text-[10px] tracking-wider px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.07] text-slate-700 dark:text-slate-300"
-                  >
-                    {u}
-                  </span>
-                ))}
-              </div>
-
-              <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 mb-4 tabular-nums">
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
-                  <span><strong>{chemTotal.toLocaleString()} Questions</strong> ({chemPapers} papers)</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
-                  <span>Stoichiometry, Electrochemistry &amp; Organic</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
-                  <span>Cation/anion qualitative analysis tables</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="relative z-10 mt-auto pt-2">
-              <div className="mb-3 p-2.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.02] border border-slate-200/70 dark:border-white/[0.06]">
-                <div className="flex items-center justify-between text-[10px] font-mono tabular-nums mb-1">
-                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-cyan-500" />
-                    <span>Progress</span>
-                  </span>
-                  <span className="text-slate-800 dark:text-slate-200 font-semibold">
-                    {chemCompleted.toLocaleString()} / {chemTotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"
-                    style={{ width: `${chemCompleted > 0 ? Math.max(2, chemProgressPct) : 0}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-white/[0.07]">
-                <button
-                  type="button"
-                  onClick={() => onNavigate('chemistry-topical')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-xs shadow-sm transition-all"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Topical Explorer</span>
-                  <ArrowRight className="w-3 h-3 ml-auto" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('chemistry-test-maker')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200/90 dark:border-white/[0.07] transition-all"
-                >
-                  <FileText className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
-                  <span>Mock Builder</span>
-                </button>
-              </div>
-            </div>
-          </SpotlightCard>
-
-          {/* Card 4: Biology (0610, Emerald Signature) */}
-          <SpotlightCard
-            enableTilt
-            spotlightColor="rgba(16, 185, 129, 0.12)"
-            borderGlowColor="rgba(52, 211, 153, 0.45)"
-            className="rounded-2xl surface-card p-5 flex flex-col justify-between"
-          >
-            <div className="absolute top-0 left-6 right-6 h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-90 z-10" />
-
-            <div className="relative z-10">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/25 border border-emerald-400/40 text-white">
-                  <Dna className="w-5 h-5" />
-                </div>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
-                  0610 · Genetics &amp; Eco
-                </span>
-              </div>
-
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors tracking-tight">
-                Biology
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-3">
-                Cambridge IGCSE (0610)
-              </p>
-
-              {/* Component Chips */}
-              <div className="flex flex-wrap gap-1 mb-4">
-                {['P1/2 MCQ', 'P3/4 Theory', 'P6 Alt Practical'].map((u) => (
-                  <span
-                    key={u}
-                    className="font-mono text-[10px] tracking-wider px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.07] text-slate-700 dark:text-slate-300"
-                  >
-                    {u}
-                  </span>
-                ))}
-              </div>
-
-              <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 mb-4 tabular-nums">
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span><strong>{bioTotal.toLocaleString()} Questions</strong> ({bioPapers} papers)</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span>Genetics, Inheritance, Ecology &amp; Human Physiology</span>
-                </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                  <span>Biological diagrams, food tests &amp; magnification</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="relative z-10 mt-auto pt-2">
-              <div className="mb-3 p-2.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.02] border border-slate-200/70 dark:border-white/[0.06]">
-                <div className="flex items-center justify-between text-[10px] font-mono tabular-nums mb-1">
-                  <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                    <span>Progress</span>
-                  </span>
-                  <span className="text-slate-800 dark:text-slate-200 font-semibold">
-                    {bioCompleted.toLocaleString()} / {bioTotal.toLocaleString()}
-                  </span>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/[0.06] overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400"
-                    style={{ width: `${bioCompleted > 0 ? Math.max(2, bioProgressPct) : 0}%` }}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-white/[0.07]">
-                <button
-                  type="button"
-                  onClick={() => onNavigate('biology-topical')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs shadow-sm transition-all"
-                >
-                  <Compass className="w-3.5 h-3.5" />
-                  <span>Topical Explorer</span>
-                  <ArrowRight className="w-3 h-3 ml-auto" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('biology-test-maker')}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.06] text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-200/90 dark:border-white/[0.07] transition-all"
-                >
-                  <FileText className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span>Mock Builder</span>
-                </button>
-              </div>
-            </div>
-          </SpotlightCard>
-        </div>
-
-        {/* 3-Column Bento Architecture */}
-        <div className="w-full max-w-7xl mx-auto mt-14 pt-10 border-t border-slate-200 dark:border-white/[0.07]">
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+        {/* Subject Portals Section */}
+        <section>
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
             <div>
-              <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.14em] text-amber-600 dark:text-amber-400">
-                CAMBRIDGE ARCHITECTURE
-              </span>
-              <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight mt-0.5">
-                Engineered for Cambridge IGCSE
-              </h3>
+              <h2 className="font-editorial text-[22px] sm:text-[25px] font-semibold tracking-[-0.02em] text-[var(--ink-primary)]">
+                Cambridge IGCSE Portals
+              </h2>
+              <p className="text-[13px] text-[var(--ink-muted)] mt-0.5">
+                Select a subject to start topical practice or build customized mock assessments
+              </p>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Rigorous syllabus conformity across all 4 subjects
-            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {subjectCards.map((card) => {
+              const Icon = card.Icon;
+              return (
+                <div
+                  key={card.key}
+                  className={`rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] border-t-[3px] ${card.theme.borderTopClass} hover:border-[#0F172A]/45 dark:hover:border-slate-500 p-5 flex flex-col justify-between transition-colors duration-150`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <div className={`w-9 h-9 rounded-md border flex items-center justify-center ${card.theme.badgeClass}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono tabular-nums font-semibold border ${card.theme.badgeClass}`}>
+                        {card.badge}
+                      </span>
+                    </div>
+
+                    <h3 className="font-editorial text-[20px] font-semibold tracking-[-0.02em] text-[var(--ink-primary)]">
+                      {card.title}
+                    </h3>
+                    <p className="text-xs text-[var(--ink-muted)] font-mono tabular-nums mt-0.5 mb-3">
+                      {card.subtitle}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {card.chips.map((chip) => (
+                        <span
+                          key={chip}
+                          className="font-mono text-[10px] px-2 py-0.5 rounded bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-secondary)]"
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+
+                    <ul className="text-xs text-[var(--ink-secondary)] space-y-1.5 mb-4 tabular-nums">
+                      <li className="flex items-start gap-2">
+                        <span className={`w-1.5 h-1.5 rounded-[1px] mt-1.5 shrink-0 ${card.theme.swatchClass}`} />
+                        <span>
+                          <strong className="font-semibold text-[var(--ink-primary)] font-mono">
+                            {card.total.toLocaleString()}
+                          </strong>{' '}
+                          Questions ({card.papers} papers)
+                        </span>
+                      </li>
+                      {card.highlights.map((item) => (
+                        <li key={item} className="flex items-start gap-2">
+                          <span className={`w-1.5 h-1.5 rounded-[1px] mt-1.5 shrink-0 ${card.theme.swatchClass}`} />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-auto pt-2">
+                    <div className="mb-3 p-2.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)]">
+                      <div className="flex items-center justify-between text-[10px] font-mono tabular-nums mb-1.5">
+                        <span className="text-[var(--ink-muted)] flex items-center gap-1">
+                          <CheckCircle2 className={`w-3 h-3 ${card.theme.textClass}`} />
+                          <span>Mastered</span>
+                        </span>
+                        <span className="text-[var(--ink-primary)] font-semibold">
+                          {card.completed.toLocaleString()} / {card.total.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="w-full h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${card.theme.bgSolidClass}`}
+                          style={{ width: `${card.completed > 0 ? Math.max(2, card.progressPct) : 0}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-3 border-t border-[var(--border-hairline)]">
+                      <button
+                        type="button"
+                        onClick={() => onNavigate(card.topicalView)}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs transition-colors"
+                      >
+                        <Compass className="w-3.5 h-3.5" />
+                        <span>Topical Explorer</span>
+                        <ArrowRight className="w-3 h-3 ml-auto" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onNavigate(card.testMakerView)}
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-md bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] font-semibold text-xs border border-[var(--border-hairline)] transition-colors"
+                      >
+                        <FileText className={`w-3.5 h-3.5 ${card.theme.textClass}`} />
+                        <span>Mock Builder</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Cambridge Architecture 3-Column Strip */}
+        <section className="pt-8 border-t border-[var(--border-hairline)]">
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+            <div>
+              <h2 className="font-editorial text-[21px] sm:text-[24px] font-semibold tracking-[-0.02em] text-[var(--ink-primary)]">
+                Engineered for Cambridge IGCSE
+              </h2>
+              <p className="text-[13px] text-[var(--ink-muted)] mt-0.5">
+                Rigorous syllabus alignment and distraction-free study workflows across all 4 subjects
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* Bento Card 1: Official Mock Exam Solver */}
-            <SpotlightCard
-              spotlightColor="rgba(245, 158, 11, 0.1)"
-              borderGlowColor="rgba(251, 191, 36, 0.4)"
-              className="rounded-2xl surface-card p-5 flex flex-col justify-between"
-            >
-              <div className="relative z-10">
+            <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-5 flex flex-col justify-between">
+              <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400">
-                    <Printer className="w-5 h-5" />
+                  <div className={`p-2 rounded-md border ${mathTheme.badgeClass}`}>
+                    <Printer className="w-4 h-4" />
                   </div>
-                  <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
+                  <span className={`font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${mathTheme.badgeClass}`}>
                     Mock Solver
                   </span>
                 </div>
-
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1 tracking-tight">
+                <h3 className="text-sm font-semibold text-[var(--ink-primary)] mb-1.5">
                   Deterministic Mock Exam Builder &amp; A4 PDF Generator
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                </h3>
+                <p className="text-xs text-[var(--ink-muted)] leading-relaxed mb-4">
                   Generates full Cambridge-standard mock papers with cover sheets, lined working space,
                   and mark schemes matching real exam specifications.
                 </p>
               </div>
-
-              <div className="relative z-10 flex flex-wrap gap-1.5 pt-3 border-t border-slate-200/70 dark:border-white/[0.06]">
+              <div className="flex flex-wrap gap-1.5 pt-3 border-t border-[var(--border-hairline)]">
                 {[
-                  { label: '0580 P2 (75–100m)', accent: 'text-amber-600 dark:text-amber-300' },
-                  { label: '0580 P4 (100–130m)', accent: 'text-amber-600 dark:text-amber-300' },
-                  { label: 'Sciences MCQ (40m)', accent: 'text-indigo-600 dark:text-indigo-300' },
-                  { label: 'Theory (80m)', accent: 'text-cyan-600 dark:text-cyan-300' },
+                  { label: '0580 P2 (75–100m)', cls: mathTheme.textClass },
+                  { label: '0580 P4 (100–130m)', cls: mathTheme.textClass },
+                  { label: 'Sciences MCQ (40m)', cls: physTheme.textClass },
+                  { label: 'Theory (80m)', cls: chemTheme.textClass },
                 ].map((preset) => (
                   <span
                     key={preset.label}
-                    className={`font-mono text-[10px] tabular-nums px-2 py-0.5 rounded bg-slate-100 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.07] ${preset.accent}`}
+                    className={`font-mono text-[10px] tabular-nums px-2 py-0.5 rounded bg-[var(--bg-inset)] border border-[var(--border-hairline)] ${preset.cls}`}
                   >
                     {preset.label}
                   </span>
                 ))}
               </div>
-            </SpotlightCard>
+            </div>
 
-            {/* Bento Card 2: Split-Screen Canvas */}
-            <SpotlightCard
-              spotlightColor="rgba(99, 102, 241, 0.1)"
-              borderGlowColor="rgba(129, 140, 248, 0.4)"
-              className="rounded-2xl surface-card p-5 flex flex-col justify-between"
-            >
-              <div className="relative z-10">
+            <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-5 flex flex-col justify-between">
+              <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/25 text-indigo-600 dark:text-indigo-400">
-                    <PenTool className="w-5 h-5" />
+                  <div className={`p-2 rounded-md border ${physTheme.badgeClass}`}>
+                    <PenTool className="w-4 h-4" />
                   </div>
-                  <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20">
+                  <span className={`font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${physTheme.badgeClass}`}>
                     Split Canvas
                   </span>
                 </div>
-
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1 tracking-tight">
+                <h3 className="text-sm font-semibold text-[var(--ink-primary)] mb-1.5">
                   Split Viewer &amp; Interactive Annotation
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                </h3>
+                <p className="text-xs text-[var(--ink-muted)] leading-relaxed mb-4">
                   Full canvas annotation tools with anti-spoil mark scheme toggle, interactive MCQ choice bar,
-                  and instant keyboard navigation.
+                  Dark Paper mode, and instant keyboard navigation.
                 </p>
               </div>
-
-              <div className="relative z-10 flex items-center justify-between pt-3 border-t border-slate-200/70 dark:border-white/[0.06] text-[11px] text-slate-500 dark:text-slate-400">
+              <div className="flex items-center justify-between pt-3 border-t border-[var(--border-hairline)] text-[11px] text-[var(--ink-muted)]">
                 <span>Shortcuts</span>
                 <div className="flex items-center gap-1.5">
                   <kbd className="kbd-keycap">Space / M</kbd>
@@ -826,85 +507,82 @@ export const HomePage: React.FC<HomePageProps> = ({
                   <kbd className="kbd-keycap">B</kbd>
                 </div>
               </div>
-            </SpotlightCard>
+            </div>
 
-            {/* Bento Card 3: Formula Sheet */}
-            <SpotlightCard
-              spotlightColor="rgba(16, 185, 129, 0.1)"
-              borderGlowColor="rgba(52, 211, 153, 0.4)"
-              className="rounded-2xl surface-card p-5 flex flex-col justify-between"
-            >
-              <div className="relative z-10">
+            <div className="rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] p-5 flex flex-col justify-between">
+              <div>
                 <div className="flex items-center justify-between mb-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400">
-                    <BookOpen className="w-5 h-5" />
+                  <div className={`p-2 rounded-md border ${bioTheme.badgeClass}`}>
+                    <BookOpen className="w-4 h-4" />
                   </div>
-                  <span className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
+                  <span className={`font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${bioTheme.badgeClass}`}>
                     Drawer Reference
                   </span>
                 </div>
-
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1 tracking-tight">
+                <h3 className="text-sm font-semibold text-[var(--ink-primary)] mb-1.5">
                   Official Cambridge Formula Sheets &amp; Tables
-                </h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
+                </h3>
+                <p className="text-xs text-[var(--ink-muted)] leading-relaxed mb-4">
                   Instant slide-over drawer with 0580 formulas, Periodic Table, Physics constants,
                   and qualitative chemical analysis testing notes.
                 </p>
               </div>
-
-              <div className="relative z-10 pt-3 border-t border-slate-200/70 dark:border-white/[0.06]">
+              <div className="pt-3 border-t border-[var(--border-hairline)]">
                 <button
                   type="button"
                   onClick={triggerDataBooklet}
-                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.03] dark:hover:bg-white/[0.07] border border-slate-200/90 dark:border-white/[0.08] text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-1.5 rounded-md bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-xs font-semibold text-[var(--ink-primary)] transition-colors"
                 >
                   <span className="flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                    <BookOpen className={`w-3.5 h-3.5 ${bioTheme.textClass}`} />
                     <span>Open Formula Sheet</span>
                   </span>
                   <kbd className="kbd-keycap">D</kbd>
                 </button>
               </div>
-            </SpotlightCard>
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* Footer */}
-        <div className="w-full max-w-7xl mx-auto mt-12 pt-6 border-t border-slate-200 dark:border-white/[0.07] flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+        <footer className="pt-6 border-t border-[var(--border-hairline)] flex flex-col sm:flex-row items-center justify-between text-xs text-[var(--ink-muted)] gap-4">
           <p>
             © {new Date().getFullYear()} Cambridge IGCSE Topicals. Past papers and mark schemes are copyright UCLES / Cambridge Assessment International Education.
           </p>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 font-mono text-[11px]">
             <button
+              type="button"
               onClick={() => onNavigate('mathematics-topical')}
-              className="hover:text-amber-600 dark:hover:text-amber-400 transition-colors font-medium"
+              className="hover:text-[#7E22CE] dark:hover:text-[#C084FC] transition-colors font-medium"
             >
               Maths 0580
             </button>
-            <span>•</span>
+            <span>·</span>
             <button
+              type="button"
               onClick={() => onNavigate('physics-topical')}
-              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors font-medium"
+              className="hover:text-[#1D4ED8] dark:hover:text-[#60A5FA] transition-colors font-medium"
             >
               Physics 0625
             </button>
-            <span>•</span>
+            <span>·</span>
             <button
+              type="button"
               onClick={() => onNavigate('chemistry-topical')}
-              className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors font-medium"
+              className="hover:text-[#C2410C] dark:hover:text-[#FB923C] transition-colors font-medium"
             >
               Chemistry 0620
             </button>
-            <span>•</span>
+            <span>·</span>
             <button
+              type="button"
               onClick={() => onNavigate('biology-topical')}
-              className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors font-medium"
+              className="hover:text-[#15803D] dark:hover:text-[#4ADE80] transition-colors font-medium"
             >
               Biology 0610
             </button>
           </div>
-        </div>
+        </footer>
       </div>
     </div>
   );

@@ -1,0 +1,217 @@
+/* ============================================================================
+ * Academic Ecosystem Design Tokens (v0.4 Canonical Reference)
+ * Source of truth: igcse-interactive-labs (Next.js / Tailwind CSS v4)
+ * Targets: cambridge-igcse-topicals, edexcel-ial-topicals, islam-topicals
+ *
+ * Framework-agnostic CSS custom properties for Light Editorial (default),
+ * opt-in Calibrated Oxford Slate Dark Mode, isolated Dark Paper exam scan
+ * inversion, and shared editorial/scrollbar utility classes.
+ * ============================================================================ */
+
+/* Local Thaana script mapping (U+0780-U+07BF) preserving primary Latin UI font */
+@font-face {
+  font-family: "Faruma";
+  src: local("Faruma"), local("Faruma Regular");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0780-U+07BF;
+}
+
+/* ----------------------------------------------------------------------------
+ * 1. Default Light Editorial Theme — Academic Ivory & Oxford Navy
+ *    Matches igcse-interactive-labs v0.4 verbatim.
+ * ---------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --bg-paper: #F7F6F2;
+  --bg-surface: #FFFFFF;
+  --bg-inset: #FAF9F5;
+  --bg-subtle: #F1EFE9;
+
+  /* Borders */
+  --border-hairline: #E2E0D8;
+  --border-strong: #CBD5E1;
+  --border-warm-strong: #D4D1C7;
+
+  /* Ink */
+  --ink-primary: #0F172A;
+  --ink-secondary: #334155;
+  --ink-muted: #475569;
+  --ink-caption: #64748B;
+
+  /* Primary Controls & Semantic Accents */
+  --action-primary-bg: #0F172A;
+  --action-primary-fg: #FFFFFF;
+  --action-primary-hover: #1E293B;
+  --action-teacher-bg: #D94E34;
+  --selection-bg: rgba(29, 78, 216, 0.15);
+
+  /* Elevation & Motion */
+  --shadow-header-scrolled: 0 6px 18px -14px rgba(15, 23, 42, 0.22);
+  --shadow-popover: 0 10px 24px -10px rgba(15, 23, 42, 0.16);
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Typography — aligned with src/app/layout.tsx & src/app/globals.css */
+  --font-editorial: "Source Serif 4", Georgia, Cambria, "Times New Roman", "Faruma", serif;
+  --font-sans: var(--font-geist-sans, "Geist"), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Faruma", sans-serif;
+  --font-mono: var(--font-geist-mono, "Geist Mono"), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Faruma", monospace;
+  --font-thaana: "Faruma", sans-serif;
+
+  /* Canonical 7 Subject Accents (IGCSE, Edexcel IAL, Maldives SSC, Maldives HSC) */
+  --subject-physics: #1D4ED8;
+  --subject-physics-bg: #EFF6FF;
+  --subject-physics-border: #BFDBFE;
+
+  --subject-maths: #7E22CE;
+  --subject-maths-bg: #FAF5FF;
+  --subject-maths-border: #E9D5FF;
+
+  --subject-chemistry: #C2410C;
+  --subject-chemistry-bg: #FFF7ED;
+  --subject-chemistry-border: #FED7AA;
+
+  --subject-biology: #15803D;
+  --subject-biology-bg: #F0FDF4;
+  --subject-biology-border: #BBF7D0;
+
+  --subject-cs: #4338CA;
+  --subject-cs-bg: #EEF2FF;
+  --subject-cs-border: #C7D2FE;
+
+  --subject-dhivehi: #9F1239;
+  --subject-dhivehi-bg: #FFF1F2;
+  --subject-dhivehi-border: #FECDD3;
+
+  --subject-islam: #B45309;
+  --subject-islam-bg: #FFFBEB;
+  --subject-islam-border: #FDE68A;
+}
+
+/* ----------------------------------------------------------------------------
+ * 2. Opt-In Calibrated Oxford Slate Dark Mode (Sister Topical Sites)
+ *    Activate via <html data-theme="dark"> or <html class="dark">.
+ * ---------------------------------------------------------------------------- */
+[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg-paper: #0B1120;
+  --bg-surface: #111827;
+  --bg-inset: #162033;
+  --bg-subtle: #1E293B;
+
+  /* Borders */
+  --border-hairline: #243146;
+  --border-strong: #334155;
+  --border-warm-strong: #334155;
+
+  /* Ink */
+  --ink-primary: #F1F5F9;
+  --ink-secondary: #CBD5E1;
+  --ink-muted: #94A3B8;
+  --ink-caption: #7D90AB;
+
+  /* Primary Controls & Semantic Accents */
+  --action-primary-bg: #F1F5F9;
+  --action-primary-fg: #0F172A;
+  --action-primary-hover: #E2E8F0;
+  --action-teacher-bg: #EA580C;
+  --selection-bg: rgba(96, 165, 250, 0.25);
+
+  /* Elevation */
+  --shadow-header-scrolled: 0 8px 20px -12px rgba(2, 6, 23, 0.72);
+  --shadow-popover: 0 12px 28px -10px rgba(2, 6, 23, 0.8);
+
+  /* Calibrated Dark-Readable 7 Subject Accents */
+  --subject-physics: #60A5FA;
+  --subject-physics-bg: rgba(59, 130, 246, 0.16);
+  --subject-physics-border: rgba(96, 165, 250, 0.35);
+
+  --subject-maths: #C084FC;
+  --subject-maths-bg: rgba(168, 85, 247, 0.16);
+  --subject-maths-border: rgba(192, 132, 252, 0.35);
+
+  --subject-chemistry: #FB923C;
+  --subject-chemistry-bg: rgba(249, 115, 22, 0.16);
+  --subject-chemistry-border: rgba(251, 146, 60, 0.35);
+
+  --subject-biology: #4ADE80;
+  --subject-biology-bg: rgba(34, 197, 94, 0.16);
+  --subject-biology-border: rgba(74, 222, 128, 0.35);
+
+  --subject-cs: #818CF8;
+  --subject-cs-bg: rgba(99, 102, 241, 0.16);
+  --subject-cs-border: rgba(129, 140, 248, 0.35);
+
+  --subject-dhivehi: #FB7185;
+  --subject-dhivehi-bg: rgba(244, 63, 94, 0.16);
+  --subject-dhivehi-border: rgba(251, 113, 133, 0.35);
+
+  --subject-islam: #FBBF24;
+  --subject-islam-bg: rgba(245, 158, 11, 0.16);
+  --subject-islam-border: rgba(251, 191, 36, 0.35);
+}
+
+/* ----------------------------------------------------------------------------
+ * 3. Isolated Dark Paper Scan Filter Utility
+ *    Apply .exam-paper-surface to the wrapper holding the cropped paper <img>,
+ *    and toggle .exam-paper-dark-invert STRICTLY on the <img> element itself.
+ *    NEVER apply to the annotation <canvas> / SVG overlay.
+ * ---------------------------------------------------------------------------- */
+.exam-paper-surface {
+  isolation: isolate;
+}
+
+[data-theme="dark"] .exam-paper-dark-invert,
+.dark .exam-paper-dark-invert {
+  filter: invert(1) hue-rotate(180deg) brightness(0.88) contrast(1.05);
+  mix-blend-mode: screen;
+}
+
+@media print {
+  .exam-paper-dark-invert {
+    filter: none !important;
+    mix-blend-mode: normal !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+ * 4. Shared Editorial, Thaana, Numeric & Scrollbar Utility Helpers
+ * ---------------------------------------------------------------------------- */
+.editorial-heading,
+.font-editorial {
+  font-family: var(--font-editorial);
+  letter-spacing: -0.02em;
+}
+
+.font-thaana {
+  font-family: var(--font-sans);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

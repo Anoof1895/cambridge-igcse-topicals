@@ -8,52 +8,94 @@ export interface SubjectThemeToken {
   name: string;
   accent: string;
   accentRgb: string;
+  darkAccent: string;
+  darkAccentRgb: string;
+  bg: string;
+  border: string;
+  darkBg: string;
+  darkBorder: string;
 }
 
 export const SUBJECT_THEME_TOKENS: Record<SubjectCode, SubjectThemeToken> = {
   '0580': {
     code: '0580',
     name: 'Mathematics',
-    accent: '#F59E0B',
-    accentRgb: '245, 158, 11',
+    accent: '#7E22CE',
+    accentRgb: '126, 34, 206',
+    darkAccent: '#C084FC',
+    darkAccentRgb: '192, 132, 252',
+    bg: '#FAF5FF',
+    border: '#E9D5FF',
+    darkBg: 'rgba(168, 85, 247, 0.16)',
+    darkBorder: 'rgba(192, 132, 252, 0.35)',
   },
   '0625': {
     code: '0625',
     name: 'Physics',
-    accent: '#6366F1',
-    accentRgb: '99, 102, 241',
+    accent: '#1D4ED8',
+    accentRgb: '29, 78, 216',
+    darkAccent: '#60A5FA',
+    darkAccentRgb: '96, 165, 250',
+    bg: '#EFF6FF',
+    border: '#BFDBFE',
+    darkBg: 'rgba(59, 130, 246, 0.16)',
+    darkBorder: 'rgba(96, 165, 250, 0.35)',
   },
   '0620': {
     code: '0620',
     name: 'Chemistry',
-    accent: '#06B6D4',
-    accentRgb: '6, 182, 212',
+    accent: '#C2410C',
+    accentRgb: '194, 65, 12',
+    darkAccent: '#FB923C',
+    darkAccentRgb: '251, 146, 60',
+    bg: '#FFF7ED',
+    border: '#FED7AA',
+    darkBg: 'rgba(249, 115, 22, 0.16)',
+    darkBorder: 'rgba(251, 146, 60, 0.35)',
   },
   '0610': {
     code: '0610',
     name: 'Biology',
-    accent: '#10B981',
-    accentRgb: '16, 185, 129',
+    accent: '#15803D',
+    accentRgb: '21, 128, 61',
+    darkAccent: '#4ADE80',
+    darkAccentRgb: '74, 222, 128',
+    bg: '#F0FDF4',
+    border: '#BBF7D0',
+    darkBg: 'rgba(34, 197, 94, 0.16)',
+    darkBorder: 'rgba(74, 222, 128, 0.35)',
   },
 };
 
-export function applySubjectThemeVariables(subject: SubjectCode | Subject): SubjectThemeToken {
+export function applySubjectThemeVariables(
+  subject: SubjectCode | Subject,
+  themeMode: Theme = 'light'
+): SubjectThemeToken {
   const code = subjectSlugToCode(subject);
   const token = SUBJECT_THEME_TOKENS[code] || SUBJECT_THEME_TOKENS['0620'];
   if (typeof document !== 'undefined') {
     const root = document.documentElement;
-    root.style.setProperty('--subject-accent', token.accent);
-    root.style.setProperty('--subject-accent-rgb', token.accentRgb);
-    root.style.setProperty('--subject-glow-rgb', token.accentRgb);
+    const isDark = themeMode === 'dark' || root.classList.contains('dark');
+    root.style.setProperty('--subject-accent', isDark ? token.darkAccent : token.accent);
+    root.style.setProperty('--subject-accent-rgb', isDark ? token.darkAccentRgb : token.accentRgb);
+    root.style.setProperty('--subject-glow-rgb', isDark ? token.darkAccentRgb : token.accentRgb);
+    root.style.setProperty('--subject-bg', isDark ? token.darkBg : token.bg);
+    root.style.setProperty('--subject-border', isDark ? token.darkBorder : token.border);
     root.setAttribute('data-subject', token.code);
   }
   return token;
 }
 
+const DARK_PAPER_STORAGE_KEY = 'igcse_dark_paper';
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
+  darkPaper: boolean;
+  setDarkPaper: (enabled: boolean) => void;
+  toggleDarkPaper: () => void;
+  isDarkPaperActive: boolean;
   subjectCode: SubjectCode;
   subjectTheme: SubjectThemeToken;
   setSubjectTheme: (subject: SubjectCode | Subject) => void;
@@ -65,13 +107,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<Theme>(() => {
     try {
       const saved = localStorage.getItem('theme');
-      if (saved === 'light') {
-        return 'light';
+      if (saved === 'dark') {
+        return 'dark';
       }
     } catch {
       // ignore
     }
-    return 'dark';
+    return 'light';
+  });
+
+  const [darkPaper, setDarkPaperState] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(DARK_PAPER_STORAGE_KEY) === 'true';
+    } catch {
+      return false;
+    }
   });
 
   const [subjectCode, setSubjectCodeState] = useState<SubjectCode>(() => {
@@ -91,25 +141,36 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (theme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      root.setAttribute('data-theme', 'dark');
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
+      root.setAttribute('data-theme', 'light');
     }
+    applySubjectThemeVariables(subjectCode, theme);
     try {
       localStorage.setItem('theme', theme);
     } catch {
       // ignore
     }
-  }, [theme]);
+  }, [theme, subjectCode]);
 
   useEffect(() => {
-    applySubjectThemeVariables(subjectCode);
+    try {
+      localStorage.setItem(DARK_PAPER_STORAGE_KEY, darkPaper ? 'true' : 'false');
+    } catch {
+      // ignore
+    }
+  }, [darkPaper]);
+
+  useEffect(() => {
+    applySubjectThemeVariables(subjectCode, theme);
     try {
       localStorage.setItem('active_subject_code', subjectCode);
     } catch {
       // ignore
     }
-  }, [subjectCode]);
+  }, [subjectCode, theme]);
 
   const toggleTheme = useCallback(() => {
     setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
@@ -119,13 +180,25 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setThemeState(newTheme);
   }, []);
 
-  const setSubjectTheme = useCallback((subject: SubjectCode | Subject) => {
-    const nextCode = subjectSlugToCode(subject);
-    setSubjectCodeState(nextCode);
-    applySubjectThemeVariables(nextCode);
+  const setDarkPaper = useCallback((enabled: boolean) => {
+    setDarkPaperState(enabled);
   }, []);
 
+  const toggleDarkPaper = useCallback(() => {
+    setDarkPaperState((prev) => !prev);
+  }, []);
+
+  const setSubjectTheme = useCallback(
+    (subject: SubjectCode | Subject) => {
+      const nextCode = subjectSlugToCode(subject);
+      setSubjectCodeState(nextCode);
+      applySubjectThemeVariables(nextCode, theme);
+    },
+    [theme]
+  );
+
   const subjectTheme = SUBJECT_THEME_TOKENS[subjectCode] || SUBJECT_THEME_TOKENS['0620'];
+  const isDarkPaperActive = theme === 'dark' && darkPaper;
 
   return (
     <ThemeContext.Provider
@@ -133,6 +206,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         theme,
         toggleTheme,
         setTheme,
+        darkPaper,
+        setDarkPaper,
+        toggleDarkPaper,
+        isDarkPaperActive,
         subjectCode,
         subjectTheme,
         setSubjectTheme,

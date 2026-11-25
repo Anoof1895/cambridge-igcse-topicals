@@ -29,8 +29,8 @@ export const SUBJECT_CONFIGS: Record<SubjectCode, SubjectConfig> = {
     label: 'Maths 0580',
     shortName: 'Mathematics',
     displayName: 'Cambridge IGCSE Mathematics (0580)',
-    accentColor: '#F59E0B',
-    accentRgb: '245, 158, 11',
+    accentColor: '#7E22CE',
+    accentRgb: '126, 34, 206',
     availableComponents: ['paper1', 'paper2', 'paper3', 'paper4'],
     componentLabels: {
       paper1: 'Paper 1 (Core Non-Calc)',
@@ -45,8 +45,8 @@ export const SUBJECT_CONFIGS: Record<SubjectCode, SubjectConfig> = {
     label: 'Physics 0625',
     shortName: 'Physics',
     displayName: 'Cambridge IGCSE Physics (0625)',
-    accentColor: '#6366F1',
-    accentRgb: '99, 102, 241',
+    accentColor: '#1D4ED8',
+    accentRgb: '29, 78, 216',
     availableComponents: ['paper1', 'paper2', 'paper3', 'paper4', 'paper6'],
     componentLabels: {
       paper1: 'Paper 1 (Core MCQ)',
@@ -62,8 +62,8 @@ export const SUBJECT_CONFIGS: Record<SubjectCode, SubjectConfig> = {
     label: 'Chemistry 0620',
     shortName: 'Chemistry',
     displayName: 'Cambridge IGCSE Chemistry (0620)',
-    accentColor: '#06B6D4',
-    accentRgb: '6, 182, 212',
+    accentColor: '#C2410C',
+    accentRgb: '194, 65, 12',
     availableComponents: ['paper1', 'paper2', 'paper3', 'paper4', 'paper6'],
     componentLabels: {
       paper1: 'Paper 1 (Core MCQ)',
@@ -79,8 +79,8 @@ export const SUBJECT_CONFIGS: Record<SubjectCode, SubjectConfig> = {
     label: 'Biology 0610',
     shortName: 'Biology',
     displayName: 'Cambridge IGCSE Biology (0610)',
-    accentColor: '#10B981',
-    accentRgb: '16, 185, 129',
+    accentColor: '#15803D',
+    accentRgb: '21, 128, 61',
     availableComponents: ['paper1', 'paper2', 'paper3', 'paper4', 'paper6'],
     componentLabels: {
       paper1: 'Paper 1 (Core MCQ)',

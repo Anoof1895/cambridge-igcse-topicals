@@ -5,6 +5,7 @@ interface ImportMetaEnv {
   readonly VITE_IMAGE_CDN_PREFIXES?: string;
   readonly VITE_SUPABASE_URL?: string;
   readonly VITE_SUPABASE_ANON_KEY?: string;
+  readonly VITE_STUDY_HUB_URL?: string;
 }
 
 interface ImportMeta {

@@ -1,30 +1,25 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { 
-  Columns, 
-  Eye, 
-  CheckCircle2, 
-  Search, 
-  Layers, 
+import {
+  Columns,
+  Eye,
+  CheckCircle2,
+  Search,
+  Layers,
   RotateCcw,
   Calendar,
   CalendarRange,
   SlidersHorizontal,
   X,
-  Sparkles,
   AlertTriangle,
-  Award
+  Award,
 } from 'lucide-react';
-import { FilterState, ViewMode, QuestionItem, Tier, SyllabusEra, Subject, StatusFilter } from '../types';
+import { FilterState, ViewMode, QuestionItem, Tier, SyllabusEra, Subject } from '../types';
 import { SubtopicMultiSelect } from './SubtopicMultiSelect';
 import { FilterMultiSelect, FilterOption } from './FilterMultiSelect';
 import { SubtopicGroup } from '../constants/taxonomy';
 import { getQuestionSubject } from '../utils/questionClassification';
 import { useAuth } from '../context/AuthContext';
-import {
-  handleSpotlightMove,
-  handleSpotlightLeave,
-  getSubjectSpotlightStyle,
-} from '../utils/spotlight';
+import { getCanonicalSubjectTheme } from '../utils/subjectTheme';
 
 export type { SubtopicGroup };
 
@@ -53,15 +48,13 @@ export const TopBar: React.FC<TopBarProps> = ({
   totalFiltered,
   totalMarks,
   onResetFilters,
-  allQuestions
+  allQuestions,
 }) => {
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isSecondaryPopoverOpen, setIsSecondaryPopoverOpen] = useState(false);
   const secondaryPopoverRef = useRef<HTMLDivElement>(null);
 
   const { user, openAuthModal, signOut } = useAuth();
-
-  // Debounced search input state
   const [searchInput, setSearchInput] = useState(filters.searchQuery);
 
   useEffect(() => {
@@ -89,7 +82,6 @@ export const TopBar: React.FC<TopBarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSecondaryPopoverOpen]);
 
-  // Detect active Cambridge subject
   const activeSubject: Subject = useMemo(() => {
     if (filters.subject) {
       if (filters.subject === '0580') return 'mathematics';
@@ -100,19 +92,11 @@ export const TopBar: React.FC<TopBarProps> = ({
     return getQuestionSubject(allQuestions?.[0]);
   }, [filters.subject, allQuestions]);
 
+  const subjectTheme = getCanonicalSubjectTheme(activeSubject);
   const isMath = activeSubject === 'mathematics';
-  const isPhysics = activeSubject === 'physics';
-  const isBio = activeSubject === 'biology';
 
-  const activePillBtnClass = isMath
-    ? 'bg-amber-600 text-white shadow-sm'
-    : isPhysics
-    ? 'bg-indigo-600 text-white shadow-sm'
-    : isBio
-    ? 'bg-emerald-600 text-white shadow-sm'
-    : 'bg-cyan-600 text-white shadow-sm';
+  const activeSegBtnClass = 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold';
 
-  // Available Paper Components with Cambridge labels
   const componentOptions: FilterOption[] = useMemo(() => {
     const counts = new Map<string, number>();
     if (allQuestions) {
@@ -164,7 +148,6 @@ export const TopBar: React.FC<TopBarProps> = ({
     }));
   }, [availableYears, allQuestions]);
 
-  // Cambridge Exam Series Options (m = Feb/March India, s = May/June, w = Oct/Nov)
   const seriesOptions: FilterOption[] = useMemo(() => {
     const seriesList = [
       { value: 'm', label: 'Feb/March (m)' },
@@ -191,7 +174,6 @@ export const TopBar: React.FC<TopBarProps> = ({
     }));
   }, [allQuestions]);
 
-  // Active filter badge count
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.selectedUnits.length > 0) count++;
@@ -201,7 +183,7 @@ export const TopBar: React.FC<TopBarProps> = ({
     if (filters.selectedTier && filters.selectedTier !== 'extended') count++;
     if (filters.variant && filters.variant !== 'all') count++;
     if (filters.syllabusEra && filters.syllabusEra !== 'all') count++;
-    if (filters.hideObsolete === false) count++; // non-default
+    if (filters.hideObsolete === false) count++;
     if (filters.statusFilter !== 'all') count++;
     if (filters.questionType !== 'all') count++;
     if (filters.bookmarkedOnly) count++;
@@ -209,7 +191,6 @@ export const TopBar: React.FC<TopBarProps> = ({
     return count;
   }, [filters]);
 
-  // Active secondary filter count (Tier, Variant, Year, Series, Status, Obsolete)
   const activeSecondaryCount = useMemo(() => {
     let count = 0;
     if (filters.selectedYears.length > 0) count++;
@@ -243,17 +224,16 @@ export const TopBar: React.FC<TopBarProps> = ({
   const currentVariant: 'all' | 1 | 2 | 3 = filters.variant || 'all';
 
   const hasActiveFilters = activeFilterCount > 0;
-
-  const selectedSubject = filters.subject || (isMath ? '0580' : isPhysics ? '0625' : isBio ? '0610' : '0620');
+  const selectedSubject = filters.subject || subjectTheme.code;
 
   return (
     <>
-      <header className="relative z-30 flex flex-nowrap items-center justify-between gap-2 px-3 py-2 w-full min-w-0 shrink-0 bg-white/95 dark:bg-[#0B0F19]/90 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800/80 overflow-visible select-none transition-colors">
-        {/* Left Wing: Title & Subject Badge only */}
+      <header className="relative z-30 flex flex-nowrap items-center justify-between gap-2 px-3 h-12 w-full min-w-0 shrink-0 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] overflow-visible select-none transition-colors">
+        {/* Left Wing: Title & Subject Badge */}
         <div className="flex-1 flex items-center justify-start min-w-0">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-zinc-300 shrink-0 whitespace-nowrap">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--ink-primary)] shrink-0 whitespace-nowrap">
             <span className="hidden sm:inline">Topical Explorer</span>
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-white/[0.06] text-slate-600 dark:text-zinc-400 border border-slate-200 dark:border-transparent">
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono tabular-nums border ${subjectTheme.badgeClass}`}>
               {selectedSubject}
             </span>
           </div>
@@ -262,397 +242,353 @@ export const TopBar: React.FC<TopBarProps> = ({
         {/* Center Group: Search & Filter Controls */}
         <div className="shrink-0 flex items-center justify-center gap-1.5 xl:gap-2 mx-auto overflow-visible">
           <div className="relative w-36 sm:w-44 lg:w-52 shrink-0">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-zinc-400 pointer-events-none" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--ink-muted)] pointer-events-none" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search topic or Q#..."
-              className="w-full h-8 pl-8 pr-2 text-xs bg-slate-100 hover:bg-slate-200/70 focus:bg-white dark:bg-white/[0.04] dark:hover:bg-white/[0.07] dark:focus:bg-white/[0.09] text-slate-800 dark:text-zinc-200 placeholder-slate-400 dark:placeholder-zinc-500 rounded-lg border border-slate-200 dark:border-white/[0.08] focus:border-[var(--subject-accent,#F59E0B)] focus:outline-none transition-all"
+              className="w-full h-8 pl-8 pr-2 text-xs bg-[var(--bg-inset)] focus:bg-[var(--bg-surface)] text-[var(--ink-primary)] placeholder-[var(--ink-caption)] rounded-lg border border-[var(--border-hairline)] focus:border-[var(--border-strong)] focus:outline-none transition-colors"
             />
           </div>
 
-          {/* Inline filter pills & controls (Wide Desktop >= 1536px) */}
+          {/* Inline filter controls (Wide Desktop >= 1536px) */}
           <div className="hidden 2xl:flex flex-nowrap items-center gap-1.5 xl:gap-2 shrink-0 overflow-visible">
-
-          {/* Primary 2: 0580 Mathematics Syllabus Segmented Toggle */}
-          {isMath && (
-            <div
-              onPointerMove={handleSpotlightMove}
-              onPointerLeave={handleSpotlightLeave}
-              style={getSubjectSpotlightStyle('mathematics', 200)}
-              className="spotlight-surface h-8 flex items-center bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] p-0.5 rounded-lg text-xs shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
-              title="0580 Mathematics Syllabus Era"
-            >
-              <button
-                type="button"
-                onClick={() => onFilterChange({ syllabusEra: '2025-2027' })}
-                className={`relative z-10 h-7 px-2 rounded-md transition-all font-medium flex items-center gap-1 text-xs whitespace-nowrap ${
-                  currentSyllabusEra === '2025-2027' || currentSyllabusEra === '2025-2028'
-                    ? activePillBtnClass
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
+            {isMath && (
+              <div
+                className="h-8 flex items-center bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs shrink-0"
+                title="0580 Mathematics Syllabus Era"
               >
-                <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
-                <span>2025–2027</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onFilterChange({ syllabusEra: '2019-2024' })}
-                className={`relative z-10 h-7 px-2 rounded-md transition-all font-medium text-xs whitespace-nowrap ${
-                  currentSyllabusEra === '2019-2024' || currentSyllabusEra === '2020-2024'
-                    ? activePillBtnClass
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                <span>2019–2024</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => onFilterChange({ syllabusEra: 'all' })}
-                className={`relative z-10 h-7 px-2 rounded-md transition-all font-medium text-xs whitespace-nowrap ${
-                  currentSyllabusEra === 'all'
-                    ? activePillBtnClass
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                <span>All Syllabi</span>
-              </button>
-            </div>
-          )}
-
-          {/* Primary 2b: Obsolete Syllabus Filter Toggle */}
-          <button
-            type="button"
-            onClick={() => onFilterChange({ hideObsolete: !hideObsoleteActive })}
-            title="Filter out questions testing content removed from current Cambridge syllabus"
-            className={`whitespace-nowrap shrink-0 h-8 px-3 text-xs font-medium inline-flex items-center gap-1.5 rounded-lg border transition-all ${
-              hideObsoleteActive
-                ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-            }`}
-          >
-            {hideObsoleteActive ? (
-              <>
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                <span>Obsolete Hidden</span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-3 h-3 text-amber-500" />
-                <span>Showing Obsolete</span>
-              </>
+                <button
+                  type="button"
+                  onClick={() => onFilterChange({ syllabusEra: '2025-2027' })}
+                  className={`h-7 px-2 rounded-md transition-colors text-xs whitespace-nowrap ${
+                    currentSyllabusEra === '2025-2027' || currentSyllabusEra === '2025-2028'
+                      ? activeSegBtnClass
+                      : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
+                  }`}
+                >
+                  2025–2027
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onFilterChange({ syllabusEra: '2019-2024' })}
+                  className={`h-7 px-2 rounded-md transition-colors text-xs whitespace-nowrap ${
+                    currentSyllabusEra === '2019-2024' || currentSyllabusEra === '2020-2024'
+                      ? activeSegBtnClass
+                      : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
+                  }`}
+                >
+                  2019–2024
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onFilterChange({ syllabusEra: 'all' })}
+                  className={`h-7 px-2 rounded-md transition-colors text-xs whitespace-nowrap ${
+                    currentSyllabusEra === 'all'
+                      ? activeSegBtnClass
+                      : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
+                  }`}
+                >
+                  All Syllabi
+                </button>
+              </div>
             )}
-          </button>
 
-          {/* Primary 3: Paper Component Multi-Select Dropdown */}
-          <FilterMultiSelect
-            labelSingular="Paper"
-            labelPlural="Papers"
-            icon={<Layers className={`w-3.5 h-3.5 shrink-0 ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : 'text-cyan-600 dark:text-cyan-400'}`} />}
-            options={componentOptions}
-            selectedValues={filters.selectedUnits}
-            onChange={(units) => onFilterChange({ selectedUnits: units })}
-          />
-
-          {/* Primary 4: Subtopic Multi-Select */}
-          <SubtopicMultiSelect
-            hierarchy={subtopicHierarchy}
-            selectedSubtopics={filters.selectedSubtopics}
-            onChange={(subs) => onFilterChange({ selectedSubtopics: subs })}
-            questions={allQuestions}
-          />
-
-          {/* Primary 5: Science Question Type (All | MCQ | Theory) Segmented Switch */}
-          {!isMath && (
-            <div
-              onPointerMove={handleSpotlightMove}
-              onPointerLeave={handleSpotlightLeave}
-              style={getSubjectSpotlightStyle(isPhysics ? 'physics' : isBio ? 'biology' : 'chemistry', 180)}
-              className="spotlight-surface h-8 flex items-center bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] p-0.5 rounded-lg text-xs shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
-            >
-              <button
-                type="button"
-                onClick={() => onFilterChange({ questionType: 'all' })}
-                className={`relative z-10 h-7 px-2.5 rounded-md transition-all font-medium text-xs whitespace-nowrap ${
-                  filters.questionType === 'all'
-                    ? activePillBtnClass
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => onFilterChange({ questionType: 'mcq' })}
-                className={`relative z-10 h-7 px-2.5 rounded-md transition-all font-medium text-xs whitespace-nowrap ${
-                  filters.questionType === 'mcq'
-                    ? activePillBtnClass
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                MCQ
-              </button>
-              <button
-                type="button"
-                onClick={() => onFilterChange({ questionType: 'theory' })}
-                className={`relative z-10 h-7 px-2.5 rounded-md transition-all font-medium text-xs whitespace-nowrap ${
-                  filters.questionType === 'theory'
-                    ? activePillBtnClass
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-              >
-                Theory
-              </button>
-            </div>
-          )}
-
-          {/* Primary 6: Consolidated Filters Popover (Tier, Variant, Year, Series, Status) */}
-          <div className="relative shrink-0" ref={secondaryPopoverRef}>
             <button
               type="button"
-              onClick={() => setIsSecondaryPopoverOpen((prev) => !prev)}
-              onPointerMove={handleSpotlightMove}
-              onPointerLeave={handleSpotlightLeave}
-              style={getSubjectSpotlightStyle(activeSubject, 180)}
-              className={`spotlight-surface h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 whitespace-nowrap ${
-                activeSecondaryCount > 0
-                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/50 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.12)]'
-                  : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] hover:text-slate-900 dark:hover:text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
+              onClick={() => onFilterChange({ hideObsolete: !hideObsoleteActive })}
+              title="Filter out questions testing content removed from current Cambridge syllabus"
+              className={`whitespace-nowrap shrink-0 h-8 px-3 text-xs font-medium inline-flex items-center gap-1.5 rounded-lg border transition-colors ${
+                hideObsoleteActive
+                  ? 'bg-[#F0FDF4] dark:bg-emerald-500/15 text-[#15803D] dark:text-[#4ADE80] border-[#BBF7D0] dark:border-emerald-500/30'
+                  : 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
               }`}
-              title="Consolidated filters: Tier, Variant, Year, Series, Status"
             >
-              <SlidersHorizontal className="relative z-10 w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="relative z-10">Filters</span>
-              {activeSecondaryCount > 0 && (
-                <span className="relative z-10 font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-600 text-white">
-                  • {activeSecondaryCount}
-                </span>
+              {hideObsoleteActive ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                  <span>Obsolete Hidden</span>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                  <span>Showing Obsolete</span>
+                </>
               )}
             </button>
 
-            {/* Secondary Filters Popover Dropdown */}
-            {isSecondaryPopoverOpen && (
-              <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1rem)] min-w-[260px] p-4 space-y-4 rounded-xl bg-white/95 dark:bg-[#0B0F19]/95 border border-slate-200 dark:border-white/10 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
-                {/* Popover Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/[0.07]">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>Cambridge Filters</span>
-                    {activeSecondaryCount > 0 && (
-                      <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                        {activeSecondaryCount} active
-                      </span>
-                    )}
-                  </div>
-                  {activeSecondaryCount > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => onFilterChange({ selectedYears: [], selectedSeries: [], selectedTier: 'extended', variant: 'all', statusFilter: 'all' })}
-                      className="text-[11px] text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-semibold transition-colors"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
+            <FilterMultiSelect
+              labelSingular="Paper"
+              labelPlural="Papers"
+              icon={<Layers className={`w-3.5 h-3.5 shrink-0 ${subjectTheme.textClass}`} />}
+              options={componentOptions}
+              selectedValues={filters.selectedUnits}
+              onChange={(units) => onFilterChange({ selectedUnits: units })}
+            />
 
-                {/* Tier Selector */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Award className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                      <span>Cambridge Tier</span>
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-3 gap-1 p-1 bg-slate-100 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.06]">
-                    {(['all', 'core', 'extended'] as const).map((t) => {
-                      const label = t === 'all' ? 'All Tiers' : t === 'core' ? 'Core' : 'Extended';
-                      return (
-                        <button
-                          key={t}
-                          type="button"
-                          onClick={() => onFilterChange({ selectedTier: t, tier: t })}
-                          className={`py-1.5 px-2 text-xs font-medium text-center truncate rounded-lg transition-all ${
-                            currentTier === t
-                              ? activePillBtnClass
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.04]'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+            <SubtopicMultiSelect
+              hierarchy={subtopicHierarchy}
+              selectedSubtopics={filters.selectedSubtopics}
+              onChange={(subs) => onFilterChange({ selectedSubtopics: subs })}
+              questions={allQuestions}
+            />
 
-                {/* Paper Variant Selector */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Layers className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                      <span>Paper Variant</span>
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-4 gap-1 p-1 bg-slate-100 dark:bg-white/[0.04] rounded-xl border border-slate-200 dark:border-white/[0.06]">
-                    {([
-                      { value: 'all', label: 'All' },
-                      { value: 1, label: 'V1' },
-                      { value: 2, label: 'V2' },
-                      { value: 3, label: 'V3' },
-                    ] as const).map((v) => (
-                      <button
-                        key={String(v.value)}
-                        type="button"
-                        onClick={() => onFilterChange({ variant: v.value })}
-                        className={`py-1.5 px-2 text-xs font-medium font-mono tabular-nums text-center truncate rounded-lg transition-all ${
-                          currentVariant === v.value
-                            ? activePillBtnClass
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-white/[0.04]'
-                        }`}
-                      >
-                        {v.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Exam Years Grid Chips */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                      <span>Exam Year</span>
-                    </label>
-                    {filters.selectedYears.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => onFilterChange({ selectedYears: [] })}
-                        className="text-[10px] text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-4 gap-1.5 w-full">
-                    {availableYears.map((yr) => {
-                      const yStr = String(yr);
-                      const isSelected = filters.selectedYears.includes(yStr);
-                      return (
-                        <button
-                          key={yr}
-                          type="button"
-                          onClick={() => toggleYear(yStr)}
-                          className={`w-full text-center py-1 text-xs font-mono tabular-nums rounded-md transition-all ${
-                            isSelected
-                              ? 'bg-amber-600 text-white font-bold shadow-sm'
-                              : 'bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08]'
-                          }`}
-                        >
-                          {yr}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Series / Season Chips */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <CalendarRange className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                      <span>Series / Season</span>
-                    </label>
-                    {filters.selectedSeries.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => onFilterChange({ selectedSeries: [] })}
-                        className="text-[10px] text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {seriesOptions.map((opt) => {
-                      const isSelected = filters.selectedSeries.includes(opt.value);
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => toggleSeries(opt.value)}
-                          className={`px-2.5 py-0.5 rounded-md text-xs font-medium transition-all ${
-                            isSelected
-                              ? 'bg-amber-600 text-white font-bold shadow-sm'
-                              : 'bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08]'
-                          }`}
-                        >
-                          {opt.label} ({opt.count})
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Revision Status Chips */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-500 dark:text-emerald-400" />
-                      <span>Revision Status</span>
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5 text-xs">
-                    {([
-                      { value: 'all', label: 'All', dot: null },
-                      { value: 'unattempted', label: 'Unattempted', dot: 'bg-slate-400 dark:bg-slate-500' },
-                      { value: 'review', label: 'Review', dot: 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)]' },
-                      { value: 'mastered', label: 'Mastered', dot: 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]' },
-                    ] as const).map((st) => {
-                      const isSelected = filters.statusFilter === st.value;
-                      return (
-                        <button
-                          key={st.value}
-                          type="button"
-                          onClick={() => onFilterChange({ statusFilter: st.value })}
-                          className={`py-1.5 px-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
-                            isSelected
-                              ? 'bg-amber-600 text-white font-bold shadow-sm'
-                              : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.06]'
-                          }`}
-                        >
-                          {st.dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.dot}`} />}
-                          <span className="truncate">{st.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+            {!isMath && (
+              <div className="h-8 flex items-center bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs shrink-0">
+                {(['all', 'mcq', 'theory'] as const).map((qt) => (
+                  <button
+                    key={qt}
+                    type="button"
+                    onClick={() => onFilterChange({ questionType: qt })}
+                    className={`h-7 px-2.5 rounded-md transition-colors text-xs whitespace-nowrap ${
+                      filters.questionType === qt
+                        ? activeSegBtnClass
+                        : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
+                    }`}
+                  >
+                    {qt === 'all' ? 'All' : qt === 'mcq' ? 'MCQ' : 'Theory'}
+                  </button>
+                ))}
               </div>
             )}
-          </div>
 
-            {/* 7. Question / Mark counter chip */}
-            <div className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.03] text-xs font-mono text-slate-700 dark:text-zinc-300 flex items-center gap-1.5 shrink-0 whitespace-nowrap min-w-[80px]">
-              <span className={`font-semibold whitespace-nowrap tabular-nums ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
+            {/* Consolidated Filters Popover */}
+            <div className="relative shrink-0" ref={secondaryPopoverRef}>
+              <button
+                type="button"
+                onClick={() => setIsSecondaryPopoverOpen((prev) => !prev)}
+                className={`h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-colors whitespace-nowrap ${
+                  activeSecondaryCount > 0
+                    ? `${subjectTheme.badgeClass}`
+                    : 'bg-[var(--bg-surface)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
+                }`}
+                title="Consolidated filters: Tier, Variant, Year, Series, Status"
+              >
+                <SlidersHorizontal className={`w-3.5 h-3.5 shrink-0 ${activeSecondaryCount > 0 ? subjectTheme.textClass : 'text-[var(--ink-muted)]'}`} />
+                <span>Filters</span>
+                {activeSecondaryCount > 0 && (
+                  <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]">
+                    {activeSecondaryCount}
+                  </span>
+                )}
+              </button>
+
+              {isSecondaryPopoverOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-80 sm:w-96 max-w-[calc(100vw-1rem)] min-w-[260px] p-4 space-y-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] z-50 max-h-[85vh] overflow-y-auto"
+                  style={{ boxShadow: 'var(--shadow-popover)' }}
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-[var(--border-hairline)]">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--ink-primary)]">
+                      <SlidersHorizontal className={`w-3.5 h-3.5 ${subjectTheme.textClass}`} />
+                      <span>Cambridge Filters</span>
+                      {activeSecondaryCount > 0 && (
+                        <span className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border ${subjectTheme.badgeClass}`}>
+                          {activeSecondaryCount} active
+                        </span>
+                      )}
+                    </div>
+                    {activeSecondaryCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => onFilterChange({ selectedYears: [], selectedSeries: [], selectedTier: 'extended', variant: 'all', statusFilter: 'all' })}
+                        className="text-[11px] text-rose-600 hover:text-rose-700 dark:text-rose-400 font-semibold transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Tier Selector */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1 mb-1.5">
+                      <Award className={`w-3 h-3 ${subjectTheme.textClass}`} />
+                      <span>Cambridge Tier</span>
+                    </label>
+                    <div className="grid grid-cols-3 gap-1 p-1 bg-[var(--bg-inset)] rounded-lg border border-[var(--border-hairline)]">
+                      {(['all', 'core', 'extended'] as const).map((t) => {
+                        const label = t === 'all' ? 'All Tiers' : t === 'core' ? 'Core' : 'Extended';
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            onClick={() => onFilterChange({ selectedTier: t, tier: t })}
+                            className={`py-1.5 px-2 text-xs text-center truncate rounded-md transition-colors ${
+                              currentTier === t
+                                ? activeSegBtnClass
+                                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] font-medium'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Paper Variant Selector */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1 mb-1.5">
+                      <Layers className={`w-3 h-3 ${subjectTheme.textClass}`} />
+                      <span>Paper Variant</span>
+                    </label>
+                    <div className="grid grid-cols-4 gap-1 p-1 bg-[var(--bg-inset)] rounded-lg border border-[var(--border-hairline)]">
+                      {([
+                        { value: 'all', label: 'All' },
+                        { value: 1, label: 'V1' },
+                        { value: 2, label: 'V2' },
+                        { value: 3, label: 'V3' },
+                      ] as const).map((v) => (
+                        <button
+                          key={String(v.value)}
+                          type="button"
+                          onClick={() => onFilterChange({ variant: v.value })}
+                          className={`py-1.5 px-2 text-xs font-mono tabular-nums text-center truncate rounded-md transition-colors ${
+                            currentVariant === v.value
+                              ? activeSegBtnClass
+                              : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] font-medium'
+                          }`}
+                        >
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Exam Years Grid */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1">
+                        <Calendar className={`w-3 h-3 ${subjectTheme.textClass}`} />
+                        <span>Exam Year</span>
+                      </label>
+                      {filters.selectedYears.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => onFilterChange({ selectedYears: [] })}
+                          className={`text-[10px] font-medium ${subjectTheme.textClass}`}
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 w-full">
+                      {availableYears.map((yr) => {
+                        const yStr = String(yr);
+                        const isSelected = filters.selectedYears.includes(yStr);
+                        return (
+                          <button
+                            key={yr}
+                            type="button"
+                            onClick={() => toggleYear(yStr)}
+                            className={`w-full text-center py-1 text-xs font-mono tabular-nums rounded-md transition-colors border ${
+                              isSelected
+                                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-transparent'
+                                : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] border-[var(--border-hairline)]'
+                            }`}
+                          >
+                            {yr}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Series / Season */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1">
+                        <CalendarRange className={`w-3 h-3 ${subjectTheme.textClass}`} />
+                        <span>Series / Season</span>
+                      </label>
+                      {filters.selectedSeries.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => onFilterChange({ selectedSeries: [] })}
+                          className={`text-[10px] font-medium ${subjectTheme.textClass}`}
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {seriesOptions.map((opt) => {
+                        const isSelected = filters.selectedSeries.includes(opt.value);
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => toggleSeries(opt.value)}
+                            className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors border ${
+                              isSelected
+                                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-transparent'
+                                : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] border-[var(--border-hairline)]'
+                            }`}
+                          >
+                            {opt.label} ({opt.count})
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Revision Status */}
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1 mb-1.5">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                      <span>Revision Status</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5 text-xs">
+                      {([
+                        { value: 'all', label: 'All', dot: null },
+                        { value: 'unattempted', label: 'Unattempted', dot: 'bg-slate-400 dark:bg-slate-500' },
+                        { value: 'review', label: 'Review', dot: 'bg-amber-500' },
+                        { value: 'mastered', label: 'Mastered', dot: 'bg-emerald-500' },
+                      ] as const).map((st) => {
+                        const isSelected = filters.statusFilter === st.value;
+                        return (
+                          <button
+                            key={st.value}
+                            type="button"
+                            onClick={() => onFilterChange({ statusFilter: st.value })}
+                            className={`py-1.5 px-2.5 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition-colors border ${
+                              isSelected
+                                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-transparent'
+                                : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] border-[var(--border-hairline)]'
+                            }`}
+                          >
+                            {st.dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.dot}`} />}
+                            <span className="truncate">{st.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Question / Mark counter chip */}
+            <div className="h-8 px-2.5 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-inset)] text-xs font-mono text-[var(--ink-secondary)] flex items-center gap-1.5 shrink-0 whitespace-nowrap min-w-[80px]">
+              <span className={`font-semibold whitespace-nowrap tabular-nums ${subjectTheme.textClass}`}>
                 {totalFiltered}
               </span>{' '}
               Qs
-              <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-zinc-600"></span>
-              <span className="font-semibold text-emerald-600 dark:text-emerald-400 whitespace-nowrap tabular-nums">{totalMarks}</span> marks
+              <span className="w-1 h-1 rounded-full bg-[var(--border-strong)]" />
+              <span className="font-semibold text-[var(--ink-primary)] whitespace-nowrap tabular-nums">{totalMarks}</span> marks
             </div>
 
-            {/* 8. Reset filter icon button (h-8 w-8) */}
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={onResetFilters}
                 title="Reset All Filters"
-                className="h-8 w-8 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 flex items-center justify-center transition-colors shrink-0"
+                className="h-8 w-8 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] hover:bg-[var(--bg-inset)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] flex items-center justify-center transition-colors shrink-0"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
             )}
-
           </div>
 
           {/* Compact Filter Drawer Trigger & Counter (< 1536px) */}
@@ -660,27 +596,27 @@ export const TopBar: React.FC<TopBarProps> = ({
             <button
               type="button"
               onClick={() => setIsMobileDrawerOpen(true)}
-              className={`h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 whitespace-nowrap shrink-0 ${
+              className={`h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-colors whitespace-nowrap shrink-0 ${
                 hasActiveFilters
-                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/50'
-                  : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08]'
+                  ? `${subjectTheme.badgeClass}`
+                  : 'bg-[var(--bg-surface)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:bg-[var(--bg-inset)]'
               }`}
               title="Filter Questions"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <SlidersHorizontal className={`w-3.5 h-3.5 shrink-0 ${hasActiveFilters ? subjectTheme.textClass : 'text-[var(--ink-muted)]'}`} />
               <span>Filters</span>
               {hasActiveFilters && (
-                <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-600 text-white">
+                <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]">
                   {activeFilterCount}
                 </span>
               )}
             </button>
 
-            <div className="h-8 px-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-100 dark:bg-white/[0.03] text-xs font-mono text-slate-700 dark:text-zinc-300 hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
-              <span className={`font-semibold tabular-nums ${isMath ? 'text-amber-600 dark:text-amber-400' : isPhysics ? 'text-indigo-600 dark:text-indigo-400' : 'text-cyan-600 dark:text-cyan-400'}`}>
+            <div className="h-8 px-2 rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-inset)] text-xs font-mono text-[var(--ink-secondary)] hidden sm:flex items-center gap-1 shrink-0 whitespace-nowrap">
+              <span className={`font-semibold tabular-nums ${subjectTheme.textClass}`}>
                 {totalFiltered}
               </span>
-              <span className="text-[10px] text-slate-500 dark:text-zinc-500">Qs</span>
+              <span className="text-[10px] text-[var(--ink-muted)]">Qs</span>
             </div>
 
             {hasActiveFilters && (
@@ -688,7 +624,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 type="button"
                 onClick={onResetFilters}
                 title="Reset All Filters"
-                className="hidden sm:flex h-8 w-8 rounded-lg bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200 items-center justify-center transition-colors shrink-0"
+                className="hidden sm:flex h-8 w-8 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] hover:bg-[var(--bg-inset)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] items-center justify-center transition-colors shrink-0"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
@@ -698,15 +634,15 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Right Wing: View Mode Controls (>= 768px) */}
         <div className="hidden md:flex flex-1 items-center justify-end min-w-0">
-          <div className="inline-flex items-center bg-slate-100 dark:bg-white/[0.04] p-0.5 rounded-lg border border-slate-200 dark:border-white/[0.08] h-8 shrink-0">
+          <div className="inline-flex items-center bg-[var(--bg-inset)] p-0.5 rounded-lg border border-[var(--border-hairline)] h-8 shrink-0">
             <button
               type="button"
               onClick={() => onViewModeChange('question-only')}
               title="Question Only (Focus Mode - Hides Answers)"
-              className={`h-7 px-2 sm:px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 shrink-0 whitespace-nowrap ${
+              className={`h-7 px-2 sm:px-2.5 rounded-md text-xs transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap ${
                 viewMode === 'question-only'
-                  ? `${activePillBtnClass} shadow-sm`
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+                  ? activeSegBtnClass
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
               }`}
             >
               <Eye className="w-3.5 h-3.5 shrink-0" />
@@ -716,10 +652,10 @@ export const TopBar: React.FC<TopBarProps> = ({
               type="button"
               onClick={() => onViewModeChange('split')}
               title="Side-by-Side Split View"
-              className={`h-7 px-2 sm:px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 shrink-0 whitespace-nowrap ${
+              className={`h-7 px-2 sm:px-2.5 rounded-md text-xs transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap ${
                 viewMode === 'split'
-                  ? `${activePillBtnClass} shadow-sm`
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+                  ? activeSegBtnClass
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
               }`}
             >
               <Columns className="w-3.5 h-3.5 shrink-0" />
@@ -729,10 +665,10 @@ export const TopBar: React.FC<TopBarProps> = ({
               type="button"
               onClick={() => onViewModeChange('ms-only')}
               title="Mark Scheme Only"
-              className={`h-7 px-2 sm:px-2.5 rounded-md text-xs font-medium transition-all flex items-center gap-1 shrink-0 whitespace-nowrap ${
+              className={`h-7 px-2 sm:px-2.5 rounded-md text-xs transition-colors flex items-center gap-1 shrink-0 whitespace-nowrap ${
                 viewMode === 'ms-only'
-                  ? `${activePillBtnClass} shadow-sm`
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-zinc-200'
+                  ? activeSegBtnClass
+                  : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
               }`}
             >
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -742,25 +678,24 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </header>
 
-      {/* ===================================================================== */}
-      {/* SLIDE-OVER FILTER DRAWER (< 1536px)                                   */}
-      {/* ===================================================================== */}
+      {/* SLIDE-OVER FILTER DRAWER (< 1536px) */}
       {isMobileDrawerOpen && (
-        <div 
-          className="fixed inset-0 z-[60] bg-black/60 dark:bg-black/70 backdrop-blur-sm 2xl:hidden flex justify-end animate-in fade-in duration-150"
+        <div
+          className="fixed inset-0 z-[60] bg-slate-950/50 2xl:hidden flex justify-end"
           onClick={() => setIsMobileDrawerOpen(false)}
         >
-          <div 
-            className="w-full sm:w-[26rem] h-full bg-white dark:bg-dark-900 border-l border-slate-200 dark:border-dark-750 flex flex-col shadow-2xl animate-in slide-in-from-right duration-200"
+          <div
+            className="w-full sm:w-[26rem] h-full bg-[var(--bg-surface)] border-l border-[var(--border-hairline)] flex flex-col"
+            style={{ boxShadow: 'var(--shadow-popover)' }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
-            <div className="h-14 px-4 border-b border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-900/90 flex items-center justify-between shrink-0">
+            <div className="h-14 px-4 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                <span className="font-bold text-sm text-slate-900 dark:text-white">Filter Questions</span>
+                <SlidersHorizontal className={`w-4 h-4 ${subjectTheme.textClass}`} />
+                <span className="font-bold text-sm text-[var(--ink-primary)]">Filter Questions</span>
                 {hasActiveFilters && (
-                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/15 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40">
+                  <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${subjectTheme.badgeClass}`}>
                     {activeFilterCount} active
                   </span>
                 )}
@@ -770,7 +705,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   <button
                     type="button"
                     onClick={onResetFilters}
-                    className="text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-medium px-2 py-1 rounded"
+                    className="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-medium px-2 py-1 rounded"
                   >
                     Reset All
                   </button>
@@ -778,7 +713,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsMobileDrawerOpen(false)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -787,34 +722,33 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             {/* Drawer Body */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Account / Auth in Mobile Drawer */}
-              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-zinc-900/60 border border-slate-200 dark:border-zinc-800/80">
+              <div className="p-2.5 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-hairline)]">
                 {user ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+                      <div className="w-6 h-6 rounded bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] flex items-center justify-center text-[10px] font-bold shrink-0">
                         {(user.email?.[0] || 'U').toUpperCase()}
                       </div>
-                      <span className="text-xs text-slate-700 dark:text-zinc-300 truncate">{user.email}</span>
+                      <span className="text-xs text-[var(--ink-secondary)] truncate">{user.email}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => signOut()}
-                      className="text-xs text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 font-semibold ml-2 shrink-0"
+                      className="text-xs text-rose-600 hover:text-rose-700 dark:text-rose-400 font-semibold ml-2 shrink-0"
                     >
                       Sign Out
                     </button>
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-600 dark:text-zinc-400">Sync progress &amp; bookmarks</span>
+                    <span className="text-xs text-[var(--ink-muted)]">Sync progress &amp; bookmarks</span>
                     <button
                       type="button"
                       onClick={() => {
                         setIsMobileDrawerOpen(false);
                         openAuthModal();
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shrink-0"
+                      className="px-2.5 py-1 rounded-md bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] text-xs font-semibold shrink-0"
                     >
                       Sign In
                     </button>
@@ -822,43 +756,41 @@ export const TopBar: React.FC<TopBarProps> = ({
                 )}
               </div>
 
-              {/* Search Query */}
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                   Search Keywords
                 </label>
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--ink-muted)]" />
                   <input
                     type="text"
                     placeholder="Search topic, question number, or keyword..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-750 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-[var(--bg-inset)] border border-[var(--border-hairline)] rounded-lg pl-9 pr-3 py-2 text-xs text-[var(--ink-primary)] placeholder-[var(--ink-caption)] focus:outline-none focus:border-[var(--border-strong)]"
                   />
                 </div>
               </div>
 
-              {/* 0580 Syllabus Era Toggle (Mobile) */}
               {isMath && (
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                     0580 Syllabus Transition Era
                   </label>
-                  <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-dark-800 p-1 rounded-xl border border-slate-200 dark:border-dark-750 text-xs">
+                  <div className="grid grid-cols-3 gap-1 bg-[var(--bg-inset)] p-1 rounded-lg border border-[var(--border-hairline)] text-xs">
                     {[
-                      { era: '2025-2028' as SyllabusEra, label: '2025–2028 (New)' },
-                      { era: '2019-2024' as SyllabusEra, label: '2019–2024 (Old)' },
-                      { era: 'all' as SyllabusEra, label: 'All Syllabi (2019–2026)' },
+                      { era: '2025-2028' as SyllabusEra, label: '2025–2028' },
+                      { era: '2019-2024' as SyllabusEra, label: '2019–2024' },
+                      { era: 'all' as SyllabusEra, label: 'All Syllabi' },
                     ].map(({ era, label }) => (
                       <button
                         key={era}
                         type="button"
                         onClick={() => onFilterChange({ syllabusEra: era })}
-                        className={`py-2 rounded-lg font-bold transition-all text-center ${
+                        className={`py-2 rounded-md transition-colors text-center ${
                           currentSyllabusEra === era || (era === '2019-2024' && currentSyllabusEra === '2020-2024')
-                            ? activePillBtnClass
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                            ? activeSegBtnClass
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
                         }`}
                       >
                         {label}
@@ -868,40 +800,38 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
               )}
 
-              {/* Obsolete Content Toggle (Mobile) */}
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                   Removed Syllabus Content
                 </label>
                 <button
                   type="button"
                   onClick={() => onFilterChange({ hideObsolete: !hideObsoleteActive })}
-                  className={`w-full py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-between transition-all ${
+                  className={`w-full py-2.5 px-3 rounded-lg border text-xs font-semibold flex items-center justify-between transition-colors ${
                     hideObsoleteActive
-                      ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                      : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                      ? 'bg-[#F0FDF4] dark:bg-emerald-500/15 text-[#15803D] dark:text-[#4ADE80] border-[#BBF7D0] dark:border-emerald-500/30'
+                      : 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
                   }`}
                 >
                   <span>Hide Obsolete Content</span>
-                  <span className="font-bold">{hideObsoleteActive ? 'ON' : 'OFF'}</span>
+                  <span className="font-mono font-bold">{hideObsoleteActive ? 'ON' : 'OFF'}</span>
                 </button>
               </div>
 
-              {/* Tier Selector (Mobile) */}
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                   Cambridge Tier
                 </label>
-                <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-dark-800 p-1 rounded-xl border border-slate-200 dark:border-dark-750 text-xs">
+                <div className="grid grid-cols-3 gap-1 bg-[var(--bg-inset)] p-1 rounded-lg border border-[var(--border-hairline)] text-xs">
                   {(['all', 'core', 'extended'] as const).map((t) => (
                     <button
                       key={t}
                       type="button"
                       onClick={() => onFilterChange({ selectedTier: t, tier: t })}
-                      className={`py-2 rounded-lg font-bold capitalize transition-all ${
+                      className={`py-2 rounded-md capitalize transition-colors ${
                         currentTier === t
-                          ? activePillBtnClass
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                          ? activeSegBtnClass
+                          : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
                       }`}
                     >
                       {t === 'all' ? 'All' : t}
@@ -910,12 +840,11 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
               </div>
 
-              {/* Paper Variant Selector (Mobile) */}
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                   Paper Variant
                 </label>
-                <div className="grid grid-cols-4 gap-1 bg-slate-100 dark:bg-dark-800 p-1 rounded-xl border border-slate-200 dark:border-dark-750 text-xs">
+                <div className="grid grid-cols-4 gap-1 bg-[var(--bg-inset)] p-1 rounded-lg border border-[var(--border-hairline)] text-xs">
                   {([
                     { value: 'all', label: 'All' },
                     { value: 1, label: 'V1' },
@@ -926,10 +855,10 @@ export const TopBar: React.FC<TopBarProps> = ({
                       key={String(v.value)}
                       type="button"
                       onClick={() => onFilterChange({ variant: v.value })}
-                      className={`py-2 rounded-lg font-bold font-mono tabular-nums transition-all ${
+                      className={`py-2 rounded-md font-mono tabular-nums transition-colors ${
                         currentVariant === v.value
-                          ? activePillBtnClass
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                          ? activeSegBtnClass
+                          : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
                       }`}
                     >
                       {v.label}
@@ -938,24 +867,23 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
               </div>
 
-              {/* Paper Component Selector */}
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                   Paper Components
                 </label>
                 <FilterMultiSelect
                   labelSingular="Paper"
                   labelPlural="Papers"
-                  icon={<Layers className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
+                  icon={<Layers className={`w-3.5 h-3.5 shrink-0 ${subjectTheme.textClass}`} />}
                   options={componentOptions}
                   selectedValues={filters.selectedUnits}
                   onChange={(units) => onFilterChange({ selectedUnits: units })}
+                  fullWidth
                 />
               </div>
 
-              {/* Subtopics Selector */}
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                   Topic &amp; Subtopics
                 </label>
                 <SubtopicMultiSelect
@@ -963,58 +891,59 @@ export const TopBar: React.FC<TopBarProps> = ({
                   selectedSubtopics={filters.selectedSubtopics}
                   onChange={(subs) => onFilterChange({ selectedSubtopics: subs })}
                   questions={allQuestions}
+                  fullWidth
                 />
               </div>
 
-              {/* Year & Series Grid */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                     Exam Year
                   </label>
                   <FilterMultiSelect
                     labelSingular="Year"
                     labelPlural="Years"
-                    icon={<Calendar className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
+                    icon={<Calendar className={`w-3.5 h-3.5 shrink-0 ${subjectTheme.textClass}`} />}
                     options={yearOptions}
                     selectedValues={filters.selectedYears}
                     onChange={(years) => onFilterChange({ selectedYears: years })}
                     badgeFontMono
+                    fullWidth
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                     Series / Season
                   </label>
                   <FilterMultiSelect
                     labelSingular="Series"
                     labelPlural="Series"
-                    icon={<CalendarRange className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />}
+                    icon={<CalendarRange className={`w-3.5 h-3.5 shrink-0 ${subjectTheme.textClass}`} />}
                     options={seriesOptions}
                     selectedValues={filters.selectedSeries}
                     onChange={(series) => onFilterChange({ selectedSeries: series })}
                     showSearch={false}
+                    fullWidth
                   />
                 </div>
               </div>
 
-              {/* Question Type Filter - Hidden in Mathematics */}
               {!isMath && (
                 <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                     Question Format
                   </label>
-                  <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-dark-800 p-1 rounded-xl border border-slate-200 dark:border-dark-750 text-xs">
+                  <div className="grid grid-cols-3 gap-1 bg-[var(--bg-inset)] p-1 rounded-lg border border-[var(--border-hairline)] text-xs">
                     {(['all', 'mcq', 'theory'] as const).map((t) => (
                       <button
                         key={t}
                         type="button"
                         onClick={() => onFilterChange({ questionType: t })}
-                        className={`py-2 rounded-lg font-bold capitalize transition-all ${
+                        className={`py-2 rounded-md capitalize transition-colors ${
                           filters.questionType === t
-                            ? activePillBtnClass
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                            ? activeSegBtnClass
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] font-medium'
                         }`}
                       >
                         {t === 'all' ? 'All' : t.toUpperCase()}
@@ -1024,46 +953,52 @@ export const TopBar: React.FC<TopBarProps> = ({
                 </div>
               )}
 
-              {/* Status Filter */}
+              {/* Revision Mastery Status (Zero Native <select>, Zero Emojis) */}
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1.5">
                   Revision Mastery Status
                 </label>
-                <div className="flex items-center gap-2 bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-750 rounded-xl px-3 py-2">
-                  <CheckCircle2 className={`w-4 h-4 shrink-0 ${
-                    filters.statusFilter === 'mastered' ? 'text-emerald-500 dark:text-emerald-400' :
-                    filters.statusFilter === 'review' ? 'text-amber-500 dark:text-amber-400' :
-                    filters.statusFilter === 'unattempted' ? 'text-slate-400 dark:text-slate-400' : 'text-amber-600 dark:text-amber-400'
-                  }`} />
-                  <select
-                    value={filters.statusFilter}
-                    onChange={(e) => onFilterChange({ statusFilter: e.target.value as StatusFilter })}
-                    className="bg-transparent text-xs text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer w-full font-medium"
-                  >
-                    <option value="all" className="bg-white dark:bg-dark-900 text-slate-800 dark:text-slate-200">All Questions</option>
-                    <option value="unattempted" className="bg-white dark:bg-dark-900 text-slate-600 dark:text-slate-400">⚪ Unattempted</option>
-                    <option value="review" className="bg-white dark:bg-dark-900 text-amber-600 dark:text-amber-300">🟡 Review Needed</option>
-                    <option value="mastered" className="bg-white dark:bg-dark-900 text-emerald-600 dark:text-emerald-300">🟢 Mastered</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  {([
+                    { value: 'all', label: 'All Questions', dot: null },
+                    { value: 'unattempted', label: 'Unattempted', dot: 'bg-slate-400 dark:bg-slate-500' },
+                    { value: 'review', label: 'Review Needed', dot: 'bg-amber-500' },
+                    { value: 'mastered', label: 'Mastered', dot: 'bg-emerald-500' },
+                  ] as const).map((st) => {
+                    const isSelected = filters.statusFilter === st.value;
+                    return (
+                      <button
+                        key={st.value}
+                        type="button"
+                        onClick={() => onFilterChange({ statusFilter: st.value })}
+                        className={`py-2 px-2.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 border transition-colors ${
+                          isSelected
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-transparent'
+                            : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-subtle)] border-[var(--border-hairline)]'
+                        }`}
+                      >
+                        {st.dot && <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${st.dot}`} />}
+                        <span className="truncate">{st.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Active Filter Metrics */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-dark-800/80 border border-slate-200 dark:border-dark-750 flex items-center justify-between text-xs">
-                <span className="text-slate-500 dark:text-slate-400">Matching Pool:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  <span className="text-amber-600 dark:text-amber-400 font-bold">{totalFiltered}</span> questions •{' '}
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">{totalMarks}</span> marks
+              <div className="p-3 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-hairline)] flex items-center justify-between text-xs">
+                <span className="text-[var(--ink-muted)]">Matching Pool:</span>
+                <span className="font-mono tabular-nums font-semibold text-[var(--ink-primary)]">
+                  <span className={`${subjectTheme.textClass} font-bold`}>{totalFiltered}</span> questions ·{' '}
+                  <span className="font-bold">{totalMarks}</span> marks
                 </span>
               </div>
             </div>
 
-            {/* Drawer Footer */}
-            <div className="p-4 border-t border-slate-200 dark:border-dark-800 bg-white/90 dark:bg-dark-900/90 shrink-0">
+            <div className="p-4 border-t border-[var(--border-hairline)] bg-[var(--bg-surface)] shrink-0">
               <button
                 type="button"
                 onClick={() => setIsMobileDrawerOpen(false)}
-                className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 active:scale-[0.99] text-white font-bold text-xs shadow-md shadow-amber-600/30 transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-lg bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs transition-colors flex items-center justify-center gap-2"
               >
                 <span>Show {totalFiltered} Questions</span>
               </button>

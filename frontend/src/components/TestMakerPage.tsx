@@ -115,57 +115,57 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
 
   const isMath = activeSubject === 'mathematics';
 
-  // Subject reactive color classes
+  // Subject reactive color classes (canonical v0.4 palette)
   const accentClasses = useMemo(() => {
     switch (activeSubject) {
       case 'mathematics':
         return {
-          primary: 'amber',
-          text: 'text-amber-500 dark:text-amber-400',
-          bg: 'bg-amber-500',
-          bgLight: 'bg-amber-50 dark:bg-amber-500/15',
-          border: 'border-amber-300 dark:border-amber-500/30',
-          gradient: 'from-amber-500 to-amber-600',
-          shadow: 'shadow-amber-500/25',
-          spotlight: 'rgba(245, 158, 11, 0.12)',
-          borderGlow: 'rgba(245, 158, 11, 0.45)',
+          primary: 'purple',
+          text: 'text-[#7E22CE] dark:text-[#C084FC]',
+          bg: 'bg-[#7E22CE] dark:bg-[#9333EA]',
+          bgLight: 'bg-[#FAF5FF] dark:bg-[rgba(168,85,247,0.16)]',
+          border: 'border-[#E9D5FF] dark:border-[rgba(192,132,252,0.35)]',
+          gradient: 'from-[#7E22CE] to-[#6B21A8]',
+          shadow: '',
+          spotlight: 'rgba(126, 34, 206, 0.08)',
+          borderGlow: 'rgba(126, 34, 206, 0.35)',
         };
       case 'physics':
         return {
-          primary: 'indigo',
-          text: 'text-indigo-500 dark:text-indigo-400',
-          bg: 'bg-indigo-500',
-          bgLight: 'bg-indigo-50 dark:bg-indigo-500/15',
-          border: 'border-indigo-300 dark:border-indigo-500/30',
-          gradient: 'from-indigo-500 to-indigo-600',
-          shadow: 'shadow-indigo-500/25',
-          spotlight: 'rgba(99, 102, 241, 0.12)',
-          borderGlow: 'rgba(99, 102, 241, 0.45)',
+          primary: 'blue',
+          text: 'text-[#1D4ED8] dark:text-[#60A5FA]',
+          bg: 'bg-[#1D4ED8] dark:bg-[#2563EB]',
+          bgLight: 'bg-[#EFF6FF] dark:bg-[rgba(59,130,246,0.16)]',
+          border: 'border-[#BFDBFE] dark:border-[rgba(96,165,250,0.35)]',
+          gradient: 'from-[#1D4ED8] to-[#1E40AF]',
+          shadow: '',
+          spotlight: 'rgba(29, 78, 216, 0.08)',
+          borderGlow: 'rgba(29, 78, 216, 0.35)',
         };
       case 'biology':
         return {
           primary: 'emerald',
-          text: 'text-emerald-500 dark:text-emerald-400',
-          bg: 'bg-emerald-500',
-          bgLight: 'bg-emerald-50 dark:bg-emerald-500/15',
-          border: 'border-emerald-300 dark:border-emerald-500/30',
-          gradient: 'from-emerald-500 to-emerald-600',
-          shadow: 'shadow-emerald-500/25',
-          spotlight: 'rgba(16, 185, 129, 0.12)',
-          borderGlow: 'rgba(16, 185, 129, 0.45)',
+          text: 'text-[#15803D] dark:text-[#4ADE80]',
+          bg: 'bg-[#15803D] dark:bg-[#16A34A]',
+          bgLight: 'bg-[#F0FDF4] dark:bg-[rgba(34,197,94,0.16)]',
+          border: 'border-[#BBF7D0] dark:border-[rgba(74,222,128,0.35)]',
+          gradient: 'from-[#15803D] to-[#166534]',
+          shadow: '',
+          spotlight: 'rgba(21, 128, 61, 0.08)',
+          borderGlow: 'rgba(21, 128, 61, 0.35)',
         };
       case 'chemistry':
       default:
         return {
-          primary: 'cyan',
-          text: 'text-cyan-500 dark:text-cyan-400',
-          bg: 'bg-cyan-500',
-          bgLight: 'bg-cyan-50 dark:bg-cyan-500/15',
-          border: 'border-cyan-300 dark:border-cyan-500/30',
-          gradient: 'from-cyan-500 to-cyan-600',
-          shadow: 'shadow-cyan-500/25',
-          spotlight: 'rgba(6, 182, 212, 0.12)',
-          borderGlow: 'rgba(6, 182, 212, 0.45)',
+          primary: 'orange',
+          text: 'text-[#C2410C] dark:text-[#FB923C]',
+          bg: 'bg-[#C2410C] dark:bg-[#EA580C]',
+          bgLight: 'bg-[#FFF7ED] dark:bg-[rgba(249,115,22,0.16)]',
+          border: 'border-[#FED7AA] dark:border-[rgba(251,146,60,0.35)]',
+          gradient: 'from-[#C2410C] to-[#9A3412]',
+          shadow: '',
+          spotlight: 'rgba(194, 65, 12, 0.08)',
+          borderGlow: 'rgba(194, 65, 12, 0.35)',
         };
     }
   }, [activeSubject]);
@@ -1092,26 +1092,26 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
   };
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-slate-50/60 dark:bg-transparent text-slate-800 dark:text-slate-100 select-none relative transition-colors">
+    <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-[var(--bg-paper)] text-[var(--ink-primary)] select-none relative transition-colors">
       {/* ===================================================================== */}
       {/* MOBILE/TABLET TOP TAB BAR: [ Pool (N) | Preview (Q#) | Cart (M) ] (< 1024px) */}
       {/* ===================================================================== */}
-      <div className="flex lg:hidden items-center justify-center p-2 bg-white dark:bg-dark-900 border-b border-slate-200 dark:border-dark-800 shrink-0 z-30">
-        <div className="grid grid-cols-3 gap-1 w-full max-w-md bg-slate-100 dark:bg-dark-850 p-1 rounded-xl border border-slate-200 dark:border-dark-750">
+      <div className="flex lg:hidden items-center justify-center p-2 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] shrink-0 z-30">
+        <div className="grid grid-cols-3 gap-1 w-full max-w-md bg-[var(--bg-inset)] p-1 rounded-lg border border-[var(--border-hairline)]">
           <button
             type="button"
             onClick={() => {
               setMobileTab('pool');
               setIsCartDrawerOpen(false);
             }}
-            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all truncate ${
+            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-md text-xs font-semibold transition-colors truncate ${
               mobileTab === 'pool'
-                ? `${accentClasses.bg} text-white shadow-sm`
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
             }`}
           >
             <Search className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Pool ({filteredPool.length})</span>
+            <span className="truncate font-mono tabular-nums">Pool ({filteredPool.length})</span>
           </button>
           <button
             type="button"
@@ -1119,14 +1119,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               setMobileTab('preview');
               setIsCartDrawerOpen(false);
             }}
-            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all truncate ${
+            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-md text-xs font-semibold transition-colors truncate ${
               mobileTab === 'preview'
-                ? `${accentClasses.bg} text-white shadow-sm`
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
             }`}
           >
             <Eye className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">
+            <span className="truncate font-mono tabular-nums">
               Preview{' '}
               {activePreviewQuestion
                 ? `(Q${activePreviewQuestion.question_number ?? activePreviewQuestion.questionNumber ?? '1'})`
@@ -1139,14 +1139,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               setMobileTab('cart');
               setIsCartDrawerOpen(true);
             }}
-            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-lg text-xs font-bold transition-all truncate ${
+            className={`min-h-[38px] px-1.5 flex items-center justify-center gap-1 rounded-md text-xs font-semibold transition-colors truncate ${
               mobileTab === 'cart'
-                ? `${accentClasses.bg} text-white shadow-sm`
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
             }`}
           >
             <FileText className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Cart ({cartQuestionIds.length})</span>
+            <span className="truncate font-mono tabular-nums">Cart ({cartQuestionIds.length})</span>
           </button>
         </div>
       </div>
@@ -1156,13 +1156,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       <aside
         className={`
-          border-r border-slate-200 dark:border-dark-800 bg-white/95 lg:bg-slate-50/70 dark:bg-dark-900/80 flex flex-col shrink-0 overflow-hidden
+          border-r border-[var(--border-hairline)] bg-[var(--bg-surface)] flex flex-col shrink-0 overflow-hidden
           w-full lg:w-[340px] lg:min-w-[320px] xl:w-[360px]
           ${mobileTab === 'pool' ? 'flex flex-1 lg:flex-none' : 'hidden lg:flex'}
         `}
       >
         {/* Filter Controls Header */}
-        <div className="p-3 border-b border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 space-y-2 relative z-30 overflow-visible">
+        <div className="p-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] space-y-2 relative z-30 overflow-visible">
           {/* Row 1: Subtopic Picker (Promoted to Full-Width, Primary Topical Filter) */}
           <div className="w-full">
             <SubtopicMultiSelect
@@ -1181,19 +1181,19 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
           <div className="flex items-center gap-1.5">
             {/* Search Input */}
             <div className="relative flex-1 min-w-0">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--ink-caption)] pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search topic or Q#..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full h-8 bg-slate-100 dark:bg-dark-800 border border-slate-200 dark:border-dark-750 rounded-lg pl-8 pr-2.5 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full h-8 bg-[var(--bg-inset)] border border-[var(--border-hairline)] rounded-lg pl-8 pr-6 text-xs text-[var(--ink-primary)] placeholder:text-[var(--ink-caption)] focus:outline-none focus:border-[var(--subject-accent)] transition-colors"
               />
               {searchInput && (
                 <button
                   type="button"
                   onClick={() => setSearchInput('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -1201,7 +1201,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             </div>
 
             {/* Tier Switch: All | Core | Extended */}
-            <div className="flex bg-slate-100 dark:bg-dark-800 p-0.5 rounded-lg text-xs font-semibold shrink-0">
+            <div className="flex bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold shrink-0">
               {(['all', 'core', 'extended'] as const).map((t) => (
                 <button
                   key={t}
@@ -1210,10 +1210,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     setFilters((prev) => ({ ...prev, selectedTier: t }));
                     setCurrentPage(1);
                   }}
-                  className={`h-7 px-2 rounded-md capitalize text-center text-[10.5px] transition-all ${
+                  className={`h-7 px-2 rounded-md capitalize text-center text-[10.5px] transition-colors ${
                     filters.selectedTier === t
-                      ? `${accentClasses.bg} text-white font-bold shadow-sm`
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                      : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                   }`}
                 >
                   {t === 'all' ? 'All' : t === 'core' ? 'Core' : 'Ext'}
@@ -1229,17 +1229,17 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <button
                 type="button"
                 onClick={() => setIsFilterPopoverOpen((prev) => !prev)}
-                className={`h-7 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                className={`h-7 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-colors active:scale-95 ${
                   activeSecondaryCount > 0
-                    ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 shadow-sm'
-                    : 'bg-slate-100 dark:bg-dark-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-dark-750 hover:bg-slate-200 dark:hover:bg-dark-750'
+                    ? 'bg-[var(--subject-bg)] text-[var(--subject-accent)] border-[var(--subject-border)]'
+                    : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:text-[var(--ink-primary)]'
                 }`}
                 title="Secondary filters: Paper, Year, Series, Variant, Calc, Marks, Syllabus Era"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
                 <span>Filters</span>
                 {activeSecondaryCount > 0 && (
-                  <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500 text-dark-950">
+                  <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]">
                     {activeSecondaryCount}
                   </span>
                 )}
@@ -1250,27 +1250,27 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 type="button"
                 onClick={handleResetAllFilters}
                 title="Reset search and all filters"
-                className="h-7 w-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-dark-800 transition-colors"
+                className="h-7 w-7 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
             </div>
 
             {/* Results Count */}
-            <span className={`text-[11px] font-mono font-bold ${accentClasses.text}`}>
+            <span className="text-[11px] font-mono tabular-nums font-semibold text-[var(--subject-accent)]">
               {filteredPool.length} available
             </span>
 
             {/* Secondary Filters Popover Dropdown Card */}
             {isFilterPopoverOpen && (
-              <div className="absolute top-full left-0 mt-1.5 w-80 sm:w-88 p-3.5 space-y-3.5 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-white/10 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[75vh] overflow-y-auto">
+              <div className="absolute top-full left-0 mt-1.5 w-80 sm:w-88 p-3.5 space-y-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-popover)] z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[75vh] overflow-y-auto">
                 {/* Popover Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-white/[0.08]">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-amber-500" />
+                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-hairline)]">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--ink-primary)]">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-[var(--subject-accent)]" />
                     <span>Secondary Filters</span>
                     {activeSecondaryCount > 0 && (
-                      <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                      <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded bg-[var(--subject-bg)] text-[var(--subject-accent)] border border-[var(--subject-border)]">
                         {activeSecondaryCount} active
                       </span>
                     )}
@@ -1279,7 +1279,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     <button
                       type="button"
                       onClick={handleResetSecondaryFilters}
-                      className="text-[11px] text-rose-500 hover:text-rose-600 font-semibold transition-colors"
+                      className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline font-semibold transition-colors"
                     >
                       Reset secondary
                     </button>
@@ -1289,15 +1289,15 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {/* 1. Cambridge Components / Papers */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Layers className="w-3 h-3 text-amber-500" />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1">
+                      <Layers className="w-3 h-3 text-[var(--subject-accent)]" />
                       <span>Cambridge Paper</span>
                     </label>
                     {selectedPaperNums.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setSelectedPaperNums([])}
-                        className="text-[10px] text-amber-600 dark:text-amber-400"
+                        className="text-[10px] text-[var(--subject-accent)] hover:underline font-medium"
                       >
                         Reset
                       </button>
@@ -1325,14 +1325,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                           key={p.num}
                           type="button"
                           onClick={() => togglePaper(p.num)}
-                          className={`py-1.5 px-2 rounded-lg text-left text-xs font-medium border transition-all truncate ${
+                          className={`py-1.5 px-2 rounded-lg text-left text-xs font-medium border transition-colors truncate ${
                             isSelected
-                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-300 border-amber-500/30 font-bold'
-                              : 'bg-slate-50 dark:bg-white/[0.03] text-slate-600 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-100 dark:hover:bg-white/[0.06]'
+                              ? 'bg-[var(--subject-bg)] text-[var(--subject-accent)] border-[var(--subject-border)] font-semibold'
+                              : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:text-[var(--ink-primary)]'
                           }`}
                         >
                           <span className="font-mono font-bold mr-1">P{p.num}</span>
-                          <span className="text-[10px] text-slate-400">{p.label.replace(/Paper \d+ /, '')}</span>
+                          <span className="text-[10px] text-[var(--ink-muted)]">{p.label.replace(/Paper \d+ /, '')}</span>
                         </button>
                       );
                     })}
@@ -1342,13 +1342,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {/* 2. Syllabus Era (Maths 0580) or Deprecated Content Toggle (Sciences) */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
                       {isMath ? 'Syllabus Era' : 'Removed Syllabus Content'}
                     </label>
                   </div>
                   {isMath ? (
                     <div className="space-y-1.5">
-                      <div className="grid grid-cols-3 bg-slate-100 dark:bg-dark-800 p-0.5 rounded-lg text-xs font-semibold">
+                      <div className="grid grid-cols-3 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold">
                         {(['2025-2028', '2019-2024', 'all'] as const).map((era) => (
                           <button
                             key={era}
@@ -1357,10 +1357,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                               setFilters((prev) => ({ ...prev, syllabusEra: era }));
                               setCurrentPage(1);
                             }}
-                            className={`py-1 px-1 rounded-md text-center text-[10.5px] truncate transition-all ${
+                            className={`py-1 px-1 rounded-md text-center text-[10.5px] truncate transition-colors ${
                               (filters.syllabusEra === era || (era === '2019-2024' && filters.syllabusEra === '2020-2024'))
-                                ? 'bg-amber-500 text-dark-950 font-bold shadow-sm'
-                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                             }`}
                           >
                             {era === '2025-2028' ? 'Current 25–28' : era === '2019-2024' ? 'Old 19–24' : 'All Syllabi'}
@@ -1373,20 +1373,20 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                           setFilters((prev) => ({ ...prev, hideObsolete: !prev.hideObsolete }));
                           setCurrentPage(1);
                         }}
-                        className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
+                        className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
                           filters.hideObsolete
                             ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                            : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                            : 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
                         }`}
                       >
                         {filters.hideObsolete ? (
                           <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                             <span>Obsolete Hidden</span>
                           </>
                         ) : (
                           <>
-                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                             <span>Showing Obsolete Content</span>
                           </>
                         )}
@@ -1399,20 +1399,20 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                         setFilters((prev) => ({ ...prev, hideObsolete: !prev.hideObsolete }));
                         setCurrentPage(1);
                       }}
-                      className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-all ${
+                      className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
                         filters.hideObsolete
                           ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                          : 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                          : 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
                       }`}
                     >
                       {filters.hideObsolete ? (
                         <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span>Obsolete Hidden</span>
                         </>
                       ) : (
                         <>
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                           <span>Showing Obsolete Content</span>
                         </>
                       )}
@@ -1424,11 +1424,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {isMath && (
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
                         Calculator Rule
                       </label>
                     </div>
-                    <div className="grid grid-cols-3 bg-slate-100 dark:bg-dark-800 p-0.5 rounded-lg text-xs font-semibold">
+                    <div className="grid grid-cols-3 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold">
                       {(['all', 'non-calc', 'calc'] as const).map((c) => (
                         <button
                           key={c}
@@ -1437,10 +1437,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                             setCalcFilter(c);
                             setCurrentPage(1);
                           }}
-                          className={`py-1 rounded-md text-center text-[10.5px] transition-all ${
+                          className={`py-1 rounded-md text-center text-[10.5px] transition-colors ${
                             calcFilter === c
-                              ? 'bg-amber-500 text-dark-950 font-bold shadow-sm'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-200'
+                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                              : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                           }`}
                         >
                           {c === 'all' ? 'All Calc' : c === 'non-calc' ? 'Non-Calc' : 'Calculator'}
@@ -1453,11 +1453,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {/* 4. Marks Range Filter */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
                       Marks Range
                     </label>
                   </div>
-                  <div className="grid grid-cols-5 gap-1 bg-slate-100 dark:bg-dark-800 p-0.5 rounded-lg text-xs">
+                  <div className="grid grid-cols-5 gap-1 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs">
                     {(isMath
                       ? (['all', '1-4m', '5-7m', '8-10m', '11m+'] as const)
                       : (['all', '1m', '2-3m', '4-5m', '6m+'] as const)
@@ -1469,10 +1469,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                           setMarksFilter(m);
                           setCurrentPage(1);
                         }}
-                        className={`py-1 rounded-md text-center text-[10.5px] font-medium transition-all ${
+                        className={`py-1 rounded-md text-center text-[10.5px] font-mono tabular-nums font-medium transition-colors ${
                           marksFilter === m
-                            ? `${accentClasses.bg} text-white font-bold shadow-sm`
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         {m === 'all' ? 'All m' : m}
@@ -1484,15 +1484,15 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {/* 5. Exam Years Chips */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-amber-500" />
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1">
+                      <Calendar className="w-3 h-3 text-[var(--subject-accent)]" />
                       <span>Exam Year</span>
                     </label>
                     {filters.selectedYears.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setFilters((prev) => ({ ...prev, selectedYears: [] }))}
-                        className="text-[10px] text-amber-600 dark:text-amber-400"
+                        className="text-[10px] text-[var(--subject-accent)] hover:underline font-medium"
                       >
                         Reset
                       </button>
@@ -1507,10 +1507,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                           key={yr}
                           type="button"
                           onClick={() => toggleYear(yStr)}
-                          className={`w-full text-center py-1 text-xs font-mono tabular-nums rounded-md transition-all border ${
+                          className={`w-full text-center py-1 text-xs font-mono tabular-nums rounded-md transition-colors border ${
                             isSelected
-                              ? 'bg-amber-500 text-dark-950 font-bold border-amber-500'
-                              : 'bg-slate-50 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border-slate-200 dark:border-white/[0.08]'
+                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
+                              : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)]'
                           }`}
                         >
                           {yr}
@@ -1523,14 +1523,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {/* 6. Series / Season */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
                       Series / Season
                     </label>
                     {filters.selectedSeries.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setFilters((prev) => ({ ...prev, selectedSeries: [] }))}
-                        className="text-[10px] text-amber-600 dark:text-amber-400"
+                        className="text-[10px] text-[var(--subject-accent)] hover:underline font-medium"
                       >
                         Reset
                       </button>
@@ -1544,10 +1544,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                           key={s.value}
                           type="button"
                           onClick={() => toggleSeries(s.value)}
-                          className={`py-1 px-1.5 rounded-lg text-xs font-medium border text-center transition-all ${
+                          className={`py-1 px-1.5 rounded-lg text-xs font-medium border text-center transition-colors ${
                             isSelected
-                              ? 'bg-amber-500 text-dark-950 font-bold border-amber-500'
-                              : 'bg-slate-50 dark:bg-white/[0.04] text-slate-600 dark:text-slate-400 border-slate-200 dark:border-white/[0.08]'
+                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
+                              : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
                           }`}
                         >
                           {s.label}
@@ -1560,11 +1560,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {/* 7. Paper Variant */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
                       Paper Variant
                     </label>
                   </div>
-                  <div className="grid grid-cols-4 bg-slate-100 dark:bg-dark-800 p-0.5 rounded-lg text-xs font-semibold">
+                  <div className="grid grid-cols-4 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold">
                     {([
                       { value: 'all', label: 'All' },
                       { value: 1, label: 'V1' },
@@ -1578,10 +1578,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                           setFilters((prev) => ({ ...prev, variant: v.value }));
                           setCurrentPage(1);
                         }}
-                        className={`py-1 rounded-md text-center text-[10.5px] font-mono tabular-nums transition-all ${
+                        className={`py-1 rounded-md text-center text-[10.5px] font-mono tabular-nums transition-colors ${
                           (filters.variant || 'all') === v.value
-                            ? `${accentClasses.bg} text-white font-bold shadow-sm`
-                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         {v.label}
@@ -1595,11 +1595,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
 
           {/* Active Filter Chips: Dismissible tags for secondary filters */}
           {activeSecondaryCount > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-slate-100 dark:border-dark-800">
+            <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-[var(--border-hairline)]">
               {selectedPaperNums.map((p) => (
                 <span
                   key={`paper-${p}`}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 font-mono"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums"
                 >
                   P{p}
                   <button
@@ -1615,7 +1615,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               {filters.selectedYears.map((y) => (
                 <span
                   key={`year-${y}`}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 font-mono"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums"
                 >
                   {y}
                   <button
@@ -1631,7 +1631,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               {filters.selectedSeries.map((s) => (
                 <span
                   key={`series-${s}`}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 font-mono"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono"
                 >
                   {s.toUpperCase()}
                   <button
@@ -1645,7 +1645,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               ))}
 
               {filters.variant && filters.variant !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 font-mono">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums">
                   V{filters.variant}
                   <button
                     type="button"
@@ -1658,7 +1658,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               )}
 
               {calcFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)]">
                   {calcFilter === 'non-calc' ? 'Non-Calc' : 'Calculator'}
                   <button
                     type="button"
@@ -1671,7 +1671,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               )}
 
               {marksFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10 text-[10px] text-slate-700 dark:text-slate-300 font-mono">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums">
                   {marksFilter}
                   <button
                     type="button"
@@ -1684,7 +1684,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               )}
 
               {isMath && filters.syllabusEra && filters.syllabusEra !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-[10px] text-amber-700 dark:text-amber-300">
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--subject-bg)] border border-[var(--subject-border)] text-[10px] text-[var(--subject-accent)]">
                   {filters.syllabusEra === '2025-2028'
                     ? 'New Syllabus (2025-2028)'
                     : filters.syllabusEra === '2019-2024' || filters.syllabusEra === '2020-2024'
@@ -1716,7 +1716,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <button
                 type="button"
                 onClick={handleResetSecondaryFilters}
-                className="text-[10px] text-rose-500 hover:text-rose-400 font-semibold underline underline-offset-2 ml-1"
+                className="text-[10px] text-rose-600 dark:text-rose-400 hover:underline font-semibold ml-1"
               >
                 Clear all
               </button>
@@ -1725,12 +1725,12 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Filtered Questions List: High-Density Fast Skim Cards */}
-        <div className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-dark-800/60 p-2 space-y-1 pb-4">
+        <div className="flex-1 overflow-y-auto p-2 space-y-1.5 pb-4 bg-[var(--bg-paper)]">
           {pagedQuestions.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 dark:text-slate-500">
-              <AlertCircle className="w-6 h-6 mx-auto mb-2 text-slate-400 dark:text-slate-600" />
-              <p className="text-xs">No matching questions found.</p>
-              <p className="text-[11px] text-slate-400 dark:text-slate-600 mt-1">
+            <div className="p-8 text-center text-[var(--ink-muted)]">
+              <AlertCircle className="w-6 h-6 mx-auto mb-2 text-[var(--ink-caption)]" />
+              <p className="text-xs font-medium text-[var(--ink-secondary)]">No matching questions found.</p>
+              <p className="text-[11px] text-[var(--ink-caption)] mt-1">
                 Try relaxing subtopic or secondary filters.
               </p>
             </div>
@@ -1751,29 +1751,36 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   key={q.id}
                   onPointerMove={handleSpotlightMove}
                   onPointerLeave={handleSpotlightLeave}
-                  style={getSubjectSpotlightStyle(activeSubject, 280)}
-                  onClick={() => setPreviewQuestionId(q.id)}
-                  className={`spotlight-surface p-2.5 rounded-xl cursor-pointer transition-all border ${
+                  style={
                     isSelected
-                      ? `${accentClasses.bgLight} ${accentClasses.border} shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]`
-                      : 'bg-white dark:bg-[#0B0E16]/75 hover:bg-slate-50 dark:hover:bg-white/[0.03] border-slate-200/80 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/12'
+                      ? { ...getSubjectSpotlightStyle(activeSubject, 280), borderLeftColor: 'var(--subject-accent)' }
+                      : getSubjectSpotlightStyle(activeSubject, 280)
+                  }
+                  onClick={() => setPreviewQuestionId(q.id)}
+                  className={`p-2.5 rounded-lg cursor-pointer transition-colors border ${
+                    isSelected
+                      ? 'bg-[var(--subject-bg)] border-[var(--subject-border)] border-l-[3px]'
+                      : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] border-[var(--border-hairline)] hover:border-[var(--border-strong)]'
                   }`}
                 >
                   <div className="relative z-10 flex items-center justify-between gap-1.5 mb-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className={`font-mono tabular-nums font-bold text-xs ${accentClasses.text}`}>
+                      <span
+                        className="font-mono tabular-nums font-bold text-xs"
+                        style={isSelected ? { color: 'var(--subject-accent)' } : undefined}
+                      >
                         Q{qNum}
                       </span>
-                      <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                      <span className="font-mono tabular-nums text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
                         {q.marks}m
                       </span>
                       {paperLabel && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                        <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
                           {paperLabel}
                         </span>
                       )}
                       {isNonCalcQuestion && (
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30">
+                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30">
                           Non-Calc
                         </span>
                       )}
@@ -1790,10 +1797,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                         }
                       }}
                       title={isInCart ? 'Remove from test' : 'Add to test'}
-                      className={`flex items-center justify-center gap-1 h-6 px-2 rounded-lg text-[11px] font-bold transition-all active:scale-95 ${
+                      className={`flex items-center justify-center gap-1 h-6 px-2 rounded-md text-[11px] font-semibold transition-colors active:scale-95 ${
                         isInCart
                           ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/40'
-                          : 'bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/15'
+                          : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:text-[var(--ink-primary)]'
                       }`}
                     >
                       {isInCart ? (
@@ -1810,14 +1817,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     </button>
                   </div>
 
-                  <p className="relative z-10 text-[11px] text-slate-800 dark:text-slate-200 truncate font-medium">
+                  <p className="relative z-10 text-[11px] text-[var(--ink-primary)] truncate font-medium">
                     {q.subtopic || q.topic}
                   </p>
-                  <div className="relative z-10 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 mt-1 tabular-nums">
+                  <div className="relative z-10 flex items-center justify-between text-[10px] text-[var(--ink-muted)] mt-1 tabular-nums">
                     <span>
                       {q.series && q.year ? `${q.series.toUpperCase()} ${q.year}` : `${q.year || ''}`}
                     </span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
                       {q.is_mcq ? 'MCQ' : 'Theory'}
                     </span>
                   </div>
@@ -1829,21 +1836,21 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="h-10 px-3 border-t border-slate-200 dark:border-dark-800 bg-white dark:bg-dark-900 flex items-center justify-between shrink-0 text-xs text-slate-500 dark:text-slate-400">
+          <div className="h-10 px-3 border-t border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between shrink-0 text-xs text-[var(--ink-muted)]">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
-              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-dark-800 disabled:opacity-30 disabled:pointer-events-none"
+              className="p-1 rounded hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-mono text-[11px]">
+            <span className="font-mono tabular-nums text-[11px] text-[var(--ink-secondary)]">
               Page {currentPage} of {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="p-1 rounded hover:bg-slate-100 dark:hover:bg-dark-800 disabled:opacity-30 disabled:pointer-events-none"
+              className="p-1 rounded hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] disabled:opacity-30 disabled:pointer-events-none transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -1856,13 +1863,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       <main
         className={`
-          flex-1 min-w-0 flex flex-col h-full bg-slate-100 dark:bg-[#0B0F19] overflow-hidden border-r border-slate-200 dark:border-dark-800
+          flex-1 min-w-0 flex flex-col h-full bg-[var(--bg-paper)] overflow-hidden border-r border-[var(--border-hairline)]
           w-full
           ${mobileTab === 'preview' ? 'flex' : 'hidden lg:flex'}
         `}
       >
         {/* Preview Header Bar */}
-        <div className="h-14 px-2.5 sm:px-4 border-b border-slate-200 dark:border-dark-800 bg-white/95 dark:bg-dark-900/90 flex items-center justify-between shrink-0 gap-2 overflow-hidden">
+        <div className="h-14 px-2.5 sm:px-4 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between shrink-0 gap-2 overflow-hidden">
           {activePreviewQuestion ? (
             <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0 overflow-hidden">
               {/* Prev / Next question navigation with [← / →] hotkey hint */}
@@ -1871,8 +1878,8 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   type="button"
                   onClick={goToPrevQuestion}
                   disabled={filteredPool.length <= 1}
-                  title="Previous question (←, ↑, j)"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-dark-700 hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95 shrink-0"
+                  title="Previous question (Arrow Left, Arrow Up, j)"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] disabled:opacity-30 disabled:pointer-events-none transition-colors active:scale-95 shrink-0"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -1880,34 +1887,34 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                   type="button"
                   onClick={goToNextQuestion}
                   disabled={filteredPool.length <= 1}
-                  title="Next question (→, ↓, k)"
-                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-dark-700 hover:bg-slate-100 dark:hover:bg-dark-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:pointer-events-none transition-all active:scale-95 shrink-0"
+                  title="Next question (Arrow Right, Arrow Down, k)"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg border border-[var(--border-hairline)] bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] disabled:opacity-30 disabled:pointer-events-none transition-colors active:scale-95 shrink-0"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
-                <span className="hidden 2xl:inline-flex items-center text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-dark-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-dark-700 select-none shrink-0 whitespace-nowrap">
+                <span className="hidden 2xl:inline-flex items-center text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-muted)] border border-[var(--border-hairline)] select-none shrink-0 whitespace-nowrap">
                   ← / →
                 </span>
               </div>
 
-              <span className={`hidden sm:inline font-mono font-bold text-sm ${accentClasses.text} shrink-0 whitespace-nowrap`}>
+              <span className="hidden sm:inline font-mono tabular-nums font-bold text-sm text-[var(--subject-accent)] shrink-0 whitespace-nowrap">
                 Question{' '}
                 {activePreviewQuestion.question_number ??
                   activePreviewQuestion.questionNumber ??
                   '1'}
               </span>
-              <span className="text-slate-300 dark:text-dark-600 hidden sm:inline shrink-0">•</span>
+              <span className="text-[var(--ink-caption)] hidden sm:inline shrink-0">/</span>
               <div className="hidden sm:flex items-center gap-2 text-xs min-w-0 flex-1 overflow-hidden">
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 font-bold shrink-0 whitespace-nowrap">
+                <span className="px-2 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)] font-mono tabular-nums font-semibold shrink-0 whitespace-nowrap">
                   {activePreviewQuestion.marks} marks
                 </span>
                 {activePreviewQuestion.calculator_allowed === false && (
-                  <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30 font-bold shrink-0 whitespace-nowrap">
+                  <span className="px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30 font-semibold shrink-0 whitespace-nowrap">
                     Non-Calc
                   </span>
                 )}
                 <span
-                  className="text-slate-700 dark:text-slate-300 font-medium min-w-0 flex-1 truncate hidden xl:block"
+                  className="text-[var(--ink-secondary)] font-medium min-w-0 flex-1 truncate hidden xl:block"
                   title={`${activePreviewQuestion.topic} / ${activePreviewQuestion.subtopic}`}
                 >
                   {activePreviewQuestion.topic} / {activePreviewQuestion.subtopic}
@@ -1915,22 +1922,22 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               </div>
             </div>
           ) : (
-            <span className="text-xs text-slate-400 dark:text-slate-500 truncate">
+            <span className="text-xs text-[var(--ink-muted)] truncate">
               No question selected for preview
             </span>
           )}
 
           {/* Preview Controls & Add/Remove Action */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <div className="flex items-center bg-slate-100 dark:bg-dark-850 p-0.5 rounded-lg border border-slate-200 dark:border-dark-750 text-xs shrink-0">
+            <div className="flex items-center bg-[var(--bg-inset)] p-0.5 rounded-lg border border-[var(--border-hairline)] text-xs shrink-0">
               <button
                 type="button"
                 onClick={() => setPreviewTab('question')}
                 title="Question Only"
-                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
+                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'question'
-                    ? `${accentClasses.bg} text-white`
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 <Eye className="w-3.5 h-3.5 shrink-0" />
@@ -1940,15 +1947,15 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 type="button"
                 onClick={() => setPreviewTab('split')}
                 title="Side-by-Side Split View (Space)"
-                className={`hidden md:inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
+                className={`hidden md:inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'split'
-                    ? `${accentClasses.bg} text-white`
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 <Columns className="w-3.5 h-3.5 shrink-0" />
                 <span className="hidden 2xl:inline">Side-by-Side</span>
-                <span className="hidden 2xl:inline-block text-[9px] font-mono opacity-70 px-1 py-0.2 rounded bg-black/15 dark:bg-white/10 select-none">
+                <span className="hidden 2xl:inline-block text-[9px] font-mono opacity-75 px-1 py-0.2 rounded border border-current/25 select-none">
                   Space
                 </span>
               </button>
@@ -1956,10 +1963,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 type="button"
                 onClick={() => setPreviewTab('ms')}
                 title="Mark Scheme Only"
-                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded transition-all font-medium whitespace-nowrap shrink-0 ${
+                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap shrink-0 ${
                   previewTab === 'ms'
-                    ? `${accentClasses.bg} text-white`
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -1971,17 +1978,17 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               <button
                 type="button"
                 onClick={handleToggleCartActive}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold shadow-md transition-all active:scale-95 shrink-0 whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg text-xs font-semibold transition-colors active:scale-95 shrink-0 whitespace-nowrap ${
                   cartQuestionIds.includes(activePreviewQuestion.id)
-                    ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 hover:bg-rose-100'
-                    : `bg-gradient-to-r ${accentClasses.gradient} text-white shadow-lg`
+                    ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 hover:bg-rose-100 dark:hover:bg-rose-500/25'
+                    : 'bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)]'
                 }`}
               >
                 {cartQuestionIds.includes(activePreviewQuestion.id) ? (
                   <>
                     <Trash2 className="w-3.5 h-3.5 shrink-0" />
                     <span className="hidden sm:inline">Remove</span>
-                    <span className="hidden 2xl:inline-block text-[10px] font-mono font-normal opacity-75 px-1 py-0.2 rounded bg-black/10 dark:bg-white/10 select-none">
+                    <span className="hidden 2xl:inline-block text-[10px] font-mono font-normal opacity-75 px-1 py-0.2 rounded border border-current/20 select-none">
                       A
                     </span>
                   </>
@@ -1990,7 +1997,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     <Plus className="w-3.5 h-3.5 shrink-0" />
                     <span className="2xl:hidden">Add</span>
                     <span className="hidden 2xl:inline">Add to Quiz</span>
-                    <span className="hidden 2xl:inline-block text-[10px] font-mono font-normal opacity-85 px-1 py-0.2 rounded bg-black/20 dark:bg-white/20 select-none">
+                    <span className="hidden 2xl:inline-block text-[10px] font-mono font-normal opacity-80 px-1 py-0.2 rounded border border-current/25 select-none">
                       A
                     </span>
                   </>
@@ -2002,7 +2009,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
 
         {/* Preview Canvas Workspace: Vertical stack below 2xl when split, side-by-side at 2xl+ */}
         <div
-          className={`flex-1 relative bg-slate-100 dark:bg-[#0B0F19] ${
+          className={`flex-1 relative bg-[var(--bg-paper)] ${
             previewTab === 'split'
               ? 'flex flex-col 2xl:grid 2xl:grid-cols-2 overflow-y-auto 2xl:overflow-hidden pb-16 lg:pb-0'
               : 'flex flex-col overflow-hidden pb-16 lg:pb-0'
@@ -2014,7 +2021,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 <div
                   className={`flex flex-col min-w-0 ${
                     previewTab === 'split'
-                      ? 'min-h-[420px] flex-1 2xl:min-h-0 2xl:h-full overflow-hidden border-b 2xl:border-b-0 2xl:border-r border-slate-200 dark:border-dark-800'
+                      ? 'min-h-[420px] flex-1 2xl:min-h-0 2xl:h-full overflow-hidden border-b 2xl:border-b-0 2xl:border-r border-[var(--border-hairline)]'
                       : 'flex-1 h-full overflow-hidden'
                   }`}
                 >
@@ -2028,12 +2035,12 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     badgeText={`${activePreviewQuestion.marks}m`}
                     badgeColor={
                       activeSubject === 'mathematics'
-                        ? 'amber'
+                        ? 'purple'
                         : activeSubject === 'physics'
-                        ? 'indigo'
+                        ? 'blue'
                         : activeSubject === 'biology'
                         ? 'emerald'
-                        : 'cyan'
+                        : 'orange'
                     }
                     activeSubject={activeSubject}
                     placeholderTitle="Question Image"
@@ -2071,7 +2078,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               )}
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs">
+            <div className="flex-1 flex items-center justify-center text-[var(--ink-muted)] text-xs">
               Select any question on the left to preview.
             </div>
           )}
@@ -2089,11 +2096,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             onClick={() => {
               setIsCartDrawerOpen(true);
             }}
-            className={`flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r ${accentClasses.gradient} text-white font-bold text-xs shadow-2xl border border-white/20 active:scale-95 transition-all`}
+            className="flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs shadow-[var(--shadow-popover)] border border-[var(--border-strong)] active:scale-95 transition-colors"
           >
-            <FileText className="w-4 h-4 text-white" />
+            <FileText className="w-4 h-4 shrink-0" />
             <span>Quiz Cart ({cartQuestionIds.length})</span>
-            <span className="px-2 py-0.5 rounded-full bg-amber-400 text-dark-950 font-bold font-mono text-[11px]">
+            <span className="px-2 py-0.5 rounded-full bg-[var(--bg-surface)] text-[var(--ink-primary)] border border-[var(--border-hairline)] font-bold font-mono tabular-nums text-[11px]">
               {totalCartMarks} / {targetMarks}m
             </span>
           </button>
@@ -2103,7 +2110,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* Laptop Backdrop for Cart Drawer (1024px - 1279px) */}
       {isCartDrawerOpen && (
         <div
-          className="hidden lg:block xl:hidden fixed inset-0 top-14 z-40 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
+          className="hidden lg:block xl:hidden fixed inset-0 top-14 z-40 bg-slate-950/50 backdrop-blur-sm animate-in fade-in duration-150"
           onClick={() => {
             setIsCartDrawerOpen(false);
             if (mobileTab === 'cart') setMobileTab('pool');
@@ -2116,29 +2123,29 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       {/* ========================================================================= */}
       <aside
         className={`
-          bg-white dark:bg-dark-900 flex flex-col shrink-0 transition-transform duration-200
+          bg-[var(--bg-surface)] flex flex-col shrink-0 transition-transform duration-200
           w-full flex-1 min-h-0 h-full max-h-full lg:flex-none
-          lg:fixed lg:top-14 lg:bottom-0 lg:right-0 lg:z-50 lg:w-[26rem] lg:border-l lg:border-slate-200 lg:dark:border-dark-750 lg:shadow-2xl
-          xl:static xl:w-84 2xl:w-96 xl:z-auto xl:border-l xl:border-slate-200 xl:dark:border-dark-800 xl:shadow-none xl:translate-x-0
+          lg:fixed lg:top-14 lg:bottom-0 lg:right-0 lg:z-50 lg:w-[26rem] lg:border-l lg:border-[var(--border-hairline)] lg:shadow-[var(--shadow-popover)]
+          xl:static xl:w-84 2xl:w-96 xl:z-auto xl:border-l xl:border-[var(--border-hairline)] xl:shadow-none xl:translate-x-0
           ${mobileTab === 'cart' ? 'flex' : 'hidden'}
           ${isCartDrawerOpen ? 'lg:translate-x-0 lg:flex' : 'lg:translate-x-full xl:translate-x-0 xl:flex'}
         `}
       >
         {/* Dedicated Sticky Mobile/Tablet/Laptop Navigation Header inside Cart (< 1280px) */}
-        <div className="flex xl:hidden items-center justify-between px-3 py-2.5 bg-slate-100 dark:bg-dark-950 border-b border-slate-200 dark:border-dark-800 shrink-0 sticky top-0 z-20">
+        <div className="flex xl:hidden items-center justify-between px-3 py-2.5 bg-[var(--bg-inset)] border-b border-[var(--border-hairline)] shrink-0 sticky top-0 z-20">
           <button
             type="button"
             onClick={() => {
               setIsCartDrawerOpen(false);
               setMobileTab('pool');
             }}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-dark-800 active:scale-95 transition-all shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-xs font-semibold text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:border-[var(--border-strong)] active:scale-95 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Back to Pool</span>
           </button>
 
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span className="text-xs font-semibold text-[var(--ink-primary)] font-mono tabular-nums">
             Quiz Cart ({cartQuestionIds.length})
           </span>
 
@@ -2150,7 +2157,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             }}
             aria-label="Close Quiz Cart"
             title="Close Quiz Cart"
-            className="w-8 h-8 rounded-lg flex items-center justify-center bg-white dark:bg-dark-850 border border-slate-200 dark:border-dark-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white active:scale-95 transition-all"
+            className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:border-[var(--border-strong)] active:scale-95 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -2160,10 +2167,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         <div className="flex-1 min-h-0 overflow-y-auto xl:overflow-hidden flex flex-col [-webkit-overflow-scrolling:touch]">
 
         {/* Cart Top Header: Title & Actions */}
-        <div className="p-3 border-b border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
+        <div className="p-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] space-y-2 shrink-0">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <FileText className={`w-3.5 h-3.5 ${accentClasses.text}`} />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--ink-primary)] flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-[var(--subject-accent)]" />
               Topical Quiz Cart
             </h3>
             <div className="flex items-center gap-1.5">
@@ -2173,14 +2180,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     type="button"
                     onClick={handleShuffleCart}
                     title="Shuffle questions order"
-                    className="p-1 rounded-lg hover:bg-slate-200 dark:hover:bg-dark-800 text-slate-400 hover:text-slate-200 transition-colors"
+                    className="p-1 rounded-lg hover:bg-[var(--bg-inset)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
                   >
                     <Shuffle className="w-3.5 h-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={handleClearCartWithUndo}
-                    className="text-[11px] text-rose-500 hover:text-rose-400 font-medium transition-colors"
+                    className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline font-semibold transition-colors"
                   >
                     Clear All
                   </button>
@@ -2196,52 +2203,55 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               value={testTitle}
               onChange={(e) => onSetTestTitle(e.target.value)}
               placeholder="e.g. Physics 3.2 Waves Topical Homework"
-              className="w-full bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-750 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-slate-100 font-medium placeholder-slate-400 focus:outline-none"
+              className="w-full bg-[var(--bg-inset)] border border-[var(--border-hairline)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--ink-primary)] font-medium placeholder:text-[var(--ink-caption)] focus:outline-none focus:border-[var(--subject-accent)] transition-colors"
             />
           </div>
 
           {/* Dynamic Mark Target Meter */}
-          <div className="p-2.5 rounded-xl bg-white dark:bg-[#0B0F19]/90 border border-slate-200/80 dark:border-white/[0.08] shadow-sm space-y-2">
+          <div className="p-2.5 rounded-xl bg-[var(--bg-inset)] border border-[var(--border-hairline)] space-y-2">
             {/* Numbers & Status Badge */}
             <div className="flex items-center justify-between">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-lg font-extrabold font-mono tabular-nums text-slate-900 dark:text-white">
+                <span className="text-lg font-extrabold font-mono tabular-nums text-[var(--ink-primary)]">
                   {totalCartMarks}
                 </span>
-                <span className="text-xs font-semibold text-slate-400">/</span>
-                <span className="text-xs font-bold font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                <span className="text-xs font-semibold text-[var(--ink-caption)]">/</span>
+                <span className="text-xs font-bold font-mono tabular-nums text-[var(--ink-muted)]">
                   {targetMarks} Marks
                 </span>
               </div>
 
               {totalCartMarks === targetMarks ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25">
                   <Check className="w-3 h-3" />
                   Target Met
                 </span>
               ) : totalCartMarks > targetMarks ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/25 font-mono tabular-nums">
                   +{totalCartMarks - targetMarks}m over target
                 </span>
               ) : (
-                <span className="text-[10px] font-mono font-medium text-slate-400">
+                <span className="text-[10px] font-mono tabular-nums font-medium text-[var(--ink-muted)]">
                   {targetMarks - totalCartMarks}m needed
                 </span>
               )}
             </div>
 
             {/* Visual Progress Bar */}
-            <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-white/[0.06] overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
               <div
                 className={`h-full transition-all duration-300 rounded-full ${
                   totalCartMarks === targetMarks
-                    ? 'bg-emerald-500'
+                    ? 'bg-emerald-600 dark:bg-emerald-500'
                     : totalCartMarks > targetMarks
-                    ? 'bg-amber-500'
-                    : `bg-gradient-to-r ${accentClasses.gradient}`
+                    ? 'bg-amber-600 dark:bg-amber-500'
+                    : ''
                 }`}
                 style={{
                   width: `${Math.min(100, Math.round((totalCartMarks / Math.max(1, targetMarks)) * 100))}%`,
+                  ...(totalCartMarks !== targetMarks && totalCartMarks <= targetMarks
+                    ? { backgroundColor: 'var(--subject-accent)' }
+                    : {}),
                 }}
               />
             </div>
@@ -2258,14 +2268,18 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       setTargetMarks(pill.marks);
                       setIsCustomTargetOpen(false);
                     }}
-                    className={`flex-1 py-1 px-1 rounded-lg text-center transition-all border text-[11px] font-semibold ${
+                    className={`flex-1 py-1 px-1 rounded-lg text-center transition-colors border text-[11px] font-semibold ${
                       isSelected
-                        ? `${accentClasses.bg} text-white font-bold shadow-sm border-transparent`
-                        : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08]'
+                        ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
+                        : 'bg-[var(--bg-surface)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:text-[var(--ink-primary)]'
                     }`}
                   >
                     <span className="font-mono tabular-nums">{pill.label}</span>
-                    <span className="text-[8.5px] font-normal text-slate-400 block -mt-0.5 truncate">
+                    <span
+                      className={`text-[8.5px] font-normal block -mt-0.5 truncate ${
+                        isSelected ? 'opacity-75' : 'text-[var(--ink-muted)]'
+                      }`}
+                    >
                       {pill.desc}
                     </span>
                   </button>
@@ -2292,9 +2306,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       }
                     }}
                     autoFocus
-                    className="w-full h-7 px-1 text-center text-xs font-mono font-bold bg-white dark:bg-dark-800 border border-amber-500 rounded-lg text-slate-900 dark:text-white focus:outline-none"
+                    className="w-full h-7 px-1 text-center text-xs font-mono tabular-nums font-bold bg-[var(--bg-surface)] border border-[var(--subject-accent)] rounded-lg text-[var(--ink-primary)] focus:outline-none"
                   />
-                  <span className="text-[10px] text-slate-400 font-mono">m</span>
+                  <span className="text-[10px] text-[var(--ink-muted)] font-mono">m</span>
                 </div>
               ) : (
                 <button
@@ -2303,10 +2317,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     setIsCustomTargetOpen(true);
                     setCustomTargetInput(String(targetMarks));
                   }}
-                  className={`px-2 py-1 rounded-lg text-center transition-all border text-[11px] font-semibold shrink-0 ${
+                  className={`px-2 py-1 rounded-lg text-center transition-colors border text-[11px] font-semibold shrink-0 ${
                     targetMarks !== 20 && targetMarks !== 40 && targetMarks !== 50
-                      ? `${accentClasses.bg} text-white font-bold shadow-sm border-transparent`
-                      : 'bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.08]'
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
+                      : 'bg-[var(--bg-surface)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:text-[var(--ink-primary)]'
                   }`}
                 >
                   <span className="font-mono tabular-nums">
@@ -2314,30 +2328,38 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       ? `${targetMarks}m`
                       : 'Custom'}
                   </span>
-                  <span className="text-[8.5px] font-normal text-slate-400 block -mt-0.5">Edit</span>
+                  <span
+                    className={`text-[8.5px] font-normal block -mt-0.5 ${
+                      targetMarks !== 20 && targetMarks !== 40 && targetMarks !== 50
+                        ? 'opacity-75'
+                        : 'text-[var(--ink-muted)]'
+                    }`}
+                  >
+                    Edit
+                  </span>
                 </button>
               )}
             </div>
 
             {/* Mini Telemetry Strip */}
-            <div className="grid grid-cols-3 pt-1.5 border-t border-slate-100 dark:border-white/[0.05] text-center">
+            <div className="grid grid-cols-3 pt-1.5 border-t border-[var(--border-hairline)] text-center">
               <div>
-                <span className="text-[9px] uppercase font-semibold text-slate-400 block">Questions</span>
-                <span className="text-xs font-bold font-mono tabular-nums text-slate-800 dark:text-slate-200">
+                <span className="text-[9px] uppercase font-semibold text-[var(--ink-muted)] block">Questions</span>
+                <span className="text-xs font-bold font-mono tabular-nums text-[var(--ink-primary)]">
                   {cartQuestions.length}
                 </span>
               </div>
               <div>
-                <span className="text-[9px] uppercase font-semibold text-slate-400 block">Est. Time</span>
-                <span className="text-xs font-bold font-mono tabular-nums text-slate-800 dark:text-slate-200">
+                <span className="text-[9px] uppercase font-semibold text-[var(--ink-muted)] block">Est. Time</span>
+                <span className="text-xs font-bold font-mono tabular-nums text-[var(--ink-primary)]">
                   {formatDuration(targetTimeMinutes)}
                 </span>
               </div>
               <div>
-                <span className="text-[9px] uppercase font-semibold text-slate-400 block">Calculator</span>
+                <span className="text-[9px] uppercase font-semibold text-[var(--ink-muted)] block">Calculator</span>
                 <span
-                  className={`text-xs font-bold inline-flex items-center justify-center gap-1 ${
-                    cartHasNonCalc ? 'text-rose-500' : 'text-emerald-500'
+                  className={`text-xs font-semibold inline-flex items-center justify-center gap-1 ${
+                    cartHasNonCalc ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'
                   }`}
                 >
                   {cartHasNonCalc ? (
@@ -2362,11 +2384,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               {topicDistribution.map((t) => (
                 <span
                   key={t.name}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.06] text-[9px] text-slate-700 dark:text-slate-300 truncate max-w-[170px]"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[9px] text-[var(--ink-secondary)] truncate max-w-[170px]"
                   title={`${t.name}: ${t.marks}m (${t.percent}%)`}
                 >
                   <span className="truncate">{t.name}</span>
-                  <span className="font-mono font-bold text-slate-400 shrink-0">{t.percent}%</span>
+                  <span className="font-mono tabular-nums font-bold text-[var(--ink-muted)] shrink-0">{t.percent}%</span>
                 </span>
               ))}
             </div>
@@ -2374,14 +2396,14 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Selected Questions List: Pinned Right Below The Meter */}
-        <div className="shrink-0 xl:flex-1 xl:min-h-0 overflow-visible xl:overflow-y-auto p-2.5 space-y-1.5">
+        <div className="shrink-0 xl:flex-1 xl:min-h-0 overflow-visible xl:overflow-y-auto p-2.5 space-y-1.5 bg-[var(--bg-paper)]">
           {cartQuestions.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center p-5 text-slate-400 dark:text-slate-500">
-              <FileText className="w-7 h-7 text-slate-400 dark:text-slate-600 mb-2" />
-              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <div className="h-full flex flex-col items-center justify-center text-center p-5 text-[var(--ink-muted)]">
+              <FileText className="w-7 h-7 text-[var(--ink-caption)] mb-2" />
+              <p className="text-xs font-semibold text-[var(--ink-secondary)]">
                 Your Quiz Cart is Empty
               </p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-1 max-w-[14rem]">
+              <p className="text-[11px] text-[var(--ink-muted)] mt-1 max-w-[14rem]">
                 1. Select subtopics on the left
                 <br />
                 2. Click &quot;+ Add&quot; on questions or use &quot;Fill Remaining&quot; below
@@ -2397,8 +2419,8 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 dragOverIndex === idx && draggedIndex !== null && draggedIndex !== idx;
               const dropIndicatorClass = isDropTarget
                 ? draggedIndex < idx
-                  ? 'border-b-2 border-b-indigo-500 scale-[1.01] ring-1 ring-indigo-500/30'
-                  : 'border-t-2 border-t-indigo-500 scale-[1.01] ring-1 ring-indigo-500/30'
+                  ? 'border-b-2 border-b-[var(--subject-accent)] ring-1 ring-[var(--subject-border)]'
+                  : 'border-t-2 border-t-[var(--subject-accent)] ring-1 ring-[var(--subject-border)]'
                 : '';
               const qNum =
                 q.question_number ??
@@ -2424,39 +2446,40 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       setIsCartDrawerOpen(false);
                     }
                   }}
-                  className={`p-2 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer select-none ${
+                  style={isPreviewed && !isDragging ? { borderLeftColor: 'var(--subject-accent)' } : undefined}
+                  className={`p-2 rounded-lg border flex items-center justify-between gap-2 transition-colors cursor-pointer select-none ${
                     isDragging
-                      ? 'opacity-50 border-dashed border-indigo-500/60 bg-indigo-500/5'
+                      ? 'opacity-50 border-dashed border-[var(--subject-accent)] bg-[var(--subject-bg)]'
                       : isPreviewed
-                      ? `${accentClasses.bgLight} ${accentClasses.border} shadow-sm`
-                      : 'bg-slate-50 hover:bg-slate-100 dark:bg-[#0B0E16]/80 dark:hover:bg-white/[0.04] border-slate-200 dark:border-white/[0.07]'
+                      ? 'bg-[var(--subject-bg)] border-[var(--subject-border)] border-l-[3px]'
+                      : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] border-[var(--border-hairline)] hover:border-[var(--border-strong)]'
                   } ${dropIndicatorClass}`}
                 >
                   <div className="flex items-center gap-1.5 overflow-hidden">
                     <span
                       title="Drag to reorder question"
-                      className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-grab active:cursor-grabbing shrink-0 flex items-center"
+                      className="text-[var(--ink-caption)] hover:text-[var(--ink-secondary)] cursor-grab active:cursor-grabbing shrink-0 flex items-center"
                     >
                       <GripVertical className="w-3.5 h-3.5" />
                     </span>
-                    <span className="w-5 h-5 rounded-md bg-slate-200 dark:bg-white/[0.08] flex items-center justify-center font-mono tabular-nums font-bold text-[10px] text-slate-700 dark:text-slate-300 shrink-0">
+                    <span className="w-5 h-5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] flex items-center justify-center font-mono tabular-nums font-bold text-[10px] text-[var(--ink-secondary)] shrink-0">
                       {idx + 1}
                     </span>
                     <div className="truncate">
                       <div className="flex items-center gap-1.5">
-                        <span className={`font-mono tabular-nums font-bold text-xs ${accentClasses.text}`}>
+                        <span className="font-mono tabular-nums font-bold text-xs text-[var(--subject-accent)]">
                           Q{qNum}
                         </span>
-                        <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                        <span className="font-mono tabular-nums text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
                           {q.marks}m
                         </span>
                         {q.paper && (
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                          <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
                             P{q.paper}
                           </span>
                         )}
                       </div>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      <p className="text-[10px] text-[var(--ink-muted)] truncate mt-0.5">
                         {q.subtopic || q.topic}
                       </p>
                     </div>
@@ -2468,7 +2491,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       disabled={isFirst}
                       onClick={() => handleMoveUp(idx)}
                       title="Move Question Up"
-                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-500 disabled:opacity-20 transition-colors"
+                      className="p-1 rounded hover:bg-[var(--bg-inset)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] disabled:opacity-20 transition-colors"
                     >
                       <ArrowUp className="w-3 h-3" />
                     </button>
@@ -2477,7 +2500,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       disabled={isLast}
                       onClick={() => handleMoveDown(idx)}
                       title="Move Question Down"
-                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-500 disabled:opacity-20 transition-colors"
+                      className="p-1 rounded hover:bg-[var(--bg-inset)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] disabled:opacity-20 transition-colors"
                     >
                       <ArrowDown className="w-3 h-3" />
                     </button>
@@ -2485,7 +2508,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       type="button"
                       onClick={() => onRemoveFromCart(q.id)}
                       title="Remove from Cart"
-                      className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-500/20 text-slate-400 hover:text-rose-500 transition-colors ml-0.5"
+                      className="p-1 rounded hover:bg-rose-500/15 text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 transition-colors ml-0.5"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -2497,23 +2520,23 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         </div>
 
         {/* Collapsible "Fill Remaining" Sampler & Presets Modal Trigger */}
-        <div className="p-2.5 border-t border-slate-200 dark:border-dark-800 bg-slate-50/70 dark:bg-dark-850/80 space-y-2 shrink-0">
+        <div className="p-2.5 border-t border-[var(--border-hairline)] bg-[var(--bg-inset)] space-y-2 shrink-0">
           {/* Fill Remaining / Auto-Generate Quiz Drawer */}
-          <div className="rounded-xl bg-white dark:bg-[#0D111C]/90 p-2.5 border border-slate-200 dark:border-white/[0.08] space-y-2">
+          <div className="rounded-xl bg-[var(--bg-surface)] p-2.5 border border-[var(--border-hairline)] space-y-2">
             <div className="flex items-center justify-between">
               <button
                 type="button"
                 onClick={totalCartMarks < targetMarks && totalCartMarks > 0 ? handleFillRemaining : handleSmartGenerate}
-                className={`flex-1 py-1.5 px-3 rounded-lg text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-md active:scale-[0.98] transition-all bg-gradient-to-r ${accentClasses.gradient}`}
+                className="flex-1 py-1.5 px-3 rounded-lg bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-colors"
               >
                 {totalCartMarks < targetMarks && totalCartMarks > 0 ? (
                   <>
-                    <Sparkles className="w-3.5 h-3.5 fill-current" />
+                    <Sparkles className="w-3.5 h-3.5" />
                     <span>Fill Remaining ({targetMarks - totalCartMarks}m)</span>
                   </>
                 ) : (
                   <>
-                    <Zap className="w-3.5 h-3.5 fill-current" />
+                    <Zap className="w-3.5 h-3.5" />
                     <span>Auto-Generate ({targetMarks}m)</span>
                   </>
                 )}
@@ -2523,7 +2546,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 type="button"
                 onClick={() => setIsSmartGenerateOpen(!isSmartGenerateOpen)}
                 title="Configure sampler settings"
-                className="ml-1.5 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/[0.06] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                className="ml-1.5 p-1.5 rounded-lg hover:bg-[var(--bg-inset)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
               >
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
@@ -2534,17 +2557,17 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             </div>
 
             {lastGeneratedInfo && (
-              <div className="text-[10px] text-center font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
+              <div className="text-[10px] text-center font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
                 {lastGeneratedInfo}
               </div>
             )}
 
             {/* Sampler Configuration Options */}
             {isSmartGenerateOpen && (
-              <div className="pt-2 border-t border-slate-100 dark:border-white/[0.06] space-y-2 text-xs">
+              <div className="pt-2 border-t border-[var(--border-hairline)] space-y-2 text-xs">
                 {/* Selection Mode */}
                 <div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
+                  <div className="text-[10px] text-[var(--ink-muted)] font-medium mb-1">
                     Selection Mode
                   </div>
                   <div className="grid grid-cols-3 gap-1">
@@ -2559,10 +2582,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                         key={m.id}
                         type="button"
                         onClick={() => setGenerateMode(m.id)}
-                        className={`py-1 px-1 text-[10px] rounded text-center font-medium transition-all border ${
+                        className={`py-1 px-1 text-[10px] rounded text-center font-medium transition-colors border ${
                           generateMode === m.id
-                            ? `${accentClasses.bg} text-white font-bold shadow-sm`
-                            : 'bg-white/80 dark:bg-dark-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-dark-750'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
+                            : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         {m.label}
@@ -2574,7 +2597,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 {/* Exam Structure (Sciences) */}
                 {!isMath && (
                   <div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mb-1">
+                    <div className="text-[10px] text-[var(--ink-muted)] font-medium mb-1">
                       Paper Composition
                     </div>
                     <div className="grid grid-cols-3 gap-1">
@@ -2589,10 +2612,10 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                           key={struct.id}
                           type="button"
                           onClick={() => setExamStructure(struct.id)}
-                          className={`py-1 px-1 text-[10px] rounded text-center font-medium transition-all border ${
+                          className={`py-1 px-1 text-[10px] rounded text-center font-medium transition-colors border ${
                             examStructure === struct.id
-                              ? `${accentClasses.bg} text-white font-bold shadow-sm`
-                              : 'bg-white/80 dark:bg-dark-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-dark-750'
+                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
+                              : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
                           }`}
                         >
                           {struct.label}
@@ -2609,75 +2632,76 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
           <button
             type="button"
             onClick={() => setIsPresetsModalOpen(true)}
-            className="w-full py-1.5 px-3 rounded-xl bg-white dark:bg-[#0B0E16]/80 hover:bg-slate-100 dark:hover:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center justify-between transition-all"
+            className="w-full py-1.5 px-3 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-subtle)] border border-[var(--border-hairline)] hover:border-[var(--border-strong)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] font-semibold text-xs flex items-center justify-between transition-colors"
           >
             <div className="flex items-center gap-1.5">
-              <Award className="w-3.5 h-3.5 text-amber-500" />
+              <Award className="w-3.5 h-3.5 text-[var(--subject-accent)]" />
               <span>Official Cambridge Presets</span>
             </div>
-            <span className="text-[10px] font-mono font-medium px-1.5 py-0.2 rounded-full bg-slate-100 dark:bg-white/[0.06] text-slate-500 dark:text-slate-400">
-              Full Papers ▾
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-mono font-medium px-1.5 py-0.2 rounded-full bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-muted)]">
+              <span>Full Papers</span>
+              <ChevronRight className="w-3 h-3" />
             </span>
           </button>
         </div>
 
         {/* Action Bar: Sit Exam, PDF Export Options & Buttons */}
-        <div className="p-3 pb-28 sm:pb-12 xl:pb-3 border-t border-slate-200 dark:border-dark-800 bg-slate-50 dark:bg-dark-850 space-y-2 shrink-0">
+        <div className="p-3 pb-28 sm:pb-12 xl:pb-3 border-t border-[var(--border-hairline)] bg-[var(--bg-surface)] space-y-2 shrink-0">
           {/* Primary Action 1: In-Browser Exam Sitting Mode */}
           <button
             type="button"
             disabled={cartQuestions.length === 0}
             onClick={() => setIsSittingModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs shadow-md shadow-emerald-950/20 active:scale-[0.99] transition-all disabled:opacity-40 disabled:pointer-events-none"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white font-semibold text-xs active:scale-[0.99] transition-colors disabled:opacity-40 disabled:pointer-events-none"
           >
             <PlayCircle className="w-4 h-4 text-white" />
             <span>Sit Mock Exam In-Browser ({formatDuration(targetTimeMinutes)})</span>
           </button>
 
           {/* Export Options Box */}
-          <div className="p-2 rounded-xl bg-white dark:bg-[#0B0E16]/90 border border-slate-200 dark:border-white/[0.08] space-y-1 text-xs">
-            <div className="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-white/[0.06]">
-              <span className="text-[9.5px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+          <div className="p-2 rounded-xl bg-[var(--bg-inset)] border border-[var(--border-hairline)] space-y-1 text-xs">
+            <div className="flex items-center justify-between pb-1 border-b border-[var(--border-hairline)]">
+              <span className="text-[9.5px] font-bold text-[var(--ink-muted)] uppercase tracking-wider">
                 Cambridge PDF Export
               </span>
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded border bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/30">
+              <span className="text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded border bg-[var(--subject-bg)] text-[var(--subject-accent)] border-[var(--subject-border)]">
                 CAIE Style
               </span>
             </div>
 
-            <label className="flex items-center gap-1.5 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-300">
+            <label className="flex items-center gap-1.5 cursor-pointer text-[10.5px] text-[var(--ink-secondary)]">
               <input
                 type="checkbox"
                 checked={includeFormalHeader}
                 onChange={(e) => setIncludeFormalHeader(e.target.checked)}
-                className="w-3.5 h-3.5 rounded text-amber-500"
+                className="w-3.5 h-3.5 rounded accent-[var(--subject-accent)]"
               />
               <span>Include Cambridge Cover Page</span>
             </label>
 
-            <label className="flex items-center gap-1.5 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-300">
+            <label className="flex items-center gap-1.5 cursor-pointer text-[10.5px] text-[var(--ink-secondary)]">
               <input
                 type="checkbox"
                 checked={includeSourceTags}
                 onChange={(e) => setIncludeSourceTags(e.target.checked)}
-                className="w-3.5 h-3.5 rounded text-amber-500"
+                className="w-3.5 h-3.5 rounded accent-[var(--subject-accent)]"
               />
               <span>Include Question Origin Citation (e.g. 0580/22 · s25 Q04)</span>
             </label>
 
-            <label className="flex items-center gap-1.5 cursor-pointer text-[10.5px] text-slate-700 dark:text-slate-300">
+            <label className="flex items-center gap-1.5 cursor-pointer text-[10.5px] text-[var(--ink-secondary)]">
               <input
                 type="checkbox"
                 checked={includeHeaderFooter}
                 onChange={(e) => setIncludeHeaderFooter(e.target.checked)}
-                className="w-3.5 h-3.5 rounded text-amber-500"
+                className="w-3.5 h-3.5 rounded accent-[var(--subject-accent)]"
               />
               <span>Include Header, Footer &amp; Page Numbers</span>
             </label>
           </div>
 
           {exportStatus && (
-            <div className="text-[11px] text-center text-amber-600 dark:text-amber-300 font-medium py-0.5 animate-pulse">
+            <div className="text-[11px] text-center text-[var(--subject-accent)] font-medium py-0.5 animate-pulse">
               {exportStatus}
             </div>
           )}
@@ -2688,7 +2712,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               type="button"
               disabled={cartQuestions.length === 0 || isExportingQP || isExportingMS}
               onClick={handleExportQP}
-              className={`py-2 px-2 rounded-xl bg-gradient-to-b ${accentClasses.gradient} text-white font-bold text-xs shadow-sm transition-all active:scale-[0.99] disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5`}
+              className="py-2 px-2 rounded-lg bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs transition-colors active:scale-[0.99] disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Export QP</span>
@@ -2698,7 +2722,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
               type="button"
               disabled={cartQuestions.length === 0 || isExportingQP || isExportingMS}
               onClick={handleExportMS}
-              className="py-2 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.09] text-emerald-700 dark:text-emerald-300 font-bold text-xs border border-slate-200 dark:border-white/[0.1] hover:border-emerald-500/40 transition-all active:scale-[0.99] disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5"
+              className="py-2 px-2 rounded-lg bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] text-emerald-700 dark:text-emerald-400 font-semibold text-xs border border-[var(--border-hairline)] hover:border-emerald-500/40 transition-colors active:scale-[0.99] disabled:opacity-40 disabled:pointer-events-none flex items-center justify-center gap-1.5"
             >
               <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Export MS</span>
@@ -2735,15 +2759,15 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
           aria-live="polite"
           className={`fixed ${
             showUndoToast && cartUndoStack.length > 0 ? 'bottom-16' : 'bottom-5'
-          } left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-amber-950/95 dark:bg-amber-900/95 text-amber-100 text-xs font-medium shadow-2xl border border-amber-500/40 max-w-md`}
+          } left-1/2 -translate-x-1/2 z-50 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[var(--bg-surface)] text-[var(--ink-primary)] text-xs font-medium shadow-[var(--shadow-popover)] border border-amber-500/40 max-w-md`}
         >
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
           <span className="truncate">{generatorWarning}</span>
           <button
             type="button"
             onClick={() => setGeneratorWarning(null)}
             aria-label="Dismiss warning notification"
-            className="text-amber-300 hover:text-white transition-colors ml-1 shrink-0"
+            className="text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors ml-1 shrink-0"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -2755,13 +2779,13 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         <div
           role="status"
           aria-live="polite"
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-medium shadow-2xl border border-white/15 animate-in fade-in slide-in-from-bottom-3 duration-150"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] text-xs font-medium shadow-[var(--shadow-popover)] border border-[var(--border-strong)] animate-in fade-in slide-in-from-bottom-3 duration-150"
         >
           <span>Cart replaced —</span>
           <button
             type="button"
             onClick={handleUndoCartReplace}
-            className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition-colors active:scale-95"
+            className="px-2.5 py-1 rounded-lg bg-[var(--subject-accent)] text-white font-semibold transition-opacity hover:opacity-90 active:scale-95"
           >
             Undo
           </button>
@@ -2769,7 +2793,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             type="button"
             onClick={() => setShowUndoToast(false)}
             aria-label="Dismiss undo notification"
-            className="text-slate-400 hover:text-white transition-colors"
+            className="opacity-75 hover:opacity-100 transition-opacity"
           >
             <X className="w-3.5 h-3.5" />
           </button>

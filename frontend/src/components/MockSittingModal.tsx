@@ -15,10 +15,11 @@ import {
   HelpCircle,
   Award
 } from 'lucide-react';
-import { QuestionItem, Subject, SubjectCode, subjectSlugToCode } from '../types';
+import { QuestionItem, Subject, SubjectCode, subjectCodeToSlug, subjectSlugToCode } from '../types';
 import { ImageCanvas } from './ImageCanvas';
 import { resolveQuestionImageUrl, resolveMarkSchemeImageUrl } from '../utils/imageUrl';
 import { useProgress } from '../context/ProgressContext';
+import { getCanonicalSubjectTheme } from '../utils/subjectTheme';
 
 interface MockSittingModalProps {
   isOpen: boolean;
@@ -207,34 +208,36 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
   };
 
   const subjectCode = subjectSlugToCode(subject);
+  const subjectSlug = subjectCodeToSlug(subjectCode);
+  const subjectTheme = getCanonicalSubjectTheme(subjectSlug);
   const isNonCalc = subjectCode === '0580' && activeQuestion.calculator_allowed === false;
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 flex flex-col bg-[#07090D] text-slate-100 select-none overflow-hidden"
+      className="fixed inset-0 z-50 flex flex-col bg-[var(--bg-paper)] text-[var(--ink-primary)] select-none overflow-hidden"
     >
       {/* Top Examination HUD Header */}
-      <header className="h-14 px-4 bg-[#0B0F19] border-b border-white/10 flex items-center justify-between shrink-0 gap-3 z-20">
+      <header className="h-14 px-4 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] flex items-center justify-between shrink-0 gap-3 z-20">
         {/* Left: Title & Cambridge Badge */}
         <div className="flex items-center gap-2.5 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-white/10">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-200">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)]">
+            <span className={`w-2 h-2 rounded-[2px] ${subjectTheme.swatchClass}`} />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-primary)]">
               Mock Exam Room
             </span>
           </div>
 
-          <h2 className="text-xs sm:text-sm font-bold text-white truncate max-w-xs md:max-w-md">
+          <h2 className="font-editorial text-sm sm:text-base font-semibold text-[var(--ink-primary)] truncate max-w-xs md:max-w-md">
             {title}
           </h2>
 
           {isNonCalc ? (
-            <span className="hidden sm:inline-flex text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
+            <span className="hidden sm:inline-flex text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30">
               Non-Calculator
             </span>
           ) : (
-            <span className="hidden sm:inline-flex text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <span className="hidden sm:inline-flex text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F0FDF4] dark:bg-emerald-500/20 text-[#15803D] dark:text-[#4ADE80] border border-[#BBF7D0] dark:border-emerald-500/30">
               Calculator Allowed
             </span>
           )}
@@ -243,17 +246,17 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
         {/* Center: Live Timer & Mode Segmented Control */}
         <div className="flex items-center gap-3 shrink-0">
           {!isExamSubmitted && (
-            <div className="hidden md:flex items-center bg-white/[0.04] p-0.5 rounded-lg border border-white/10 text-xs">
+            <div className="hidden md:flex items-center bg-[var(--bg-inset)] p-0.5 rounded-lg border border-[var(--border-hairline)] text-xs">
               <button
                 type="button"
                 onClick={() => {
                   setSittingMode('test');
                   setShowMarkSchemeInPractice(false);
                 }}
-                className={`px-2.5 py-1 rounded transition-all font-semibold ${
+                className={`px-2.5 py-1 rounded-md transition-colors font-semibold ${
                   sittingMode === 'test'
-                    ? 'bg-amber-500 text-dark-950 font-bold shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 Test Mode
@@ -261,10 +264,10 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
               <button
                 type="button"
                 onClick={() => setSittingMode('practice')}
-                className={`px-2.5 py-1 rounded transition-all font-semibold ${
+                className={`px-2.5 py-1 rounded-md transition-colors font-semibold ${
                   sittingMode === 'practice'
-                    ? 'bg-cyan-500 text-dark-950 font-bold shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 Practice Mode
@@ -274,20 +277,20 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
 
           {/* Countdown Clock Display */}
           <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono tabular-nums text-sm font-extrabold ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono tabular-nums text-sm font-bold ${
               isTimeCritical
-                ? 'bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse'
-                : 'bg-white/[0.05] border-white/10 text-white'
+                ? 'bg-rose-50 dark:bg-rose-500/20 border-rose-300 dark:border-rose-500/50 text-rose-700 dark:text-rose-300'
+                : 'bg-[var(--bg-inset)] border-[var(--border-hairline)] text-[var(--ink-primary)]'
             }`}
           >
-            <Clock className={`w-4 h-4 ${isTimeCritical ? 'text-rose-400' : 'text-cyan-400'}`} />
+            <Clock className={`w-4 h-4 ${isTimeCritical ? 'text-rose-600 dark:text-rose-400' : subjectTheme.textClass}`} />
             <span>{formatTime(secondsRemaining)}</span>
             {!isExamSubmitted && (
               <button
                 type="button"
                 onClick={() => setIsTimerRunning((r) => !r)}
                 title={isTimerRunning ? 'Pause Timer' : 'Resume Timer'}
-                className="ml-1 p-0.5 hover:text-cyan-300 text-slate-400 transition-colors"
+                className="ml-1 p-0.5 text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
               >
                 {isTimerRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               </button>
@@ -301,13 +304,13 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
             <button
               type="button"
               onClick={() => setShowSubmitConfirm(true)}
-              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs border border-emerald-400/40 shadow-lg shadow-emerald-950/40 active:scale-95 transition-all"
+              className="px-3 py-1.5 rounded-lg bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs transition-colors"
             >
               Finish Exam
             </button>
           ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold text-xs">
-              <Award className="w-4 h-4 text-emerald-400" />
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4] dark:bg-emerald-500/20 border border-[#BBF7D0] dark:border-emerald-500/40 text-[#15803D] dark:text-[#4ADE80] font-bold text-xs">
+              <Award className="w-4 h-4" />
               <span>Exam Complete</span>
             </div>
           )}
@@ -315,7 +318,7 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 hover:text-white border border-white/10 transition-colors"
+            className="p-1.5 rounded-lg bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border border-[var(--border-hairline)] transition-colors"
             title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -324,7 +327,7 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-white/[0.05] hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/10 transition-colors"
+            className="p-1.5 rounded-lg bg-[var(--bg-inset)] hover:bg-rose-50 dark:hover:bg-rose-500/20 text-[var(--ink-secondary)] hover:text-rose-600 dark:hover:text-rose-300 border border-[var(--border-hairline)] transition-colors"
             title="Exit Exam Room"
           >
             <X className="w-4 h-4" />
@@ -332,8 +335,8 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
         </div>
       </header>
 
-      {/* Question Navigation Strip (Q1, Q2, Q3...) */}
-      <nav className="h-11 px-4 bg-[#080B12] border-b border-white/[0.07] flex items-center gap-1.5 overflow-x-auto shrink-0 scrollbar-thin">
+      {/* Question Navigation Strip */}
+      <nav className="h-11 px-4 bg-[var(--bg-inset)] border-b border-[var(--border-hairline)] flex items-center gap-1.5 overflow-x-auto shrink-0">
         {questions.map((q, idx) => {
           const isCurrent = idx === currentIndex;
           const isFlagged = flaggedQuestions.has(q.id);
@@ -342,11 +345,11 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
           const isGradedMaster = status === 'mastered';
           const isGradedReview = status === 'review';
 
-          let indicatorColor = 'bg-white/20';
-          if (isGradedMaster) indicatorColor = 'bg-emerald-400';
-          else if (isGradedReview) indicatorColor = 'bg-rose-400';
-          else if (hasAnswer) indicatorColor = 'bg-cyan-400';
-          else if (isFlagged) indicatorColor = 'bg-amber-400';
+          let indicatorColor = 'bg-[var(--border-strong)]';
+          if (isGradedMaster) indicatorColor = 'bg-[#15803D] dark:bg-[#4ADE80]';
+          else if (isGradedReview) indicatorColor = 'bg-rose-500';
+          else if (hasAnswer) indicatorColor = subjectTheme.swatchClass;
+          else if (isFlagged) indicatorColor = 'bg-amber-500';
 
           return (
             <button
@@ -356,15 +359,15 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
                 setCurrentIndex(idx);
                 setShowMarkSchemeInPractice(false);
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all shrink-0 border ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono font-bold transition-colors shrink-0 border ${
                 isCurrent
-                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                  : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/[0.06] text-slate-400 hover:text-white'
+                  ? 'bg-[var(--action-primary-bg)] border-transparent text-[var(--action-primary-fg)]'
+                  : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-subtle)] border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
               }`}
             >
               <span className={`w-1.5 h-1.5 rounded-full ${indicatorColor}`} />
               <span>Q{idx + 1}</span>
-              {isFlagged && <Bookmark className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />}
+              {isFlagged && <Bookmark className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />}
             </button>
           );
         })}
@@ -372,18 +375,17 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
 
       {/* Main Examination Question Viewing Workspace */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        {/* Left / Center: Question Canvas */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden border-r border-white/10">
+        <div className="flex-1 flex flex-col h-full overflow-hidden border-r border-[var(--border-hairline)]">
           {/* Question Meta Bar */}
-          <div className="h-11 px-4 bg-[#0C101B] border-b border-white/10 flex items-center justify-between shrink-0 text-xs">
+          <div className="h-11 px-4 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] flex items-center justify-between shrink-0 text-xs">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-white font-mono">
+              <span className="font-bold text-[var(--ink-primary)] font-mono tabular-nums">
                 Question {currentIndex + 1} of {questions.length} (Q{qNumDisplay})
               </span>
-              <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">
+              <span className={`px-2 py-0.5 rounded font-mono font-bold border ${subjectTheme.badgeClass}`}>
                 {activeQuestion.marks} marks
               </span>
-              <span className="text-slate-400 truncate hidden sm:inline">
+              <span className="text-[var(--ink-muted)] truncate hidden sm:inline">
                 {activeQuestion.topic} / {activeQuestion.subtopic}
               </span>
             </div>
@@ -392,25 +394,24 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
               <button
                 type="button"
                 onClick={() => toggleFlag(activeQuestion.id)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors ${
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-semibold transition-colors ${
                   flaggedQuestions.has(activeQuestion.id)
-                    ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
-                    : 'bg-white/[0.04] border-white/10 text-slate-400 hover:text-white'
+                    ? 'bg-amber-50 dark:bg-amber-500/20 border-amber-300 dark:border-amber-500/40 text-amber-800 dark:text-amber-300'
+                    : 'bg-[var(--bg-inset)] border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                 }`}
               >
                 <Bookmark className="w-3.5 h-3.5" />
                 <span>{flaggedQuestions.has(activeQuestion.id) ? 'Flagged' : 'Flag'}</span>
               </button>
 
-              {/* Reveal Mark Scheme button (Practice Mode or Exam Submitted) */}
               {(sittingMode === 'practice' || isExamSubmitted) && (
                 <button
                   type="button"
                   onClick={() => setShowMarkSchemeInPractice((v) => !v)}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors ${
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-semibold transition-colors ${
                     showMarkSchemeInPractice
-                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                      : 'bg-white/[0.04] border-white/10 text-slate-400 hover:text-white'
+                      ? 'bg-[#F0FDF4] dark:bg-emerald-500/20 border-[#BBF7D0] dark:border-emerald-500/40 text-[#15803D] dark:text-[#4ADE80]'
+                      : 'bg-[var(--bg-inset)] border-[var(--border-hairline)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)]'
                   }`}
                 >
                   {showMarkSchemeInPractice ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -426,7 +427,8 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
               src={resolveQuestionImageUrl(activeQuestion)}
               title={`Question ${qNumDisplay}`}
               badgeText={`${activeQuestion.marks}m`}
-              badgeColor="cyan"
+              badgeColor={subjectTheme.badgeColor}
+              activeSubject={subjectSlug}
               enableAnnotation={true}
               questionId={activeQuestion.id}
             />
@@ -434,9 +436,9 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
 
           {/* Interactive MCQ Answer Bar */}
           {activeQuestion.is_mcq && (
-            <div className="p-3 bg-[#0A0D16] border-t border-white/10 flex items-center justify-between gap-3 shrink-0">
+            <div className="p-3 bg-[var(--bg-surface)] border-t border-[var(--border-hairline)] flex items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <span className="text-xs font-bold text-[var(--ink-muted)] uppercase tracking-wider">
                   Select Answer:
                 </span>
                 <div className="flex items-center gap-1.5">
@@ -450,14 +452,14 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
                         key={choice}
                         type="button"
                         onClick={() => handleSelectMcq(choice)}
-                        className={`w-9 h-9 rounded-xl font-bold font-mono text-sm border transition-all active:scale-95 ${
+                        className={`w-9 h-9 rounded-lg font-bold font-mono text-sm border transition-colors ${
                           isCorrect
-                            ? 'bg-emerald-500 text-dark-950 border-emerald-400 shadow-md shadow-emerald-500/30'
+                            ? 'bg-[#15803D] dark:bg-[#16A34A] text-white border-transparent'
                             : isWrong
-                            ? 'bg-rose-500 text-white border-rose-400'
+                            ? 'bg-rose-600 text-white border-transparent'
                             : isSelected
-                            ? 'bg-cyan-500 text-dark-950 border-cyan-400 shadow-md shadow-cyan-500/30'
-                            : 'bg-white/[0.06] hover:bg-white/[0.12] text-white border-white/10'
+                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] border-transparent'
+                            : 'bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] text-[var(--ink-primary)] border-[var(--border-hairline)]'
                         }`}
                       >
                         {choice}
@@ -468,7 +470,7 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
               </div>
 
               {activeQuestion.correct_answer && (sittingMode === 'practice' || isExamSubmitted) && (
-                <div className="text-xs font-mono font-bold text-emerald-400">
+                <div className="text-xs font-mono font-bold text-[#15803D] dark:text-[#4ADE80]">
                   Official Answer: [ {activeQuestion.correct_answer} ]
                 </div>
               )}
@@ -478,16 +480,15 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
 
         {/* Right: Companion Mark Scheme */}
         {(showMarkSchemeInPractice || isExamSubmitted) && (
-          <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#0A0D16] border-l border-white/10">
-            <div className="h-11 px-4 bg-[#0F1424] border-b border-white/10 flex items-center justify-between shrink-0 text-xs">
-              <span className="font-bold text-emerald-400 font-mono flex items-center gap-1.5">
+          <div className="flex-1 flex flex-col h-full overflow-hidden bg-[var(--bg-paper)] border-l border-[var(--border-hairline)]">
+            <div className="h-11 px-4 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] flex items-center justify-between shrink-0 text-xs">
+              <span className="font-bold text-[#15803D] dark:text-[#4ADE80] font-mono flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4" />
                 Official Mark Scheme: Q{qNumDisplay}
               </span>
 
-              {/* Self-Scoring / Grading Buttons */}
               <div className="flex items-center gap-1">
-                <span className="text-slate-400 text-[11px] mr-1">Grade:</span>
+                <span className="text-[var(--ink-muted)] text-[11px] mr-1">Grade:</span>
                 {[0, Math.ceil((activeQuestion.marks || 1) / 2), activeQuestion.marks || 1].map((pts) => {
                   const isAwarded = studentScores[activeQuestion.id] === pts;
                   return (
@@ -499,10 +500,10 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
                         if (pts === activeQuestion.marks) setQuestionStatus(activeQuestion.id, 'mastered');
                         else if (pts === 0) setQuestionStatus(activeQuestion.id, 'review');
                       }}
-                      className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border transition-all ${
+                      className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border transition-colors ${
                         isAwarded
-                          ? 'bg-emerald-500 text-dark-950 border-emerald-400'
-                          : 'bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 border-white/10'
+                          ? 'bg-[#15803D] dark:bg-[#16A34A] text-white border-transparent'
+                          : 'bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] text-[var(--ink-secondary)] border-[var(--border-hairline)]'
                       }`}
                     >
                       {pts}m
@@ -518,6 +519,7 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
                 title={`Mark Scheme: Q${qNumDisplay}`}
                 badgeText="Answers"
                 badgeColor="emerald"
+                activeSubject={subjectSlug}
                 placeholderTitle="Mark Scheme Image"
                 placeholderMessage="Official mark scheme slice not indexed for this question."
               />
@@ -527,7 +529,7 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
       </main>
 
       {/* Bottom Paging Toolbar */}
-      <footer className="h-12 px-4 bg-[#0B0F19] border-t border-white/10 flex items-center justify-between shrink-0 text-xs z-20">
+      <footer className="h-12 px-4 bg-[var(--bg-surface)] border-t border-[var(--border-hairline)] flex items-center justify-between shrink-0 text-xs z-20">
         <button
           type="button"
           disabled={currentIndex <= 0}
@@ -535,18 +537,18 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
             setCurrentIndex((i) => Math.max(0, i - 1));
             setShowMarkSchemeInPractice(false);
           }}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold disabled:opacity-30 disabled:pointer-events-none transition-all"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--ink-primary)] font-semibold disabled:opacity-30 disabled:pointer-events-none transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           <span>Previous</span>
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="font-mono text-slate-400 text-xs">
+          <span className="font-mono tabular-nums text-[var(--ink-muted)] text-xs">
             {currentIndex + 1} / {questions.length} Questions
           </span>
           {isExamSubmitted && (
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold font-mono">
+            <span className="px-2.5 py-1 rounded-md bg-[#F0FDF4] dark:bg-emerald-500/20 text-[#15803D] dark:text-[#4ADE80] border border-[#BBF7D0] dark:border-emerald-500/30 font-bold font-mono tabular-nums">
               Score: {earnedMarks} / {totalMarks} ({Math.round((earnedMarks / (totalMarks || 1)) * 100)}%)
             </span>
           )}
@@ -559,7 +561,7 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
             setCurrentIndex((i) => Math.min(questions.length - 1, i + 1));
             setShowMarkSchemeInPractice(false);
           }}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white font-semibold disabled:opacity-30 disabled:pointer-events-none transition-all"
+          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--ink-primary)] font-semibold disabled:opacity-30 disabled:pointer-events-none transition-colors"
         >
           <span>Next</span>
           <ChevronRight className="w-4 h-4" />
@@ -568,34 +570,37 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
 
       {/* Submission Confirmation Modal */}
       {showSubmitConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-[#0F1424] border border-white/15 rounded-2xl p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/50">
+          <div
+            className="w-full max-w-md bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg p-6 space-y-4"
+            style={{ boxShadow: 'var(--shadow-popover)' }}
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+              <div className="w-10 h-10 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-hairline)] flex items-center justify-center text-[var(--ink-primary)]">
                 <HelpCircle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">Submit Examination?</h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <h3 className="font-editorial text-base font-semibold text-[var(--ink-primary)]">Submit Examination?</h3>
+                <p className="text-xs text-[var(--ink-muted)] mt-0.5">
                   Are you ready to finish? Time remaining: {formatTime(secondsRemaining)}
                 </p>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-white/[0.04] border border-white/[0.07] space-y-1.5 text-xs text-slate-300">
+            <div className="p-3 rounded-lg bg-[var(--bg-inset)] border border-[var(--border-hairline)] space-y-1.5 text-xs text-[var(--ink-secondary)]">
               <div className="flex justify-between">
                 <span>Total Questions:</span>
-                <span className="font-mono font-bold text-white">{questions.length}</span>
+                <span className="font-mono font-bold text-[var(--ink-primary)]">{questions.length}</span>
               </div>
               <div className="flex justify-between">
                 <span>Questions Attempted:</span>
-                <span className="font-mono font-bold text-cyan-300">
+                <span className={`font-mono font-bold ${subjectTheme.textClass}`}>
                   {Object.keys(localAnswers).length} of {questions.length}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Flagged for Review:</span>
-                <span className="font-mono font-bold text-amber-400">{flaggedQuestions.size}</span>
+                <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{flaggedQuestions.size}</span>
               </div>
             </div>
 
@@ -603,14 +608,14 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
               <button
                 type="button"
                 onClick={() => setShowSubmitConfirm(false)}
-                className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-slate-300 font-semibold text-xs transition-colors"
+                className="px-4 py-2 rounded-lg bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--ink-primary)] font-semibold text-xs transition-colors"
               >
                 Keep Working
               </button>
               <button
                 type="button"
                 onClick={handleFinalSubmit}
-                className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-950/40 transition-all active:scale-95"
+                className="px-5 py-2 rounded-lg bg-[var(--action-primary-bg)] hover:bg-[var(--action-primary-hover)] text-[var(--action-primary-fg)] font-semibold text-xs transition-colors"
               >
                 Yes, Submit Exam
               </button>
@@ -621,23 +626,26 @@ export const MockSittingModal: React.FC<MockSittingModalProps> = ({
 
       {/* Post-Exam Final Grade Report Overlay */}
       {isExamSubmitted && !showMarkSchemeInPractice && currentIndex === 0 && (
-        <div className="absolute top-16 right-6 z-30 w-72 rounded-2xl bg-[#0F1424]/95 border border-emerald-500/30 p-4 shadow-2xl backdrop-blur-xl animate-in slide-in-from-top-4 duration-200">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+        <div
+          className="absolute top-16 right-6 z-30 w-72 rounded-lg bg-[var(--bg-surface)] border border-[#BBF7D0] dark:border-emerald-500/35 p-4"
+          style={{ boxShadow: 'var(--shadow-popover)' }}
+        >
+          <div className="flex items-center justify-between pb-2 border-b border-[var(--border-hairline)]">
+            <span className="text-xs font-bold text-[#15803D] dark:text-[#4ADE80] flex items-center gap-1.5">
               <Award className="w-4 h-4" />
               Official Mock Result
             </span>
-            <span className="text-[10px] font-mono text-slate-400">Graded</span>
+            <span className="text-[10px] font-mono text-[var(--ink-muted)]">Graded</span>
           </div>
           <div className="py-3 text-center">
-            <div className="text-2xl font-extrabold text-white font-mono">
+            <div className="text-2xl font-bold text-[var(--ink-primary)] font-mono tabular-nums">
               {earnedMarks} / {totalMarks}
             </div>
-            <div className="text-xs font-semibold text-emerald-300 mt-0.5">
+            <div className="text-xs font-semibold text-[#15803D] dark:text-[#4ADE80] mt-0.5">
               {calcGrade(earnedMarks, totalMarks)}
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 text-center leading-snug">
+          <p className="text-[11px] text-[var(--ink-muted)] text-center leading-snug">
             Review your answers using the companion Mark Schemes.
           </p>
         </div>

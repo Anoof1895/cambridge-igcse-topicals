@@ -7,15 +7,12 @@ import {
   List,
   X,
   Calculator,
-  Ban
+  Ban,
+  AlertTriangle
 } from 'lucide-react';
 import { QuestionItem, MasteryStatus, Subject } from '../types';
 import { getQuestionType, getQuestionSubject, isCalculatorAllowed } from '../utils/questionClassification';
-import {
-  handleSpotlightMove,
-  handleSpotlightLeave,
-  getSubjectSpotlightStyle,
-} from '../utils/spotlight';
+import { getCanonicalSubjectTheme } from '../utils/subjectTheme';
 
 interface QuestionListProps {
   questions: QuestionItem[];
@@ -115,23 +112,23 @@ export const getStatusConfig = (status: MasteryStatus = 'unattempted') => {
       return {
         label: status === 'correct' ? 'Correct' : 'Mastered',
         shortLabel: status === 'correct' ? 'Correct' : 'Mastered',
-        bg: 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
-        dot: 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.6)]',
+        bg: 'bg-[#F0FDF4] hover:bg-emerald-100/80 dark:bg-emerald-500/15 dark:hover:bg-emerald-500/25 text-[#15803D] dark:text-[#4ADE80] border-[#BBF7D0] dark:border-emerald-500/30',
+        dot: 'bg-[#15803D] dark:bg-[#4ADE80]',
       };
     case 'review':
     case 'incorrect':
       return {
         label: status === 'incorrect' ? 'Incorrect' : 'Review Needed',
         shortLabel: status === 'incorrect' ? 'Incorrect' : 'Review',
-        bg: 'bg-amber-500/15 hover:bg-amber-500/25 text-amber-700 dark:text-amber-300 border-amber-500/30',
-        dot: 'bg-amber-500 dark:bg-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)]',
+        bg: 'bg-amber-50 hover:bg-amber-100/80 dark:bg-amber-500/15 dark:hover:bg-amber-500/25 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30',
+        dot: 'bg-amber-600 dark:bg-amber-400',
       };
     case 'unattempted':
     default:
       return {
         label: 'Unattempted',
         shortLabel: 'Unattempted',
-        bg: 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] dark:text-slate-400 dark:border-white/[0.08]',
+        bg: 'bg-[var(--bg-inset)] hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] border-[var(--border-hairline)]',
         dot: 'bg-slate-400 dark:bg-slate-500',
       };
   }
@@ -313,8 +310,9 @@ export const QuestionList: React.FC<QuestionListProps> = ({
   }, [sortedQuestions, startIndex]);
 
   const listSubject: Subject = useMemo(() => getQuestionSubject(sortedQuestions[0]), [sortedQuestions]);
+  const listSubjectTheme = getCanonicalSubjectTheme(listSubject);
 
-  // Linear / Raycast keyboard shortcuts: 'j'/'ArrowDown' = next, 'k'/'ArrowUp' = prev
+  // Keyboard shortcuts: 'j'/'ArrowDown' = next, 'k'/'ArrowUp' = prev
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -351,34 +349,34 @@ export const QuestionList: React.FC<QuestionListProps> = ({
     <>
       {/* Mobile/Tablet Backdrop (< 1024px) */}
       {isDrawerOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/60 dark:bg-black/70 backdrop-blur-sm lg:hidden animate-in fade-in duration-150"
+        <div
+          className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden"
           onClick={onCloseDrawer}
         />
       )}
 
       {/* Question List Sidebar */}
-      <aside 
+      <aside
         className={`
-          border-r border-slate-200 dark:border-white/[0.07] bg-white/95 lg:bg-slate-50/70 dark:bg-[#07090D]/95 lg:dark:bg-[#07090D]/75 backdrop-blur-xl flex flex-col w-72 2xl:w-80 shrink-0 flex-none select-none overflow-hidden transition-transform duration-200
-          fixed inset-y-0 left-0 z-40 max-w-[88vw] shadow-2xl lg:shadow-none
+          border-r border-[var(--border-hairline)] bg-[var(--bg-surface)] flex flex-col w-72 2xl:w-80 shrink-0 flex-none select-none overflow-hidden transition-transform duration-200
+          fixed inset-y-0 left-0 z-40 max-w-[88vw] lg:shadow-none
           lg:static lg:w-72 2xl:w-80 lg:z-auto lg:translate-x-0
           ${isDrawerOpen ? 'translate-x-0 flex' : '-translate-x-full lg:translate-x-0 hidden lg:flex'}
         `}
       >
         {/* Mobile/Tablet Drawer Header (< 1024px) */}
-        <div className="h-12 px-3 border-b border-slate-200 dark:border-white/[0.07] bg-white dark:bg-[#07090D] flex items-center justify-between lg:hidden shrink-0">
+        <div className="h-12 px-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between lg:hidden shrink-0">
           <div className="flex items-center gap-2">
-            <List className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-            <span className="font-bold text-xs text-slate-800 dark:text-white">Question Navigator</span>
-            <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.06] text-amber-700 dark:text-amber-300">
+            <List className={`w-4 h-4 ${listSubjectTheme.textClass}`} />
+            <span className="font-bold text-xs text-[var(--ink-primary)]">Question Navigator</span>
+            <span className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded border ${listSubjectTheme.badgeClass}`}>
               {questions.length}
             </span>
           </div>
           <button
             type="button"
             onClick={onCloseDrawer}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] transition-colors"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -386,23 +384,24 @@ export const QuestionList: React.FC<QuestionListProps> = ({
         </div>
 
         {/* Header Tabs: All Questions vs Bookmarked */}
-        <div
-          style={getSubjectSpotlightStyle(listSubject, 220)}
-          className="p-2 border-b border-slate-200 dark:border-white/[0.07] bg-white/80 dark:bg-[#07090D]/80 backdrop-blur-md flex items-center gap-1.5 shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
-        >
+        <div className="p-2 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => onTabChange('all')}
-            onPointerMove={handleSpotlightMove}
-            onPointerLeave={handleSpotlightLeave}
-            className={`spotlight-surface flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors border ${
               activeTab === 'all'
-                ? 'bg-slate-100 dark:bg-white/[0.08] text-slate-900 dark:text-white shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.08)] border border-slate-200 dark:border-white/12'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/[0.04]'
+                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] border-transparent'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] border-transparent'
             }`}
           >
-            <span className="relative z-10">All Questions</span>
-            <span className="relative z-10 text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-slate-200/80 dark:bg-white/[0.07] text-slate-700 dark:text-slate-300">
+            <span>All Questions</span>
+            <span
+              className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded ${
+                activeTab === 'all'
+                  ? 'bg-white/15 dark:bg-slate-900/15 text-current'
+                  : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)]'
+              }`}
+            >
               {activeTab === 'all' ? questions.length : 'All'}
             </span>
           </button>
@@ -410,44 +409,41 @@ export const QuestionList: React.FC<QuestionListProps> = ({
           <button
             type="button"
             onClick={() => onTabChange('bookmarked')}
-            onPointerMove={handleSpotlightMove}
-            onPointerLeave={handleSpotlightLeave}
-            style={getSubjectSpotlightStyle('amber', 200)}
-            className={`spotlight-surface flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors border ${
               activeTab === 'bookmarked'
-                ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.08)] border border-amber-300 dark:border-amber-500/30'
-                : 'text-slate-600 hover:text-amber-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-amber-300 dark:hover:bg-white/[0.04]'
+                ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/35'
+                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] border-transparent'
             }`}
           >
-            <Bookmark className={`relative z-10 w-3.5 h-3.5 ${bookmarks.size > 0 ? 'fill-amber-500 text-amber-500' : ''}`} />
-            <span className="relative z-10">Bookmarked</span>
-            <span className="relative z-10 text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300">
+            <Bookmark className={`w-3.5 h-3.5 ${bookmarks.size > 0 ? 'fill-amber-500 text-amber-500' : ''}`} />
+            <span>Bookmarked</span>
+            <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)]">
               {bookmarks.size}
             </span>
           </button>
         </div>
 
         {/* Scrollable Questions List Container */}
-        <div 
+        <div
           ref={listRef}
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-1.5"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-2 py-2 space-y-1.5 bg-[var(--bg-inset)]"
         >
           {paginatedQuestions.length === 0 ? (
             activeTab === 'bookmarked' ? (
-              <div className="p-8 text-center text-slate-400 dark:text-slate-500">
-                <Bookmark className="w-8 h-8 mx-auto mb-2 text-slate-400 dark:text-slate-600" />
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">No bookmarks yet</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-600 mt-1">Press [B] or click the bookmark icon on any question to save it for review.</p>
+              <div className="p-8 text-center text-[var(--ink-muted)]">
+                <Bookmark className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-xs font-semibold text-[var(--ink-primary)]">No bookmarks yet</p>
+                <p className="text-[11px] text-[var(--ink-muted)] mt-1">Press [B] or click the bookmark icon on any question to save it for review.</p>
               </div>
             ) : (
-              <div className="p-8 text-center text-slate-400 dark:text-slate-500">
-                <FilterX className="w-8 h-8 mx-auto mb-2 text-slate-400 dark:text-slate-600" />
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">No questions match your filters</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-600 mt-1 mb-3">Try adjusting syllabus era, paper component, or subtopics.</p>
+              <div className="p-8 text-center text-[var(--ink-muted)]">
+                <FilterX className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p className="text-xs font-semibold text-[var(--ink-primary)]">No questions match your filters</p>
+                <p className="text-[11px] text-[var(--ink-muted)] mt-1 mb-3">Try adjusting syllabus era, paper component, or subtopics.</p>
                 <button
                   type="button"
                   onClick={onClearFilters}
-                  className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.06] hover:bg-slate-200 dark:hover:bg-white/[0.1] text-xs text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-white/10 transition-colors"
+                  className="px-3 py-1.5 rounded-md bg-[var(--bg-surface)] hover:bg-[var(--bg-subtle)] text-xs font-semibold text-[var(--ink-primary)] border border-[var(--border-hairline)] transition-colors"
                 >
                   Reset All Filters
                 </button>
@@ -461,124 +457,91 @@ export const QuestionList: React.FC<QuestionListProps> = ({
               const statusCfg = getStatusConfig(status);
               const qType = getQuestionType(q);
               const qSubject = getQuestionSubject(q);
+              const qTheme = getCanonicalSubjectTheme(qSubject);
               const meta = getCambridgeMetadata(q);
               const isMath = qSubject === 'mathematics';
-              const isPhysics = qSubject === 'physics';
-              const isBio = qSubject === 'biology';
 
               const marks = q.marks ?? q.total_marks ?? 1;
               const rawSubtopic = q.subtopic || q.topic || '';
               const cleanedSubtopic = cleanSubtopic(rawSubtopic);
               const qNumDisplay = formatQuestionNumber(q);
 
-              // Reactive accent card styling
-              const selectedCardAccent = isMath
-                ? 'bg-amber-50/70 dark:bg-[#16130D] border-y-amber-300/80 dark:border-y-white/10 border-r-amber-300/80 dark:border-r-white/10 border-l-amber-500 dark:border-l-amber-400 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-amber-500/20 dark:ring-amber-400/20'
-                : isPhysics
-                ? 'bg-indigo-50/70 dark:bg-[#0D111A] border-y-indigo-300/80 dark:border-y-white/10 border-r-indigo-300/80 dark:border-r-white/10 border-l-indigo-500 dark:border-l-indigo-400 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-indigo-500/20 dark:ring-indigo-400/20'
-                : isBio
-                ? 'bg-emerald-50/70 dark:bg-[#0A1612] border-y-emerald-300/80 dark:border-y-white/10 border-r-emerald-300/80 dark:border-r-white/10 border-l-emerald-500 dark:border-l-emerald-400 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-emerald-500/20 dark:ring-emerald-400/20'
-                : 'bg-cyan-50/70 dark:bg-[#0A141A] border-y-cyan-300/80 dark:border-y-white/10 border-r-cyan-300/80 dark:border-r-white/10 border-l-cyan-500 dark:border-l-cyan-400 shadow-sm dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] ring-1 ring-cyan-500/20 dark:ring-cyan-400/20';
-
-              const selectedSubtopicText = isMath
-                ? 'text-xs text-amber-800 dark:text-amber-300 font-medium line-clamp-2'
-                : isPhysics
-                ? 'text-xs text-indigo-800 dark:text-indigo-300 font-medium line-clamp-2'
-                : isBio
-                ? 'text-xs text-emerald-800 dark:text-emerald-300 font-medium line-clamp-2'
-                : 'text-xs text-cyan-800 dark:text-cyan-300 font-medium line-clamp-2';
-
               return (
                 <div
                   key={q.id}
                   data-question-id={q.id}
-                  onPointerMove={handleSpotlightMove}
-                  onPointerLeave={handleSpotlightLeave}
-                  style={getSubjectSpotlightStyle(qSubject, 280)}
                   onClick={() => {
                     onSelectQuestion(q);
                     if (onCloseDrawer) {
                       onCloseDrawer();
                     }
                   }}
-                  className={`spotlight-surface group relative min-w-0 overflow-hidden rounded-xl py-2.5 px-3.5 cursor-pointer transition-all duration-150 border-y border-r border-l-4 ${
+                  className={`group relative min-w-0 overflow-hidden rounded-lg py-2.5 px-3 cursor-pointer transition-colors border-y border-r border-l-[3px] ${
                     isSelected
-                      ? `${selectedCardAccent} text-slate-900 dark:text-white`
-                      : 'bg-white dark:bg-[#0B0E16]/70 border-slate-200/80 dark:border-white/[0.06] border-l-transparent hover:bg-slate-50 dark:hover:bg-white/[0.03] hover:border-slate-300 dark:hover:border-white/10 hover:border-l-slate-400 dark:hover:border-l-slate-600 text-slate-700 dark:text-slate-300 dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]'
+                      ? `${qTheme.selectedCardClass} text-[var(--ink-primary)]`
+                      : 'bg-[var(--bg-surface)] border-[var(--border-hairline)] border-l-transparent hover:bg-[var(--bg-subtle)] hover:border-l-[var(--border-strong)] text-[var(--ink-secondary)]'
                   }`}
                 >
                   {/* Top Row: Q Number, Mark Badge, Type Pill, Calc Pill, Bookmark Action */}
-                  <div className="relative z-10 flex items-center justify-between gap-1.5">
+                  <div className="flex items-center justify-between gap-1.5">
                     <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                      {/* Prominent Question Number */}
-                      <span className={`font-mono tabular-nums font-bold text-sm tracking-tight ${isSelected ? 'text-slate-950 dark:text-white' : 'text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-300'}`}>
+                      <span className={`font-mono tabular-nums font-bold text-sm tracking-tight ${isSelected ? qTheme.textClass : 'text-[var(--ink-primary)]'}`}>
                         Q{qNumDisplay}
                       </span>
 
-                      {/* Marks Badge */}
-                      <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/25">
+                      <span className="font-mono tabular-nums text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
                         {marks}m
                       </span>
 
-                      {/* 0580 Non-Calc / Calc Badging */}
                       {isMath && (
                         meta.isNonCalc ? (
-                          <span 
+                          <span
                             title="2025+ Non-Calculator Paper (Paper 1 & Paper 2)"
-                            className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30"
+                            className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30"
                           >
-                            <Ban className="w-2.5 h-2.5 text-rose-500" />
+                            <Ban className="w-2.5 h-2.5" />
                             Non-Calc
                           </span>
                         ) : (
-                          <span 
+                          <span
                             title="Calculator Allowed Paper"
-                            className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                            className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#F0FDF4] dark:bg-emerald-500/15 text-[#15803D] dark:text-[#4ADE80] border border-[#BBF7D0] dark:border-emerald-500/30"
                           >
-                            <Calculator className="w-2.5 h-2.5 text-emerald-500" />
+                            <Calculator className="w-2.5 h-2.5" />
                             Calc
                           </span>
                         )
                       )}
 
-                      {/* Science Question Type Pill (MCQ vs Theory) */}
                       {!isMath && (
                         <span
                           className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border ${
                             qType === 'mcq'
-                              ? 'bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30'
-                              : 'bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30'
+                              ? 'bg-[#FAF5FF] dark:bg-purple-500/15 text-[#7E22CE] dark:text-[#C084FC] border-[#E9D5FF] dark:border-purple-400/35'
+                              : 'bg-[#EFF6FF] dark:bg-blue-500/15 text-[#1D4ED8] dark:text-[#60A5FA] border-[#BFDBFE] dark:border-blue-400/35'
                           }`}
                         >
                           {qType === 'mcq' ? 'MCQ' : 'Theory'}
                         </span>
                       )}
 
-                      {/* Tier Badge (Core / Extended / Practical) */}
                       {meta.tier && (
-                        <span className={`text-[9px] font-semibold capitalize px-1.5 py-0.5 rounded border ${
-                          meta.tier === 'extended'
-                            ? 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20'
-                            : meta.tier === 'core'
-                            ? 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20'
-                            : 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20'
-                        }`}>
+                        <span className="text-[9px] font-semibold capitalize px-1.5 py-0.5 rounded border bg-[var(--bg-inset)] text-[var(--ink-muted)] border-[var(--border-hairline)]">
                           {meta.tier}
                         </span>
                       )}
 
-                      {/* Obsolete Syllabus Removal Badge (Compact in Sidebar) */}
                       {meta.isObsolete && (
                         <span
-                          className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 shrink-0"
                           title={q.obsolete_reason || meta.obsoleteReason || 'Tests content removed in official Cambridge syllabus revisions'}
                         >
-                          ⚠️ Obsolete
+                          <AlertTriangle className="w-2.5 h-2.5 shrink-0" />
+                          <span>Obsolete</span>
                         </span>
                       )}
                     </div>
 
-                    {/* Bookmark Action */}
                     <div className="flex items-center shrink-0">
                       <button
                         type="button"
@@ -586,9 +549,9 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                           e.stopPropagation();
                           onToggleBookmark(q.id);
                         }}
-                        title={isBookmarked ? "Remove bookmark [B]" : "Bookmark question [B]"}
-                        className={`p-1 rounded-md hover:bg-slate-100 dark:hover:bg-white/[0.08] transition-colors ${
-                          isBookmarked ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+                        title={isBookmarked ? 'Remove bookmark [B]' : 'Bookmark question [B]'}
+                        className={`p-1 rounded hover:bg-[var(--bg-inset)] transition-colors ${
+                          isBookmarked ? 'text-amber-500' : 'text-[var(--ink-caption)] hover:text-[var(--ink-primary)]'
                         }`}
                       >
                         <Bookmark className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-amber-500' : ''}`} />
@@ -596,28 +559,28 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                     </div>
                   </div>
 
-                  {/* Sub-row: Cambridge Component and Series Tag (e.g. 0580/22 · s25 or 0625/41 · w24) */}
-                  <div className="relative z-10 text-[11px] tabular-nums text-slate-600 dark:text-slate-400 font-medium mt-1 flex items-center gap-1.5">
-                    <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
+                  {/* Sub-row: Cambridge Component and Series Tag */}
+                  <div className="text-[11px] tabular-nums text-[var(--ink-muted)] font-medium mt-1 flex items-center gap-1.5">
+                    <span className="font-mono font-semibold text-[var(--ink-primary)]">
                       {meta.paperLabel}
                     </span>
-                    <span className="text-slate-400">·</span>
-                    <span className="font-mono text-slate-600 dark:text-slate-400">
+                    <span>·</span>
+                    <span className="font-mono">
                       {meta.seriesTag}
                     </span>
                     {meta.year && (
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[10px] text-[var(--ink-caption)]">
                         ({meta.year})
                       </span>
                     )}
                   </div>
 
                   {/* Subtopic Title */}
-                  <div 
-                    className={`relative z-10 mt-1 transition-colors ${
-                      isSelected 
-                        ? selectedSubtopicText
-                        : 'text-[11px] text-slate-600 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-slate-200 truncate'
+                  <div
+                    className={`mt-1 transition-colors ${
+                      isSelected
+                        ? `text-xs font-medium line-clamp-2 ${qTheme.textClass}`
+                        : 'text-[11px] text-[var(--ink-muted)] group-hover:text-[var(--ink-primary)] truncate'
                     }`}
                     title={rawSubtopic}
                   >
@@ -625,24 +588,23 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                   </div>
 
                   {/* Bottom Row: Status Pill */}
-                  <div className="relative z-10 flex items-center justify-between pt-2 mt-2 border-t border-slate-100 dark:border-white/[0.06] text-[10px]">
+                  <div className="flex items-center justify-between pt-2 mt-2 border-t border-[var(--border-hairline)] text-[10px]">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         onCycleStatus(q.id);
                       }}
-                      title={`Status: ${statusCfg.label}. Click to cycle: Unattempted → Review Needed → Mastered`}
-                      className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md font-medium border transition-all active:scale-95 ${statusCfg.bg}`}
+                      title={`Status: ${statusCfg.label}. Click to cycle: Unattempted -> Review Needed -> Mastered`}
+                      className={`flex items-center gap-1.5 px-2 py-0.5 rounded font-medium border transition-colors ${statusCfg.bg}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
                       <span>{statusCfg.label}</span>
                     </button>
-                    
-                    {/* Keyboard navigation helper on selected card */}
+
                     {isSelected && (
-                      <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 hidden sm:inline">
-                        <kbd className="px-1 py-0.2 rounded bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10">J</kbd>/<kbd className="px-1 py-0.2 rounded bg-slate-100 dark:bg-white/[0.06] border border-slate-200 dark:border-white/10">K</kbd> to nav
+                      <span className="text-[9px] font-mono text-[var(--ink-caption)] hidden sm:inline">
+                        <kbd className="kbd-keycap">J</kbd>/<kbd className="kbd-keycap">K</kbd> nav
                       </span>
                     )}
                   </div>
@@ -654,30 +616,25 @@ export const QuestionList: React.FC<QuestionListProps> = ({
 
         {/* Pagination Bar */}
         {questions.length > 0 && (
-          <div
-            onPointerMove={handleSpotlightMove}
-            onPointerLeave={handleSpotlightLeave}
-            style={getSubjectSpotlightStyle(listSubject, 280)}
-            className="spotlight-surface p-2 border-t border-slate-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#07090D]/95 backdrop-blur-xl flex flex-col items-center gap-1.5 shrink-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)]"
-          >
-            <div className="relative z-10 flex items-center justify-between w-full px-1 text-[11px] tabular-nums text-slate-600 dark:text-slate-400">
+          <div className="p-2 border-t border-[var(--border-hairline)] bg-[var(--bg-surface)] flex flex-col items-center gap-1.5 shrink-0">
+            <div className="flex items-center justify-between w-full px-1 text-[11px] tabular-nums text-[var(--ink-muted)]">
               <span>
-                Showing <span className="font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">{startIndex + 1}</span>–<span className="font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">{Math.min(startIndex + PAGE_SIZE, questions.length)}</span> of <span className="font-mono tabular-nums font-semibold text-slate-800 dark:text-slate-200">{questions.length}</span>
+                Showing <span className="font-mono tabular-nums font-semibold text-[var(--ink-primary)]">{startIndex + 1}</span>–<span className="font-mono tabular-nums font-semibold text-[var(--ink-primary)]">{Math.min(startIndex + PAGE_SIZE, questions.length)}</span> of <span className="font-mono tabular-nums font-semibold text-[var(--ink-primary)]">{questions.length}</span>
               </span>
-              <span className="text-[10px] font-mono tabular-nums text-slate-500">
+              <span className="text-[10px] font-mono tabular-nums text-[var(--ink-caption)]">
                 Page {currentPage} of {totalPages}
               </span>
             </div>
 
-            <div className="relative z-10 flex items-center justify-center gap-1 w-full">
+            <div className="flex items-center justify-center gap-1 w-full">
               <button
                 type="button"
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage <= 1}
-                className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold transition-all ${
+                className={`w-7 h-7 flex items-center justify-center rounded-md text-xs font-semibold transition-colors ${
                   currentPage <= 1
-                    ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-40'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] active:scale-95'
+                    ? 'text-[var(--ink-caption)] cursor-not-allowed opacity-40'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)]'
                 }`}
                 title="Previous Page"
               >
@@ -687,7 +644,7 @@ export const QuestionList: React.FC<QuestionListProps> = ({
               {getPaginationItems(currentPage, totalPages).map((item, idx) => {
                 if (item === '...') {
                   return (
-                    <span key={`dots-${idx}`} className="w-5 text-center text-slate-400 dark:text-slate-500 text-xs select-none">
+                    <span key={`dots-${idx}`} className="w-5 text-center text-[var(--ink-caption)] text-xs select-none">
                       ...
                     </span>
                   );
@@ -699,16 +656,10 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                     key={item}
                     type="button"
                     onClick={() => handlePageChange(item)}
-                    className={`min-w-[28px] h-7 px-1.5 flex items-center justify-center rounded-lg text-xs font-mono tabular-nums font-semibold transition-all ${
+                    className={`min-w-[28px] h-7 px-1.5 flex items-center justify-center rounded-md text-xs font-mono tabular-nums font-semibold transition-colors border ${
                       isCurrent
-                        ? listSubject === 'mathematics'
-                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 dark:border-amber-500/40 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-bold'
-                          : listSubject === 'physics'
-                          ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30 dark:border-indigo-500/40 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-bold'
-                          : listSubject === 'biology'
-                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 dark:border-emerald-500/40 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-bold'
-                          : 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 dark:border-cyan-500/40 shadow-[0_1px_2px_rgba(0,0,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.12)] font-bold'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/[0.06] border border-transparent'
+                        ? `${listSubjectTheme.badgeClass} font-bold`
+                        : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] border-transparent'
                     }`}
                   >
                     {item}
@@ -720,10 +671,10 @@ export const QuestionList: React.FC<QuestionListProps> = ({
                 type="button"
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage >= totalPages}
-                className={`w-7 h-7 flex items-center justify-center rounded-lg text-xs font-semibold transition-all ${
+                className={`w-7 h-7 flex items-center justify-center rounded-md text-xs font-semibold transition-colors ${
                   currentPage >= totalPages
-                    ? 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-40'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] active:scale-95'
+                    ? 'text-[var(--ink-caption)] cursor-not-allowed opacity-40'
+                    : 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)]'
                 }`}
                 title="Next Page"
               >
