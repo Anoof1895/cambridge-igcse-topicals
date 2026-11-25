@@ -142,7 +142,7 @@ export const FilterMultiSelect: React.FC<FilterMultiSelectProps> = ({
         <div
           className={`absolute ${
             align === 'right' ? 'right-0' : 'left-0'
-          } top-full mt-1.5 w-64 sm:w-72 max-w-[calc(100vw-2rem)] max-h-[380px] z-50 bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg flex flex-col overflow-hidden`}
+          } top-full mt-1.5 w-60 sm:w-64 max-w-[calc(100vw-1.5rem)] max-h-[380px] z-50 bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg flex flex-col overflow-hidden`}
           style={{ boxShadow: 'var(--shadow-popover)' }}
         >
           {/* Header Search & Actions */}

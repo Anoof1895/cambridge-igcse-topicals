@@ -205,7 +205,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
 
   return (
     <>
-      <header className="w-full max-w-full h-14 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] px-2.5 sm:px-4 lg:px-6 flex flex-nowrap items-center justify-between gap-1.5 sm:gap-3 select-none shrink-0 relative z-50 transition-colors">
+      <header className="w-full max-w-full h-14 bg-[var(--bg-surface)] border-b border-[var(--border-hairline)] px-2.5 sm:px-4 lg:px-4 xl:px-5 flex flex-nowrap items-center justify-between gap-1.5 sm:gap-2.5 select-none shrink-0 relative z-50 transition-colors">
         {/* Crisp 2px solid top accent rule inside a subject view */}
         {currentView !== 'home' && (
           <div
@@ -216,7 +216,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
         )}
 
         {/* Left Wing: <- Study Hub Bridge + Divider + Wordmark */}
-        <div className="flex-1 flex items-center justify-start min-w-0 gap-2 sm:gap-3">
+        <div className="flex items-center justify-start min-w-0 lg:shrink-0 gap-1.5 sm:gap-2.5">
           <a
             href={studyHubUrl}
             title={`Return to Study Hub (${studyHubLabel})`}
@@ -234,10 +234,10 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
           <button
             type="button"
             onClick={() => handleNavClick('home')}
-            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group min-w-0 text-left focus-visible:outline-none"
+            className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group min-w-0 shrink-0 text-left focus-visible:outline-none"
             title="Go to Cambridge IGCSE Portal"
           >
-            <span className="font-editorial text-[15px] sm:text-[18px] font-semibold tracking-[-0.02em] text-[var(--ink-primary)] truncate whitespace-nowrap">
+            <span className="font-editorial text-[14px] sm:text-[17px] lg:text-[18px] font-semibold tracking-[-0.02em] text-[var(--ink-primary)] shrink-0 whitespace-nowrap">
               Cambridge IGCSE
             </span>
             {currentView !== 'home' && (
@@ -251,16 +251,16 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
         </div>
 
         {/* Center Group: Desktop Navigation Tabs + Compact Utility Actions (>= 1024px) */}
-        <div className="hidden lg:flex h-full shrink-0 flex-nowrap items-center justify-center gap-2 xl:gap-3 mx-auto">
+        <div className="hidden lg:flex h-full shrink-0 flex-nowrap items-center justify-center gap-1.5 xl:gap-2.5">
           <nav
             aria-label="Primary Workspace Navigation"
-            className="flex items-center h-full gap-1 xl:gap-2 shrink-0"
+            className="flex items-center h-full gap-0.5 xl:gap-1.5 shrink-0"
           >
             <button
               type="button"
               onClick={() => onNavigate('home')}
               aria-current={currentView === 'home' ? 'page' : undefined}
-              className={`relative h-full inline-flex items-center gap-1.5 px-2.5 text-[13px] transition-colors whitespace-nowrap ${
+              className={`relative h-full inline-flex items-center gap-1.5 px-2 xl:px-2.5 text-[13px] transition-colors whitespace-nowrap ${
                 currentView === 'home'
                   ? 'font-semibold text-[var(--ink-primary)]'
                   : 'font-medium text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
@@ -281,7 +281,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
               type="button"
               onClick={() => onNavigate(topicalView)}
               aria-current={isTopicalActive ? 'page' : undefined}
-              className={`relative h-full inline-flex items-center gap-1.5 px-2.5 text-[13px] transition-colors whitespace-nowrap ${
+              className={`relative h-full inline-flex items-center gap-1.5 px-2 xl:px-2.5 text-[13px] transition-colors whitespace-nowrap ${
                 isTopicalActive
                   ? 'font-semibold text-[var(--ink-primary)]'
                   : 'font-medium text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
@@ -302,7 +302,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
               type="button"
               onClick={() => onNavigate(testMakerView)}
               aria-current={isTestMakerActive ? 'page' : undefined}
-              className={`relative h-full inline-flex items-center gap-1.5 px-2.5 text-[13px] transition-colors whitespace-nowrap ${
+              className={`relative h-full inline-flex items-center gap-1.5 px-2 xl:px-2.5 text-[13px] transition-colors whitespace-nowrap ${
                 isTestMakerActive
                   ? 'font-semibold text-[var(--ink-primary)]'
                   : 'font-medium text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
@@ -346,7 +346,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
             <button
               type="button"
               onClick={onOpenDataBooklet}
-              title="Official Cambridge Formulae & Tables (Press 'D')"
+              title="Official Cambridge Formulae & Tables (D, or Shift+D on MCQs)"
               className="shrink-0 whitespace-nowrap flex items-center gap-1.5 h-8 px-2.5 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[var(--ink-primary)] text-xs font-medium transition-colors"
             >
               <BookOpen className={`w-3.5 h-3.5 shrink-0 ${activeSubjectTheme.textClass}`} />
@@ -442,7 +442,7 @@ export const AppNavbar: React.FC<AppNavbarProps> = ({
         </div>
 
         {/* Right Wing: Subject Switcher (>= 1024px) */}
-        <div className="hidden lg:flex flex-1 items-center justify-end min-w-0">
+        <div className="hidden lg:flex items-center justify-end shrink-0">
           <div className="relative shrink-0" ref={subjectMenuRef}>
             <button
               type="button"

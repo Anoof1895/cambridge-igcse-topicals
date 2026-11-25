@@ -231,31 +231,6 @@ export const App: React.FC = () => {
   const [isDataBookletExpanded, setIsDataBookletExpanded] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
 
-  // Global keyboard shortcut: 'D' to toggle Official Data & Formula Booklet Drawer
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.repeat || isCommandPaletteOpen) return;
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-
-      if ((e.key === 'd' || e.key === 'D') && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        setIsDataBookletOpen((prev) => !prev);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isCommandPaletteOpen]);
-
   const initialRoute = useRef(parseHashRoute());
   const [currentView, setCurrentView] = useState<AppView>(initialRoute.current.view);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(initialRoute.current.questionId);
@@ -1050,6 +1025,57 @@ export const App: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentView, isDataBookletOpen, isAuthModalOpen, isCommandPaletteOpen, handlePrevQuestion, handleNextQuestion, handleToggleMarkScheme, handleToggleActiveBookmark]);
+
+  const isActiveInteractiveMcq = useMemo(() => {
+    if (!currentView.endsWith('-topical') || activeSubject === 'mathematics' || !activeQuestion) {
+      return false;
+    }
+    const mcqAns =
+      activeQuestion.answer ||
+      activeQuestion.correct_answer ||
+      activeQuestion.correctAnswer ||
+      activeQuestion.key;
+    return getQuestionType(activeQuestion) === 'mcq' || Boolean(mcqAns);
+  }, [currentView, activeSubject, activeQuestion]);
+
+  // Global keyboard shortcut: 'D' toggles Official Formulae & Tables
+  // (Shift+D works everywhere including interactive MCQs where plain 'D' picks option D)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.repeat || isCommandPaletteOpen) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key !== 'd' && e.key !== 'D') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      if (e.shiftKey) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setIsDataBookletOpen((prev) => !prev);
+        return;
+      }
+
+      if (isActiveInteractiveMcq && !isDataBookletOpen) {
+        return;
+      }
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setIsDataBookletOpen((prev) => !prev);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCommandPaletteOpen, isActiveInteractiveMcq, isDataBookletOpen]);
 
   const handleFilterChange = (updates: Partial<FilterState>) => {
     setFilters((prev) => {

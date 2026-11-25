@@ -27,7 +27,6 @@ import {
   SlidersHorizontal,
   Sparkles,
   Award,
-  Layers,
   Columns,
   GripVertical,
 } from 'lucide-react';
@@ -41,6 +40,8 @@ import {
   MockExamPreset,
   SyllabusEra,
 } from '../types';
+import { FilterMultiSelect, FilterOption } from './FilterMultiSelect';
+import { PaperMultiSelect } from './PaperMultiSelect';
 import { SubtopicMultiSelect } from './SubtopicMultiSelect';
 import { SubtopicGroup, buildStaticSubtopicHierarchy } from '../constants/taxonomy';
 import { getQuestionType, getQuestionSubject } from '../utils/questionClassification';
@@ -414,60 +415,110 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     return () => clearTimeout(timer);
   }, [searchInput, filters.searchQuery]);
 
-  // Available filter options
-  const availableYears = useMemo(() => {
-    const years = new Set<number>();
-    questions.forEach((q) => { if (q.year) years.add(q.year); });
-    return Array.from(years).sort((a, b) => b - a);
-  }, [questions]);
+  // Available filter options & live counts
+  const seriesList = useMemo(
+    () => [
+      { value: 'm', label: 'Feb/Mar (m)' },
+      { value: 's', label: 'May/Jun (s)' },
+      { value: 'w', label: 'Oct/Nov (w)' },
+    ],
+    []
+  );
 
-  const seriesList = [
-    { value: 'm', label: 'Feb/Mar (m)' },
-    { value: 's', label: 'May/Jun (s)' },
-    { value: 'w', label: 'Oct/Nov (w)' },
-  ];
+  const paperCounts = useMemo(() => {
+    const map = new Map<number, number>();
+    questions.forEach((q) => {
+      if (filters.hideObsolete && (q.is_obsolete || q.obsolete)) return;
+      if (q.paper) {
+        map.set(q.paper, (map.get(q.paper) || 0) + 1);
+      }
+    });
+    return map;
+  }, [questions, filters.hideObsolete]);
+
+  const yearOptions: FilterOption[] = useMemo(() => {
+    const counts = new Map<number, number>();
+    questions.forEach((q) => {
+      if (filters.hideObsolete && (q.is_obsolete || q.obsolete)) return;
+      if (q.year) {
+        counts.set(q.year, (counts.get(q.year) || 0) + 1);
+      }
+    });
+    return Array.from(counts.keys())
+      .sort((a, b) => b - a)
+      .map((yr) => ({
+        value: String(yr),
+        label: String(yr),
+        count: counts.get(yr),
+      }));
+  }, [questions, filters.hideObsolete]);
+
+  const seriesOptions: FilterOption[] = useMemo(() => {
+    const counts = new Map<string, number>();
+    questions.forEach((q) => {
+      if (filters.hideObsolete && (q.is_obsolete || q.obsolete)) return;
+      const s = (q.series || '').toLowerCase();
+      if (!s) return;
+      for (const item of seriesList) {
+        if (s.includes(item.value)) {
+          counts.set(item.value, (counts.get(item.value) || 0) + 1);
+        }
+      }
+    });
+    return seriesList.map((s) => ({
+      value: s.value,
+      label: s.label,
+      count: counts.get(s.value) || 0,
+    }));
+  }, [questions, filters.hideObsolete, seriesList]);
 
   // Canonical Subtopic Hierarchy
   const subtopicHierarchy: SubtopicGroup[] = useMemo(() => {
     return buildStaticSubtopicHierarchy([], questions, activeSubject);
   }, [questions, activeSubject]);
 
-  // Active secondary filter count (Paper, Year, Series, Variant, Calc, Marks, Syllabus Era/Obsolete)
-  const activeSecondaryCount = useMemo(() => {
+  // Extra secondary filter count inside compact "More" popover (Variant, Syllabus Era, Obsolete toggle)
+  const activeExtraCount = useMemo(() => {
     let count = 0;
-    if (selectedPaperNums.length > 0) count++;
-    if (filters.selectedYears.length > 0) count++;
-    if (filters.selectedSeries.length > 0) count++;
     if (filters.variant && filters.variant !== 'all') count++;
-    if (calcFilter !== 'all') count++;
-    if (marksFilter !== 'all') count++;
     if (isMath && filters.syllabusEra && filters.syllabusEra !== 'all') count++;
     if (filters.hideObsolete === false) count++;
     return count;
+  }, [filters.variant, isMath, filters.syllabusEra, filters.hideObsolete]);
+
+  const hasActiveFilters = useMemo(() => {
+    return (
+      Boolean(searchInput.trim()) ||
+      filters.selectedSubtopics.length > 0 ||
+      selectedPaperNums.length > 0 ||
+      filters.selectedYears.length > 0 ||
+      filters.selectedSeries.length > 0 ||
+      filters.questionType !== 'all' ||
+      marksFilter !== 'all' ||
+      calcFilter !== 'all' ||
+      filters.selectedTier !== 'extended' ||
+      activeExtraCount > 0
+    );
   }, [
-    selectedPaperNums,
-    filters.selectedYears,
-    filters.selectedSeries,
-    filters.variant,
-    calcFilter,
+    searchInput,
+    filters.selectedSubtopics.length,
+    selectedPaperNums.length,
+    filters.selectedYears.length,
+    filters.selectedSeries.length,
+    filters.questionType,
     marksFilter,
-    isMath,
-    filters.syllabusEra,
-    filters.hideObsolete,
+    calcFilter,
+    filters.selectedTier,
+    activeExtraCount,
   ]);
 
   const handleResetSecondaryFilters = () => {
-    setSelectedPaperNums([]);
     setFilters((prev) => ({
       ...prev,
-      selectedYears: [],
-      selectedSeries: [],
       variant: 'all',
       syllabusEra: isMath ? 'all' : '2025-2028',
       hideObsolete: true,
     }));
-    setCalcFilter('all');
-    setMarksFilter('all');
     setCurrentPage(1);
   };
 
@@ -563,23 +614,16 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         if (filters.questionType === 'theory' && isMcq) return false;
       }
 
-      // Marks filter
+      // Standardized Marks filter across all subjects (1m, 2-3m, 4-5m, 6m+)
       if (marksFilter !== 'all') {
         const marks = q.marks || 0;
-        if (isMath) {
-          if (marksFilter === '1-4m' && (marks < 1 || marks > 4)) return false;
-          if (marksFilter === '5-7m' && (marks < 5 || marks > 7)) return false;
-          if (marksFilter === '8-10m' && (marks < 8 || marks > 10)) return false;
-          if (marksFilter === '11m+' && marks < 11) return false;
-        } else {
-          if (marksFilter === '1m' && marks !== 1) return false;
-          if (marksFilter === '2-3m' && (marks < 2 || marks > 3)) return false;
-          if (marksFilter === '4-5m' && (marks < 4 || marks > 5)) return false;
-          if (marksFilter === '6m+' && marks < 6) return false;
-        }
+        if (marksFilter === '1m' && marks !== 1) return false;
+        if (marksFilter === '2-3m' && (marks < 2 || marks > 3)) return false;
+        if (marksFilter === '4-5m' && (marks < 4 || marks > 5)) return false;
+        if (marksFilter === '6m+' && marks < 6) return false;
       }
 
-      // Search query
+      // Search query (topic, question number, paper ID, year, series)
       if (filters.searchQuery.trim()) {
         const query = filters.searchQuery.toLowerCase();
         const qNum = String(q.question_number ?? q.questionNumber ?? '');
@@ -587,7 +631,9 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
         const matchTopic = (q.topic || '').toLowerCase().includes(query);
         const matchSubtopic = (q.subtopic || '').toLowerCase().includes(query);
         const matchSubs = (q.subtopics || []).some((s) => s.toLowerCase().includes(query));
-        if (!matchQNum && !matchTopic && !matchSubtopic && !matchSubs) {
+        const matchYear = String(q.year || '').includes(query);
+        const matchSeries = (q.series || '').toLowerCase().includes(query);
+        if (!matchQNum && !matchTopic && !matchSubtopic && !matchSubs && !matchYear && !matchSeries) {
           return false;
         }
       }
@@ -843,6 +889,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     const neededMarks = targetMarks - totalCartMarks;
     if (neededMarks <= 0) return;
 
+    if (hasActiveFilters && filteredPool.length === 0) {
+      showGeneratorWarning('No questions match your current filters. Please adjust your filters before generating.');
+      return;
+    }
+
     const basePool = (filteredPool.length > 0 ? filteredPool : questions)
       .filter((q) => !cartQuestionIds.includes(q.id));
 
@@ -889,6 +940,11 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
 
   // Fresh Auto-Generate Quiz Handler
   const handleSmartGenerate = () => {
+    if (hasActiveFilters && filteredPool.length === 0) {
+      showGeneratorWarning('No questions match your current filters. Please adjust your filters before generating.');
+      return;
+    }
+
     const pool = filteredPool.length > 0 ? filteredPool : questions;
     if (pool.length === 0) {
       showGeneratorWarning('No questions available in the current filter pool.');
@@ -1058,39 +1114,6 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
     }
   };
 
-  const togglePaper = (pNum: number) => {
-    setSelectedPaperNums((prev) =>
-      prev.includes(pNum) ? prev.filter((p) => p !== pNum) : [...prev, pNum]
-    );
-    setCurrentPage(1);
-  };
-
-  const toggleYear = (yStr: string) => {
-    setFilters((prev) => {
-      const isSelected = prev.selectedYears.includes(yStr);
-      return {
-        ...prev,
-        selectedYears: isSelected
-          ? prev.selectedYears.filter((y) => y !== yStr)
-          : [...prev.selectedYears, yStr],
-      };
-    });
-    setCurrentPage(1);
-  };
-
-  const toggleSeries = (sCode: string) => {
-    setFilters((prev) => {
-      const isSelected = prev.selectedSeries.includes(sCode);
-      return {
-        ...prev,
-        selectedSeries: isSelected
-          ? prev.selectedSeries.filter((s) => s !== sCode)
-          : [...prev.selectedSeries, sCode],
-      };
-    });
-    setCurrentPage(1);
-  };
-
   return (
     <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden bg-[var(--bg-paper)] text-[var(--ink-primary)] select-none relative transition-colors">
       {/* ===================================================================== */}
@@ -1163,407 +1186,131 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
       >
         {/* Filter Controls Header */}
         <div className="p-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] space-y-2 relative z-30 overflow-visible">
-          {/* Row 1: Subtopic Picker (Promoted to Full-Width, Primary Topical Filter) */}
-          <div className="w-full">
-            <SubtopicMultiSelect
-              hierarchy={subtopicHierarchy}
-              selectedSubtopics={filters.selectedSubtopics}
-              onChange={(subs) => {
-                setFilters((prev) => ({ ...prev, selectedSubtopics: subs }));
-                setCurrentPage(1);
-              }}
-              questions={questions}
-              fullWidth
-            />
-          </div>
+          {/* Header Row: Title, Available Count, More Constraints Popover & Reset */}
+          <div className="flex items-center justify-between gap-2 relative" ref={filterPopoverRef}>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--ink-primary)] flex items-center gap-1.5 shrink-0">
+              <Search className="w-3.5 h-3.5 text-[var(--subject-accent)]" />
+              <span>Question Search</span>
+            </span>
 
-          {/* Row 2: Search Input + Tier Segmented Switch */}
-          <div className="flex items-center gap-1.5">
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-0">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--ink-caption)] pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search topic or Q#..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full h-8 bg-[var(--bg-inset)] border border-[var(--border-hairline)] rounded-lg pl-8 pr-6 text-xs text-[var(--ink-primary)] placeholder:text-[var(--ink-caption)] focus:outline-none focus:border-[var(--subject-accent)] transition-colors"
-              />
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={() => setSearchInput('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[11px] font-mono tabular-nums font-semibold text-[var(--subject-accent)]">
+                {filteredPool.length} available
+              </span>
 
-            {/* Tier Switch: All | Core | Extended */}
-            <div className="flex bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold shrink-0">
-              {(['all', 'core', 'extended'] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => {
-                    setFilters((prev) => ({ ...prev, selectedTier: t }));
-                    setCurrentPage(1);
-                  }}
-                  className={`h-7 px-2 rounded-md capitalize text-center text-[10.5px] transition-colors ${
-                    filters.selectedTier === t
-                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
-                      : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
-                  }`}
-                >
-                  {t === 'all' ? 'All' : t === 'core' ? 'Core' : 'Ext'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Row 3: Secondary Filters Popover Button + Reset + Available Questions Counter */}
-          <div className="flex items-center justify-between gap-2 pt-0.5 relative" ref={filterPopoverRef}>
-            <div className="flex items-center gap-1.5">
-              {/* "Filters (n)" Popover Button */}
               <button
                 type="button"
                 onClick={() => setIsFilterPopoverOpen((prev) => !prev)}
-                className={`h-7 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-colors active:scale-95 ${
-                  activeSecondaryCount > 0
+                className={`h-6 px-2 rounded-md text-[10.5px] font-semibold flex items-center gap-1 border transition-colors ${
+                  activeExtraCount > 0 || isFilterPopoverOpen
                     ? 'bg-[var(--subject-bg)] text-[var(--subject-accent)] border-[var(--subject-border)]'
                     : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:text-[var(--ink-primary)]'
                 }`}
-                title="Secondary filters: Paper, Year, Series, Variant, Calc, Marks, Syllabus Era"
+                title="Extra constraints: Variant, Syllabus Era, Obsolete Content"
               >
-                <SlidersHorizontal className="w-3.5 h-3.5 shrink-0" />
-                <span>Filters</span>
-                {activeSecondaryCount > 0 && (
-                  <span className="font-mono tabular-nums text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]">
-                    {activeSecondaryCount}
+                <SlidersHorizontal className="w-3 h-3 shrink-0" />
+                <span>More</span>
+                {activeExtraCount > 0 && (
+                  <span className="font-mono tabular-nums text-[9px] font-bold px-1 rounded-full bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]">
+                    {activeExtraCount}
                   </span>
                 )}
               </button>
 
-              {/* Reset All Filters */}
               <button
                 type="button"
                 onClick={handleResetAllFilters}
-                title="Reset search and all filters"
-                className="h-7 w-7 rounded-lg flex items-center justify-center text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] transition-colors"
+                title="Reset all filters"
+                className={`h-6 w-6 rounded-md flex items-center justify-center border transition-colors ${
+                  hasActiveFilters
+                    ? 'bg-[var(--subject-bg)] text-[var(--subject-accent)] border-[var(--subject-border)] hover:opacity-85'
+                    : 'bg-[var(--bg-inset)] text-[var(--ink-muted)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
+                }`}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-3 h-3" />
               </button>
             </div>
 
-            {/* Results Count */}
-            <span className="text-[11px] font-mono tabular-nums font-semibold text-[var(--subject-accent)]">
-              {filteredPool.length} available
-            </span>
-
-            {/* Secondary Filters Popover Dropdown Card */}
+            {/* Compact Secondary Constraints Popover (Variant, Syllabus Era, Obsolete toggle) */}
             {isFilterPopoverOpen && (
-              <div className="absolute top-full left-0 mt-1.5 w-80 sm:w-88 p-3.5 space-y-3.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-popover)] z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[75vh] overflow-y-auto">
-                {/* Popover Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-hairline)]">
+              <div className="absolute top-full right-0 mt-1.5 w-72 max-w-[calc(100vw-1.5rem)] p-3 space-y-3 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-[var(--shadow-popover)] z-50 animate-in fade-in zoom-in-95 duration-150 max-h-[70vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-1.5 border-b border-[var(--border-hairline)]">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--ink-primary)]">
                     <SlidersHorizontal className="w-3.5 h-3.5 text-[var(--subject-accent)]" />
-                    <span>Secondary Filters</span>
-                    {activeSecondaryCount > 0 && (
-                      <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.2 rounded bg-[var(--subject-bg)] text-[var(--subject-accent)] border border-[var(--subject-border)]">
-                        {activeSecondaryCount} active
-                      </span>
-                    )}
+                    <span>Extra Constraints</span>
                   </div>
-                  {activeSecondaryCount > 0 && (
+                  {activeExtraCount > 0 && (
                     <button
                       type="button"
                       onClick={handleResetSecondaryFilters}
                       className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline font-semibold transition-colors"
                     >
-                      Reset secondary
+                      Reset
                     </button>
                   )}
                 </div>
 
-                {/* 1. Cambridge Components / Papers */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1">
-                      <Layers className="w-3 h-3 text-[var(--subject-accent)]" />
-                      <span>Cambridge Paper</span>
-                    </label>
-                    {selectedPaperNums.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedPaperNums([])}
-                        className="text-[10px] text-[var(--subject-accent)] hover:underline font-medium"
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {(isMath
-                      ? [
-                          { num: 1, label: 'Paper 1 (Core Non-Calc)' },
-                          { num: 2, label: 'Paper 2 (Ext Non-Calc)' },
-                          { num: 3, label: 'Paper 3 (Core Calc)' },
-                          { num: 4, label: 'Paper 4 (Ext Calc)' },
-                        ]
-                      : [
-                          { num: 1, label: 'Paper 1 (Core MCQ)' },
-                          { num: 2, label: 'Paper 2 (Ext MCQ)' },
-                          { num: 3, label: 'Paper 3 (Core Theory)' },
-                          { num: 4, label: 'Paper 4 (Ext Theory)' },
-                          { num: 6, label: 'Paper 6 (ATP)' },
-                        ]
-                    ).map((p) => {
-                      const isSelected = selectedPaperNums.includes(p.num);
-                      return (
-                        <button
-                          key={p.num}
-                          type="button"
-                          onClick={() => togglePaper(p.num)}
-                          className={`py-1.5 px-2 rounded-lg text-left text-xs font-medium border transition-colors truncate ${
-                            isSelected
-                              ? 'bg-[var(--subject-bg)] text-[var(--subject-accent)] border-[var(--subject-border)] font-semibold'
-                              : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)] hover:text-[var(--ink-primary)]'
-                          }`}
-                        >
-                          <span className="font-mono font-bold mr-1">P{p.num}</span>
-                          <span className="text-[10px] text-[var(--ink-muted)]">{p.label.replace(/Paper \d+ /, '')}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 2. Syllabus Era (Maths 0580) or Deprecated Content Toggle (Sciences) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-                      {isMath ? 'Syllabus Era' : 'Removed Syllabus Content'}
-                    </label>
-                  </div>
-                  {isMath ? (
-                    <div className="space-y-1.5">
-                      <div className="grid grid-cols-3 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold">
-                        {(['2025-2028', '2019-2024', 'all'] as const).map((era) => (
-                          <button
-                            key={era}
-                            type="button"
-                            onClick={() => {
-                              setFilters((prev) => ({ ...prev, syllabusEra: era }));
-                              setCurrentPage(1);
-                            }}
-                            className={`py-1 px-1 rounded-md text-center text-[10.5px] truncate transition-colors ${
-                              (filters.syllabusEra === era || (era === '2019-2024' && filters.syllabusEra === '2020-2024'))
-                                ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
-                                : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
-                            }`}
-                          >
-                            {era === '2025-2028' ? 'Current 25–28' : era === '2019-2024' ? 'Old 19–24' : 'All Syllabi'}
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFilters((prev) => ({ ...prev, hideObsolete: !prev.hideObsolete }));
-                          setCurrentPage(1);
-                        }}
-                        className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
-                          filters.hideObsolete
-                            ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                            : 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-                        }`}
-                      >
-                        {filters.hideObsolete ? (
-                          <>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>Obsolete Hidden</span>
-                          </>
-                        ) : (
-                          <>
-                            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                            <span>Showing Obsolete Content</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFilters((prev) => ({ ...prev, hideObsolete: !prev.hideObsolete }));
-                        setCurrentPage(1);
-                      }}
-                      className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
-                        filters.hideObsolete
-                          ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
-                          : 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
-                      }`}
-                    >
-                      {filters.hideObsolete ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span>Obsolete Hidden</span>
-                        </>
-                      ) : (
-                        <>
-                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                          <span>Showing Obsolete Content</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-
-                {/* 3. Calculator Filter (Maths 0580) */}
                 {isMath && (
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-                        Calculator Rule
-                      </label>
-                    </div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1">
+                      Syllabus Era
+                    </label>
                     <div className="grid grid-cols-3 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold">
-                      {(['all', 'non-calc', 'calc'] as const).map((c) => (
+                      {(['2025-2028', '2019-2024', 'all'] as const).map((era) => (
                         <button
-                          key={c}
+                          key={era}
                           type="button"
                           onClick={() => {
-                            setCalcFilter(c);
+                            setFilters((prev) => ({ ...prev, syllabusEra: era }));
                             setCurrentPage(1);
                           }}
-                          className={`py-1 rounded-md text-center text-[10.5px] transition-colors ${
-                            calcFilter === c
+                          className={`py-1 px-1 rounded-md text-center text-[10.5px] truncate transition-colors ${
+                            (filters.syllabusEra === era || (era === '2019-2024' && filters.syllabusEra === '2020-2024'))
                               ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
                               : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                           }`}
                         >
-                          {c === 'all' ? 'All Calc' : c === 'non-calc' ? 'Non-Calc' : 'Calculator'}
+                          {era === '2025-2028' ? 'Current 25–28' : era === '2019-2024' ? 'Old 19–24' : 'All Syllabi'}
                         </button>
                       ))}
                     </div>
                   </div>
                 )}
 
-                {/* 4. Marks Range Filter */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-                      Marks Range
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-5 gap-1 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs">
-                    {(isMath
-                      ? (['all', '1-4m', '5-7m', '8-10m', '11m+'] as const)
-                      : (['all', '1m', '2-3m', '4-5m', '6m+'] as const)
-                    ).map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => {
-                          setMarksFilter(m);
-                          setCurrentPage(1);
-                        }}
-                        className={`py-1 rounded-md text-center text-[10.5px] font-mono tabular-nums font-medium transition-colors ${
-                          marksFilter === m
-                            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
-                            : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
-                        }`}
-                      >
-                        {m === 'all' ? 'All m' : m}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 5. Exam Years Chips */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-[var(--subject-accent)]" />
-                      <span>Exam Year</span>
-                    </label>
-                    {filters.selectedYears.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setFilters((prev) => ({ ...prev, selectedYears: [] }))}
-                        className="text-[10px] text-[var(--subject-accent)] hover:underline font-medium"
-                      >
-                        Reset
-                      </button>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1">
+                    Removed Syllabus Content
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFilters((prev) => ({ ...prev, hideObsolete: !prev.hideObsolete }));
+                      setCurrentPage(1);
+                    }}
+                    className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-colors ${
+                      filters.hideObsolete
+                        ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-500/30'
+                        : 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/30'
+                    }`}
+                  >
+                    {filters.hideObsolete ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Obsolete Hidden</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <span>Showing Obsolete Content</span>
+                      </>
                     )}
-                  </div>
-                  <div className="grid grid-cols-4 gap-1.5 w-full">
-                    {availableYears.map((yr) => {
-                      const yStr = String(yr);
-                      const isSelected = filters.selectedYears.includes(yStr);
-                      return (
-                        <button
-                          key={yr}
-                          type="button"
-                          onClick={() => toggleYear(yStr)}
-                          className={`w-full text-center py-1 text-xs font-mono tabular-nums rounded-md transition-colors border ${
-                            isSelected
-                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
-                              : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] border-[var(--border-hairline)] hover:border-[var(--border-strong)]'
-                          }`}
-                        >
-                          {yr}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  </button>
                 </div>
 
-                {/* 6. Series / Season */}
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-                      Series / Season
-                    </label>
-                    {filters.selectedSeries.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setFilters((prev) => ({ ...prev, selectedSeries: [] }))}
-                        className="text-[10px] text-[var(--subject-accent)] hover:underline font-medium"
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-1">
-                    {seriesList.map((s) => {
-                      const isSelected = filters.selectedSeries.includes(s.value);
-                      return (
-                        <button
-                          key={s.value}
-                          type="button"
-                          onClick={() => toggleSeries(s.value)}
-                          className={`py-1 px-1.5 rounded-lg text-xs font-medium border text-center transition-colors ${
-                            isSelected
-                              ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold border-[var(--action-primary-bg)]'
-                              : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
-                          }`}
-                        >
-                          {s.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 7. Paper Variant */}
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)]">
-                      Paper Variant
-                    </label>
-                  </div>
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--ink-muted)] block mb-1">
+                    Paper Variant
+                  </label>
                   <div className="grid grid-cols-4 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-xs font-semibold">
                     {([
                       { value: 'all', label: 'All' },
@@ -1593,57 +1340,179 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             )}
           </div>
 
-          {/* Active Filter Chips: Dismissible tags for secondary filters */}
-          {activeSecondaryCount > 0 && (
+          {/* Row 1: Search Input */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--ink-caption)] pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search topic, question, or year..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full h-8 bg-[var(--bg-inset)] border border-[var(--border-hairline)] rounded-lg pl-8 pr-6 text-xs text-[var(--ink-primary)] placeholder:text-[var(--ink-caption)] focus:outline-none focus:border-[var(--subject-accent)] transition-colors"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => setSearchInput('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--ink-muted)] hover:text-[var(--ink-primary)]"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Row 2: 2-Column Custom Popover Grid — All Papers (40%) + All Subtopics (60%) */}
+          <div className="grid grid-cols-5 gap-1.5">
+            <div className="col-span-2 min-w-0">
+              <PaperMultiSelect
+                isMath={isMath}
+                selectedPaperNums={selectedPaperNums}
+                onChange={(nums) => {
+                  setSelectedPaperNums(nums);
+                  setCurrentPage(1);
+                }}
+                counts={paperCounts}
+                fullWidth
+                align="left"
+              />
+            </div>
+            <div className="col-span-3 min-w-0">
+              <SubtopicMultiSelect
+                hierarchy={subtopicHierarchy}
+                selectedSubtopics={filters.selectedSubtopics}
+                onChange={(subs) => {
+                  setFilters((prev) => ({ ...prev, selectedSubtopics: subs }));
+                  setCurrentPage(1);
+                }}
+                questions={questions}
+                fullWidth
+                align="right"
+              />
+            </div>
+          </div>
+
+          {/* Row 3: 2-Column Custom Popover Grid — All Years + All Series */}
+          <div className="grid grid-cols-2 gap-1.5">
+            <FilterMultiSelect
+              labelSingular="Year"
+              labelPlural="Years"
+              icon={<Calendar className="w-3 h-3 text-[var(--subject-accent)] shrink-0" />}
+              options={yearOptions}
+              selectedValues={filters.selectedYears}
+              onChange={(years) => {
+                setFilters((prev) => ({ ...prev, selectedYears: years }));
+                setCurrentPage(1);
+              }}
+              badgeFontMono
+              fullWidth
+              align="left"
+            />
+
+            <FilterMultiSelect
+              labelSingular="Series"
+              labelPlural="Series"
+              icon={<Calendar className="w-3 h-3 text-[var(--subject-accent)] shrink-0" />}
+              options={seriesOptions}
+              selectedValues={filters.selectedSeries}
+              onChange={(series) => {
+                setFilters((prev) => ({ ...prev, selectedSeries: series }));
+                setCurrentPage(1);
+              }}
+              showSearch={false}
+              fullWidth
+              align="right"
+            />
+          </div>
+
+          {/* Row 4: Question Type / Calc Rule + Cambridge Core/Extended Tier */}
+          <div className="flex items-center gap-1.5">
+            {!isMath ? (
+              <div className="flex-1 grid grid-cols-3 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-[10.5px] font-semibold">
+                {(['all', 'mcq', 'theory'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => {
+                      setFilters((prev) => ({ ...prev, questionType: t }));
+                      setCurrentPage(1);
+                    }}
+                    className={`h-6 rounded-md capitalize text-center transition-colors ${
+                      filters.questionType === t
+                        ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                        : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                    }`}
+                  >
+                    {t === 'all' ? 'All' : t === 'mcq' ? 'MCQ' : 'Theory'}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex-1 min-w-0 grid grid-cols-[1fr_1.65fr_1fr] bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-[10.5px] font-semibold">
+                {(['all', 'non-calc', 'calc'] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setCalcFilter(c);
+                      setCurrentPage(1);
+                    }}
+                    className={`h-6 rounded-md text-center whitespace-nowrap px-1 transition-colors ${
+                      calcFilter === c
+                        ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                        : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                    }`}
+                  >
+                    {c === 'all' ? 'All' : c === 'non-calc' ? 'Non-Calc' : 'Calc'}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className={`${isMath ? 'w-[124px] shrink-0' : 'flex-1'} grid grid-cols-3 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-[10.5px] font-semibold`}>
+              {(['all', 'core', 'extended'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => {
+                    setFilters((prev) => ({ ...prev, selectedTier: t }));
+                    setCurrentPage(1);
+                  }}
+                  className={`h-6 rounded-md text-center transition-colors ${
+                    filters.selectedTier === t
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                      : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                  }`}
+                >
+                  {t === 'all' ? 'All' : t === 'core' ? 'Core' : 'Ext'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Row 5: Standardized Mark-Bucket Chips */}
+          <div className="grid grid-cols-5 gap-0.5 bg-[var(--bg-inset)] border border-[var(--border-hairline)] p-0.5 rounded-lg text-[10.5px]">
+            {(['all', '1m', '2-3m', '4-5m', '6m+'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => {
+                  setMarksFilter(m);
+                  setCurrentPage(1);
+                }}
+                className={`h-6 rounded-md text-center font-mono tabular-nums font-medium transition-colors ${
+                  marksFilter === m
+                    ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
+                    : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
+                }`}
+              >
+                {m === 'all' ? 'All m' : m}
+              </button>
+            ))}
+          </div>
+
+          {/* Active Extra Constraint Chips (Variant / Era / Obsolete) */}
+          {activeExtraCount > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap pt-1.5 border-t border-[var(--border-hairline)]">
-              {selectedPaperNums.map((p) => (
-                <span
-                  key={`paper-${p}`}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums"
-                >
-                  P{p}
-                  <button
-                    type="button"
-                    onClick={() => togglePaper(p)}
-                    className="hover:text-rose-500 transition-colors"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                </span>
-              ))}
-
-              {filters.selectedYears.map((y) => (
-                <span
-                  key={`year-${y}`}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums"
-                >
-                  {y}
-                  <button
-                    type="button"
-                    onClick={() => toggleYear(y)}
-                    className="hover:text-rose-500 transition-colors"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                </span>
-              ))}
-
-              {filters.selectedSeries.map((s) => (
-                <span
-                  key={`series-${s}`}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono"
-                >
-                  {s.toUpperCase()}
-                  <button
-                    type="button"
-                    onClick={() => toggleSeries(s)}
-                    className="hover:text-rose-500 transition-colors"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                </span>
-              ))}
-
               {filters.variant && filters.variant !== 'all' && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums">
                   V{filters.variant}
@@ -1657,38 +1526,12 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 </span>
               )}
 
-              {calcFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)]">
-                  {calcFilter === 'non-calc' ? 'Non-Calc' : 'Calculator'}
-                  <button
-                    type="button"
-                    onClick={() => setCalcFilter('all')}
-                    className="hover:text-rose-500 transition-colors"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                </span>
-              )}
-
-              {marksFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[10px] text-[var(--ink-secondary)] font-mono tabular-nums">
-                  {marksFilter}
-                  <button
-                    type="button"
-                    onClick={() => setMarksFilter('all')}
-                    className="hover:text-rose-500 transition-colors"
-                  >
-                    <X className="w-2.5 h-2.5" />
-                  </button>
-                </span>
-              )}
-
               {isMath && filters.syllabusEra && filters.syllabusEra !== 'all' && (
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--subject-bg)] border border-[var(--subject-border)] text-[10px] text-[var(--subject-accent)]">
                   {filters.syllabusEra === '2025-2028'
-                    ? 'New Syllabus (2025-2028)'
+                    ? 'New 25–28'
                     : filters.syllabusEra === '2019-2024' || filters.syllabusEra === '2020-2024'
-                    ? 'Old Syllabus (2019-2024)'
+                    ? 'Old 19–24'
                     : filters.syllabusEra}
                   <button
                     type="button"
@@ -1718,7 +1561,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                 onClick={handleResetSecondaryFilters}
                 className="text-[10px] text-rose-600 dark:text-rose-400 hover:underline font-semibold ml-1"
               >
-                Clear all
+                Clear
               </button>
             </div>
           )}
@@ -2378,19 +2221,40 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
             </div>
           </div>
 
-          {/* Topic Balance Distribution Chips */}
+          {/* Topic Coverage Summary Bar & Distribution Chips */}
           {topicDistribution.length > 0 && (
-            <div className="flex flex-wrap gap-1 max-h-12 overflow-y-auto">
-              {topicDistribution.map((t) => (
-                <span
-                  key={t.name}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[9px] text-[var(--ink-secondary)] truncate max-w-[170px]"
-                  title={`${t.name}: ${t.marks}m (${t.percent}%)`}
-                >
-                  <span className="truncate">{t.name}</span>
-                  <span className="font-mono tabular-nums font-bold text-[var(--ink-muted)] shrink-0">{t.percent}%</span>
-                </span>
-              ))}
+            <div className="space-y-1.5">
+              <div
+                className="flex h-1.5 w-full rounded-full overflow-hidden bg-[var(--bg-subtle)] gap-px"
+                aria-label="Topic coverage breakdown"
+              >
+                {topicDistribution.map((t, idx) => {
+                  const opacities = [1, 0.78, 0.58, 0.42, 0.28];
+                  return (
+                    <div
+                      key={t.name}
+                      title={`${t.name}: ${t.marks}m (${t.percent}%)`}
+                      style={{
+                        width: `${Math.max(4, t.percent)}%`,
+                        backgroundColor: 'var(--subject-accent)',
+                        opacity: opacities[idx % opacities.length],
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex flex-wrap gap-1 max-h-12 overflow-y-auto">
+                {topicDistribution.map((t) => (
+                  <span
+                    key={t.name}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] text-[9px] text-[var(--ink-secondary)] truncate max-w-[170px]"
+                    title={`${t.name}: ${t.marks}m (${t.percent}%)`}
+                  >
+                    <span className="truncate">{t.name}</span>
+                    <span className="font-mono tabular-nums font-bold text-[var(--ink-muted)] shrink-0">{t.percent}%</span>
+                  </span>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -2455,7 +2319,7 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                       : 'bg-[var(--bg-surface)] hover:bg-[var(--bg-inset)] border-[var(--border-hairline)] hover:border-[var(--border-strong)]'
                   } ${dropIndicatorClass}`}
                 >
-                  <div className="flex items-center gap-1.5 overflow-hidden">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
                     <span
                       title="Drag to reorder question"
                       className="text-[var(--ink-caption)] hover:text-[var(--ink-secondary)] cursor-grab active:cursor-grabbing shrink-0 flex items-center"
@@ -2465,16 +2329,16 @@ export const TestMakerPage: React.FC<TestMakerPageProps> = ({
                     <span className="w-5 h-5 rounded-md bg-[var(--bg-inset)] border border-[var(--border-hairline)] flex items-center justify-center font-mono tabular-nums font-bold text-[10px] text-[var(--ink-secondary)] shrink-0">
                       {idx + 1}
                     </span>
-                    <div className="truncate">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono tabular-nums font-bold text-xs text-[var(--subject-accent)]">
+                        <span className="font-mono tabular-nums font-bold text-xs text-[var(--subject-accent)] shrink-0">
                           Q{qNum}
                         </span>
-                        <span className="font-mono tabular-nums text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
+                        <span className="font-mono tabular-nums text-[10px] font-semibold px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)] shrink-0">
                           {q.marks}m
                         </span>
                         {q.paper && (
-                          <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)]">
+                          <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)] border border-[var(--border-hairline)] shrink-0">
                             P{q.paper}
                           </span>
                         )}

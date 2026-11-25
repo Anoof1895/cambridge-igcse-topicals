@@ -191,7 +191,7 @@ export const SubtopicMultiSelect: React.FC<SubtopicMultiSelectProps> = ({
       {/* Popover Dropdown */}
       {isOpen && (
         <div
-          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1.5 w-[360px] max-w-[calc(100vw-2rem)] max-h-[480px] z-50 bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg flex flex-col overflow-hidden`}
+          className={`absolute ${align === 'right' ? 'right-0' : 'left-0'} top-full mt-1.5 w-[296px] sm:w-[312px] xl:w-[336px] max-w-[calc(100vw-1.5rem)] max-h-[480px] z-50 bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-lg flex flex-col overflow-hidden`}
           style={{ boxShadow: 'var(--shadow-popover)' }}
         >
           {/* Header Search */}

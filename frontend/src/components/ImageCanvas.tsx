@@ -929,7 +929,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
   // Shared Floating Annotation Toolbar Renderer
   const renderAnnotationToolbar = () => (
     <div
-      className="flex items-center gap-1 sm:gap-1.5 bg-[var(--bg-surface)] px-2.5 sm:px-3 py-1.5 rounded-full border border-[var(--border-hairline)] select-none transition-colors flex-wrap justify-center sm:flex-nowrap"
+      className="flex flex-wrap items-center justify-center gap-1 bg-[var(--bg-surface)] px-2 py-1.5 rounded-xl border border-[var(--border-hairline)] select-none transition-colors max-w-full"
       style={{ boxShadow: 'var(--shadow-popover)' }}
     >
       {/* Toggle Annotate: On/Off */}
@@ -937,7 +937,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
         type="button"
         onClick={toggleAnnotating}
         title={isAnnotating ? 'Turn off annotation' : 'Turn on annotation overlay'}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-colors ${
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors ${
           isAnnotating
             ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
             : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--ink-primary)] border border-[var(--border-hairline)]'
@@ -949,14 +949,14 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
       {isAnnotating && (
         <>
-          <div className="w-px h-4 bg-[var(--border-hairline)] mx-0.5" />
+          <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
 
           {/* Pen */}
           <button
             type="button"
             onClick={() => switchTool('pen')}
             title={`Pen (${SIZE_CONFIG[brushSize].penWidth}px)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'pen'
                 ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
                 : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
@@ -989,7 +989,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             type="button"
             onClick={() => switchTool('highlighter')}
             title={`Highlighter (${SIZE_CONFIG[brushSize].highlighterWidth}px Yellow)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'highlighter'
                 ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 font-semibold'
                 : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
@@ -1004,7 +1004,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             type="button"
             onClick={() => switchTool('text')}
             title={`Text (${SIZE_CONFIG[brushSize].fontSize}px Font)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'text'
                 ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
                 : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
@@ -1019,7 +1019,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             type="button"
             onClick={() => switchTool('eraser')}
             title={`Eraser (${SIZE_CONFIG[brushSize].eraserWidth}px)`}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
               currentTool === 'eraser'
                 ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 font-semibold'
                 : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
@@ -1029,7 +1029,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             <span>Eraser</span>
           </button>
 
-          <div className="w-px h-4 bg-[var(--border-hairline)] mx-0.5" />
+          <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
 
           {/* 3-Tier Size Picker */}
           <div className="flex items-center gap-1 bg-[var(--bg-inset)] p-0.5 rounded-full border border-[var(--border-hairline)]">
@@ -1064,7 +1064,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             })}
           </div>
 
-          <div className="w-px h-4 bg-[var(--border-hairline)] mx-0.5" />
+          <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
 
           {/* Undo Button */}
           <button
@@ -1208,11 +1208,11 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
   return (
     <div className="flex-1 flex flex-col h-full w-full min-h-[300px] bg-[var(--bg-inset)] overflow-hidden transition-colors">
       {/* Canvas Header */}
-      <div className="h-10 px-3 sm:px-4 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between shrink-0 select-none">
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden flex-wrap sm:flex-nowrap">
-          <span className="text-xs font-semibold text-[var(--ink-primary)] truncate">{title}</span>
+      <div className="h-10 px-2.5 sm:px-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between gap-2 shrink-0 select-none">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden flex-nowrap">
+          <span className="text-xs font-semibold text-[var(--ink-primary)] whitespace-nowrap shrink-0">{title}</span>
           {badgeText && (
-            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border shrink-0 font-mono tabular-nums ${getBadgeClass()}`}>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border shrink-0 font-mono tabular-nums whitespace-nowrap ${getBadgeClass()}`}>
               {badgeText}
             </span>
           )}
@@ -1221,7 +1221,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
 
         {/* Annotate, Dark Paper (Dark Mode only), Zoom & Lightbox Controls */}
         {src && !hasError && (
-          <div className="flex items-center gap-0.5 sm:gap-1 bg-[var(--bg-inset)] rounded-lg p-0.5 border border-[var(--border-hairline)] shrink-0">
+          <div className="flex items-center gap-0.5 bg-[var(--bg-inset)] rounded-lg p-0.5 border border-[var(--border-hairline)] shrink-0">
             {enableAnnotation && (
               <>
                 <button
@@ -1247,7 +1247,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
                   onClick={toggleDarkPaper}
                   aria-pressed={darkPaper}
                   title={darkPaper ? 'Dark Paper ON (click for white exam sheet)' : 'Dark Paper OFF (click to invert exam scan for dark reading)'}
-                  className={`flex items-center gap-1 px-1.5 sm:px-2 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
+                  className={`flex items-center gap-1 px-1.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
                     darkPaper
                       ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
                       : 'hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
@@ -1268,7 +1268,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-[10px] font-mono tabular-nums text-[var(--ink-secondary)] px-1 select-none min-w-[2.5rem] sm:min-w-[3rem] text-center">
+            <span className="text-[10px] font-mono tabular-nums text-[var(--ink-secondary)] px-0.5 select-none min-w-[2.25rem] text-center">
               {Math.round(zoom * 100)}%
             </span>
             <button
@@ -1335,7 +1335,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
           <div className="relative z-10 flex flex-col justify-start items-center pt-1 pb-12 w-full max-w-full">
             {/* Minimal Floating Annotation Controls */}
             {enableAnnotation && (
-              <div className="sticky top-2 z-10 mb-3 flex items-center justify-center pointer-events-auto">
+              <div className="sticky top-2 z-10 mb-3 w-full max-w-full px-1 flex items-center justify-center pointer-events-auto">
                 {renderAnnotationToolbar()}
               </div>
             )}

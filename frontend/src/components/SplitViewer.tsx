@@ -186,12 +186,17 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
     }
   }, [question, setMcqAnswer]);
 
+  const isMcqAnsweredCorrectly = Boolean(
+    selectedMcqOption !== null && normalizedKey && selectedMcqOption === normalizedKey
+  );
+
   // Desktop keyboard shortcuts A-D (and 1-4) for Chemistry & Physics MCQs
   useEffect(() => {
     if (!question || !isMcq || isMath || isFullQuestionOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      if (isMcqAnsweredCorrectly) return;
       // Do not fire when an overlay/modal/drawer is open
       if (document.querySelector('[role="dialog"], [aria-modal="true"]')) return;
 
@@ -231,7 +236,7 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [question, isMcq, isMath, isFullQuestionOpen, handleMcqSelect]);
+  }, [question, isMcq, isMath, isFullQuestionOpen, isMcqAnsweredCorrectly, handleMcqSelect]);
 
   if (!question) {
     return (
@@ -249,9 +254,6 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
   const questionImagePath = question ? resolveQuestionImageUrl(question, activeSubject) : '';
   const markSchemePath = question ? resolveMarkSchemeImageUrl(question, activeSubject) : null;
 
-  const isMcqAnsweredCorrectly = Boolean(
-    selectedMcqOption !== null && normalizedKey && selectedMcqOption === normalizedKey
-  );
   const isMcqAnswerRevealed = isMarkSchemeVisible || mobileTab === 'ms';
 
   const subjectQBadgeClass = subjectTheme.badgeClass;
@@ -582,23 +584,16 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
         >
           <ImageCanvas
             src={markSchemePath}
-            title={`Mark Scheme: Q${displayQNum}`}
+            title="Mark Scheme"
             badgeText={
               mcqAnswer
-                ? `Correct Option: [${mcqAnswer.toUpperCase()}]`
+                ? `KEY: [${mcqAnswer.toUpperCase()}]`
                 : qType === 'mcq'
-                ? 'MCQ Answer Key'
-                : 'Official Answers'
+                ? 'MCQ Key'
+                : 'Answers'
             }
             badgeColor="emerald"
             activeSubject={activeSubject}
-            extraBadge={
-              mcqAnswer ? (
-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#F0FDF4] dark:bg-emerald-500/20 text-[#15803D] dark:text-[#4ADE80] border border-[#BBF7D0] dark:border-emerald-500/30 shrink-0 font-mono">
-                  Option [{mcqAnswer.toUpperCase()}]
-                </span>
-              ) : undefined
-            }
             placeholderTitle="Mark Scheme Pending"
             placeholderMessage="This question's mark scheme row is either still processing or was not included in the sample pages."
             enableAnnotation={true}
