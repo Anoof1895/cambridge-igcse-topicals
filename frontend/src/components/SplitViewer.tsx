@@ -254,7 +254,7 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
   const questionImagePath = question ? resolveQuestionImageUrl(question, activeSubject) : '';
   const markSchemePath = question ? resolveMarkSchemeImageUrl(question, activeSubject) : null;
 
-  const isMcqAnswerRevealed = isMarkSchemeVisible || mobileTab === 'ms';
+  const isMcqAnswerRevealed = isMarkSchemeVisible || mobileTab === 'ms' || isMcqAnsweredCorrectly;
 
   const subjectQBadgeClass = subjectTheme.badgeClass;
   const subjectUnitTextClass = subjectTheme.textClass;
@@ -337,7 +337,7 @@ export const SplitViewer: React.FC<SplitViewerProps> = ({
 
           {/* MCQ Answer Key Badge in Header - only shown once revealed (anti-spoiler) */}
           {isMcq && mcqAnswer && isMcqAnswerRevealed && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0">
+            <span className={`${mobileTab === 'ms' || isMcqAnsweredCorrectly ? 'inline-flex' : 'hidden md:inline-flex'} items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0`}>
               <span className="text-[9px] uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Key:</span>
               <span className="font-mono text-white bg-emerald-700 dark:bg-emerald-600 px-1 py-0.5 rounded text-[10px] font-bold">
                 [{normalizedKey}]

@@ -7,7 +7,6 @@ import {
   Maximize2,
   X,
   Pencil,
-  PenLine,
   Highlighter,
   Eraser,
   Trash2,
@@ -208,13 +207,12 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
     () => getSubjectPenColor(activeSubject, badgeColor, isDarkPaperActive),
     [activeSubject, badgeColor, isDarkPaperActive]
   );
-  const penPaletteSwatches = useMemo(
-    () =>
-      isDarkPaperActive
-        ? [defaultSubjectColor, '#F8FAFC', '#FACC15', '#38BDF8']
-        : [defaultSubjectColor, '#0F172A', '#DC2626', '#1D4ED8'],
-    [defaultSubjectColor, isDarkPaperActive]
-  );
+  const penPaletteSwatches = useMemo(() => {
+    const candidates = isDarkPaperActive
+      ? [defaultSubjectColor, '#F8FAFC', '#FACC15', '#38BDF8', '#FB923C']
+      : [defaultSubjectColor, '#0F172A', '#DC2626', '#1D4ED8', '#15803D'];
+    return Array.from(new Set(candidates)).slice(0, 4);
+  }, [defaultSubjectColor, isDarkPaperActive]);
   const [penColor, setPenColor] = useState<string>(defaultSubjectColor);
   const penColorRef = useRef<string>(penColor);
   penColorRef.current = penColor;
@@ -926,176 +924,152 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
     }
   };
 
-  // Shared Floating Annotation Toolbar Renderer
+  // Shared Docked Annotation Tools Bar Renderer (shown directly below header when Annotate is active)
   const renderAnnotationToolbar = () => (
-    <div
-      className="flex flex-wrap items-center justify-center gap-1 bg-[var(--bg-surface)] px-2 py-1.5 rounded-xl border border-[var(--border-hairline)] select-none transition-colors max-w-full"
-      style={{ boxShadow: 'var(--shadow-popover)' }}
-    >
-      {/* Toggle Annotate: On/Off */}
+    <div className="flex flex-wrap items-center justify-center gap-1 px-1 select-none max-w-full">
+      {/* Pen */}
       <button
         type="button"
-        onClick={toggleAnnotating}
-        title={isAnnotating ? 'Turn off annotation' : 'Turn on annotation overlay'}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-semibold transition-colors ${
-          isAnnotating
-            ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
-            : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--ink-primary)] border border-[var(--border-hairline)]'
+        onClick={() => switchTool('pen')}
+        title={`Pen (${SIZE_CONFIG[brushSize].penWidth}px)`}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+          currentTool === 'pen'
+            ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
+            : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
         }`}
       >
-        <PenLine className="w-3.5 h-3.5" />
-        <span>{isAnnotating ? 'Annotating' : 'Annotate'}</span>
+        <span className="w-2.5 h-2.5 rounded-full border border-black/15 dark:border-white/20 inline-block" style={{ backgroundColor: penColor }} />
+        <span>Pen</span>
       </button>
 
-      {isAnnotating && (
-        <>
-          <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
-
-          {/* Pen */}
-          <button
-            type="button"
-            onClick={() => switchTool('pen')}
-            title={`Pen (${SIZE_CONFIG[brushSize].penWidth}px)`}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-              currentTool === 'pen'
-                ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
-                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
-            }`}
-          >
-            <span className="w-2.5 h-2.5 rounded-full border border-black/15 dark:border-white/20 inline-block" style={{ backgroundColor: penColor }} />
-            <span>Pen</span>
-          </button>
-
-          {/* Ink Palette Swatches */}
-          {currentTool === 'pen' && (
-            <div className="flex items-center gap-1 bg-[var(--bg-inset)] p-0.5 px-1.5 rounded-full border border-[var(--border-hairline)]">
-              {penPaletteSwatches.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setPenColor(c)}
-                  className={`w-3.5 h-3.5 rounded-full border border-black/15 dark:border-white/20 transition-transform ${
-                    penColor === c ? 'scale-125 ring-2 ring-[var(--ink-primary)]' : 'opacity-75 hover:opacity-100 hover:scale-110'
-                  }`}
-                  style={{ backgroundColor: c }}
-                  title={`Select ink color: ${c}`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Highlighter */}
-          <button
-            type="button"
-            onClick={() => switchTool('highlighter')}
-            title={`Highlighter (${SIZE_CONFIG[brushSize].highlighterWidth}px Yellow)`}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-              currentTool === 'highlighter'
-                ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 font-semibold'
-                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
-            }`}
-          >
-            <Highlighter className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-            <span>Highlight</span>
-          </button>
-
-          {/* Text Tool */}
-          <button
-            type="button"
-            onClick={() => switchTool('text')}
-            title={`Text (${SIZE_CONFIG[brushSize].fontSize}px Font)`}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-              currentTool === 'text'
-                ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
-                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
-            }`}
-          >
-            <Type className="w-3.5 h-3.5" style={{ color: 'var(--subject-accent)' }} />
-            <span>Text</span>
-          </button>
-
-          {/* Eraser */}
-          <button
-            type="button"
-            onClick={() => switchTool('eraser')}
-            title={`Eraser (${SIZE_CONFIG[brushSize].eraserWidth}px)`}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-              currentTool === 'eraser'
-                ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 font-semibold'
-                : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
-            }`}
-          >
-            <Eraser className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-            <span>Eraser</span>
-          </button>
-
-          <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
-
-          {/* 3-Tier Size Picker */}
-          <div className="flex items-center gap-1 bg-[var(--bg-inset)] p-0.5 rounded-full border border-[var(--border-hairline)]">
-            {(['fine', 'medium', 'bold'] as const).map((tier) => {
-              const isSelected = brushSize === tier;
-              const config = SIZE_CONFIG[tier];
-              return (
-                <button
-                  key={tier}
-                  type="button"
-                  onClick={() => handleBrushSizeChange(tier)}
-                  title={`${config.label} (${config.penWidth}px Pen / ${config.fontSize}px Font)`}
-                  className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                    isSelected
-                      ? 'bg-[var(--bg-surface)] border border-[var(--border-strong)] scale-105'
-                      : 'hover:bg-[var(--bg-subtle)] opacity-65 hover:opacity-100'
-                  }`}
-                >
-                  <span
-                    className={`rounded-full transition-colors ${
-                      isSelected
-                        ? currentTool === 'eraser'
-                          ? 'bg-rose-500'
-                          : currentTool === 'highlighter'
-                          ? 'bg-amber-500'
-                          : 'bg-[var(--ink-primary)]'
-                        : 'bg-[var(--ink-caption)]'
-                    } ${config.dotClass}`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
-
-          {/* Undo Button */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleUndo}
-            disabled={!canUndo}
-            title="Undo drawing stroke (Ctrl+Z)"
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-              canUndo
-                ? 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)]'
-                : 'text-[var(--ink-caption)] opacity-40 cursor-not-allowed'
-            }`}
-          >
-            <Undo2 className="w-3.5 h-3.5" />
-            <span>Undo</span>
-          </button>
-
-          {/* Clear Button */}
-          <button
-            type="button"
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={handleClearCanvas}
-            title="Clear all annotations on this question"
-            className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Clear</span>
-          </button>
-        </>
+      {/* Ink Palette Swatches */}
+      {currentTool === 'pen' && (
+        <div className="flex items-center gap-1 bg-[var(--bg-inset)] p-0.5 px-1.5 rounded-full border border-[var(--border-hairline)]">
+          {penPaletteSwatches.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setPenColor(c)}
+              className={`w-3.5 h-3.5 rounded-full border border-black/15 dark:border-white/20 transition-transform ${
+                penColor === c ? 'scale-125 ring-2 ring-[var(--ink-primary)]' : 'opacity-75 hover:opacity-100 hover:scale-110'
+              }`}
+              style={{ backgroundColor: c }}
+              title={`Select ink color: ${c}`}
+            />
+          ))}
+        </div>
       )}
+
+      {/* Highlighter */}
+      <button
+        type="button"
+        onClick={() => switchTool('highlighter')}
+        title={`Highlighter (${SIZE_CONFIG[brushSize].highlighterWidth}px Yellow)`}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+          currentTool === 'highlighter'
+            ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 font-semibold'
+            : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
+        }`}
+      >
+        <Highlighter className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+        <span>Highlight</span>
+      </button>
+
+      {/* Text Tool */}
+      <button
+        type="button"
+        onClick={() => switchTool('text')}
+        title={`Text (${SIZE_CONFIG[brushSize].fontSize}px Font)`}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+          currentTool === 'text'
+            ? 'bg-[var(--bg-subtle)] text-[var(--ink-primary)] border border-[var(--border-strong)] font-semibold'
+            : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
+        }`}
+      >
+        <Type className="w-3.5 h-3.5" style={{ color: 'var(--subject-accent)' }} />
+        <span>Text</span>
+      </button>
+
+      {/* Eraser */}
+      <button
+        type="button"
+        onClick={() => switchTool('eraser')}
+        title={`Eraser (${SIZE_CONFIG[brushSize].eraserWidth}px)`}
+        className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+          currentTool === 'eraser'
+            ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/40 font-semibold'
+            : 'text-[var(--ink-muted)] hover:bg-[var(--bg-inset)] hover:text-[var(--ink-primary)]'
+        }`}
+      >
+        <Eraser className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+        <span>Eraser</span>
+      </button>
+
+      <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
+
+      {/* 3-Tier Size Picker */}
+      <div className="flex items-center gap-1 bg-[var(--bg-inset)] p-0.5 rounded-full border border-[var(--border-hairline)]">
+        {(['fine', 'medium', 'bold'] as const).map((tier) => {
+          const isSelected = brushSize === tier;
+          const config = SIZE_CONFIG[tier];
+          return (
+            <button
+              key={tier}
+              type="button"
+              onClick={() => handleBrushSizeChange(tier)}
+              title={`${config.label} (${config.penWidth}px Pen / ${config.fontSize}px Font)`}
+              className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                isSelected
+                  ? 'bg-[var(--bg-surface)] border border-[var(--border-strong)] scale-105'
+                  : 'hover:bg-[var(--bg-subtle)] opacity-65 hover:opacity-100'
+              }`}
+            >
+              <span
+                className={`rounded-full transition-colors ${
+                  isSelected
+                    ? currentTool === 'eraser'
+                      ? 'bg-rose-500'
+                      : currentTool === 'highlighter'
+                      ? 'bg-amber-500'
+                      : 'bg-[var(--ink-primary)]'
+                    : 'bg-[var(--ink-caption)]'
+                } ${config.dotClass}`}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="hidden sm:block w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
+
+      {/* Undo Button */}
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={handleUndo}
+        disabled={!canUndo}
+        title="Undo drawing stroke (Ctrl+Z)"
+        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-colors ${
+          canUndo
+            ? 'text-[var(--ink-secondary)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)]'
+            : 'text-[var(--ink-caption)] opacity-40 cursor-not-allowed'
+        }`}
+      >
+        <Undo2 className="w-3.5 h-3.5" />
+        <span>Undo</span>
+      </button>
+
+      {/* Clear Button */}
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={handleClearCanvas}
+        title="Clear all annotations on this question"
+        className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-[var(--ink-muted)] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+        <span>Clear</span>
+      </button>
     </div>
   );
 
@@ -1208,7 +1182,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
   return (
     <div className="flex-1 flex flex-col h-full w-full min-h-[300px] bg-[var(--bg-inset)] overflow-hidden transition-colors">
       {/* Canvas Header */}
-      <div className="h-10 px-2.5 sm:px-3 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between gap-2 shrink-0 select-none">
+      <div className="h-10 px-2 sm:px-2.5 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-between gap-1.5 shrink-0 select-none">
         <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden flex-nowrap">
           <span className="text-xs font-semibold text-[var(--ink-primary)] whitespace-nowrap shrink-0">{title}</span>
           {badgeText && (
@@ -1227,16 +1201,18 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
                 <button
                   type="button"
                   onClick={toggleAnnotating}
+                  aria-pressed={isAnnotating}
                   title={isAnnotating ? 'Turn off annotation overlay' : 'Draw / annotate on question'}
-                  className={`p-1 sm:p-1.5 rounded transition-colors ${
+                  className={`flex items-center gap-1 px-1.5 py-1 rounded text-[11px] font-medium transition-colors whitespace-nowrap ${
                     isAnnotating
-                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)]'
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] font-semibold'
                       : 'hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)]'
                   }`}
                 >
-                  <Pencil className="w-3.5 h-3.5" />
+                  <Pencil className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden sm:inline">Annotate</span>
                 </button>
-                <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
+                <div className="w-px h-3.5 bg-[var(--border-hairline)]" />
               </>
             )}
 
@@ -1256,7 +1232,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
                   <Contrast className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Dark Paper</span>
                 </button>
-                <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
+                <div className="w-px h-3.5 bg-[var(--border-hairline)]" />
               </>
             )}
 
@@ -1264,36 +1240,36 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
               type="button"
               onClick={handleZoomOut}
               title="Zoom out"
-              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
+              className="p-1 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
             >
               <ZoomOut className="w-3.5 h-3.5" />
             </button>
-            <span className="text-[10px] font-mono tabular-nums text-[var(--ink-secondary)] px-0.5 select-none min-w-[2.25rem] text-center">
+            <span className="text-[10px] font-mono tabular-nums text-[var(--ink-secondary)] px-0.5 select-none min-w-[2rem] text-center">
               {Math.round(zoom * 100)}%
             </span>
             <button
               type="button"
               onClick={handleZoomIn}
               title="Zoom in"
-              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
+              className="p-1 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
-            <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
+            <div className="w-px h-3.5 bg-[var(--border-hairline)]" />
             <button
               type="button"
               onClick={handleResetZoom}
               title="Reset Zoom"
-              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
+              className="p-1 rounded hover:bg-[var(--bg-subtle)] text-[var(--ink-muted)] hover:text-[var(--ink-primary)] transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
-            <div className="w-px h-3.5 bg-[var(--border-hairline)] mx-0.5" />
+            <div className="w-px h-3.5 bg-[var(--border-hairline)]" />
             <button
               type="button"
               onClick={openLightbox}
               title="Full-screen Lightbox (inspect intricate mechanisms & graphs)"
-              className="p-1 sm:p-1.5 rounded hover:bg-[var(--bg-subtle)] transition-colors"
+              className="p-1 rounded hover:bg-[var(--bg-subtle)] transition-colors"
               style={{ color: 'var(--subject-accent)' }}
             >
               <Maximize2 className="w-3.5 h-3.5" />
@@ -1301,6 +1277,13 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
           </div>
         )}
       </div>
+
+      {/* Docked Annotation Tools Bar directly below Card Header when active */}
+      {enableAnnotation && isAnnotating && src && !hasError && (
+        <div className="px-2 py-1.5 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-center shrink-0">
+          {renderAnnotationToolbar()}
+        </div>
+      )}
 
       {/* Canvas Viewport */}
       <div
@@ -1332,13 +1315,7 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             )}
           </div>
         ) : (
-          <div className="relative z-10 flex flex-col justify-start items-center pt-1 pb-12 w-full max-w-full">
-            {/* Minimal Floating Annotation Controls */}
-            {enableAnnotation && (
-              <div className="sticky top-2 z-10 mb-3 w-full max-w-full px-1 flex items-center justify-center pointer-events-auto">
-                {renderAnnotationToolbar()}
-              </div>
-            )}
+          <div className="relative z-10 flex flex-col justify-start items-center pt-1 pb-10 w-full max-w-full">
 
             <div
               className="flex justify-center w-full max-w-full"
@@ -1429,6 +1406,23 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {enableAnnotation && (
+                <button
+                  type="button"
+                  onClick={toggleAnnotating}
+                  aria-pressed={isAnnotating}
+                  title={isAnnotating ? 'Turn off annotation overlay' : 'Draw / annotate on question'}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                    isAnnotating
+                      ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] border-transparent font-semibold'
+                      : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)] border-[var(--border-hairline)] hover:text-[var(--ink-primary)]'
+                  }`}
+                >
+                  <Pencil className="w-3.5 h-3.5 shrink-0" />
+                  <span>Annotate</span>
+                </button>
+              )}
+
               {theme === 'dark' && (
                 <button
                   type="button"
@@ -1488,20 +1482,21 @@ export const ImageCanvas: React.FC<ImageCanvasProps> = ({
             </div>
           </div>
 
+          {enableAnnotation && isAnnotating && (
+            <div
+              className="px-3 py-1.5 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center justify-center shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {renderAnnotationToolbar()}
+            </div>
+          )}
+
           {/* Lightbox Body / Viewport */}
           <div
             className="flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start cursor-zoom-out bg-[var(--bg-paper)]"
             onClick={closeLightbox}
             style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
           >
-            {enableAnnotation && (
-              <div
-                className="sticky top-2 z-30 mb-3 flex items-center justify-center pointer-events-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {renderAnnotationToolbar()}
-              </div>
-            )}
 
             <div
               className={`rounded-lg border border-[var(--border-hairline)] p-2 max-w-5xl transition-transform duration-100 ease-out origin-top cursor-default ${

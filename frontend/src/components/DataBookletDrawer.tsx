@@ -713,13 +713,13 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                           P\G
                         </div>
                         {Array.from({ length: 18 }, (_, i) => (
-                          <div key={i + 1} className="h-6 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--ink-muted)]">
+                          <div key={`grp-${i + 1}`} className="h-6 flex items-center justify-center text-[10px] font-mono font-bold text-[var(--ink-muted)]">
                             {i + 1}
                           </div>
                         ))}
 
                         {[1, 2, 3, 4, 5, 6, 7].map((periodNum) => (
-                          <React.Fragment key={periodNum}>
+                          <React.Fragment key={`period-${periodNum}`}>
                             <div className="flex items-center justify-center text-[10px] font-mono font-bold text-[var(--ink-muted)] border-r border-[var(--border-hairline)]">
                               {periodNum}
                             </div>
@@ -731,7 +731,7 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
                               );
 
                               if (!element) {
-                                return <div key={colIndex} className="min-h-[50px] bg-transparent" />;
+                                return <div key={`empty-${periodNum}-${colIndex}`} className="min-h-[50px] bg-transparent" />;
                               }
 
                               const isSelected = selectedElement?.atomicNumber === element.atomicNumber;
@@ -739,7 +739,7 @@ export const DataBookletDrawer: React.FC<DataBookletDrawerProps> = ({
 
                               return (
                                 <button
-                                  key={element.atomicNumber}
+                                  key={`el-${element.atomicNumber}`}
                                   type="button"
                                   onClick={() => setSelectedElement(element)}
                                   className={`min-h-[50px] p-1 rounded border flex flex-col justify-between text-left transition-colors ${styleClass} ${

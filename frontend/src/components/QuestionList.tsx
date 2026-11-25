@@ -383,39 +383,35 @@ export const QuestionList: React.FC<QuestionListProps> = ({
           </button>
         </div>
 
-        {/* Header Tabs: All Questions vs Bookmarked */}
+        {/* Header Tabs: All vs Bookmarked */}
         <div className="p-2 border-b border-[var(--border-hairline)] bg-[var(--bg-surface)] flex items-center gap-1.5 shrink-0">
           <button
             type="button"
             onClick={() => onTabChange('all')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors border ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors border whitespace-nowrap ${
               activeTab === 'all'
                 ? 'bg-[var(--action-primary-bg)] text-[var(--action-primary-fg)] border-transparent'
                 : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] border-transparent'
             }`}
           >
-            <span>All Questions</span>
-            <span
-              className={`text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded ${
-                activeTab === 'all'
-                  ? 'bg-white/15 dark:bg-slate-900/15 text-current'
-                  : 'bg-[var(--bg-inset)] text-[var(--ink-secondary)]'
-              }`}
-            >
-              {activeTab === 'all' ? questions.length : 'All'}
-            </span>
+            <span>All</span>
+            {activeTab === 'all' && (
+              <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-white/15 dark:bg-slate-900/15 text-current">
+                {questions.length}
+              </span>
+            )}
           </button>
 
           <button
             type="button"
             onClick={() => onTabChange('bookmarked')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors border ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-colors border whitespace-nowrap ${
               activeTab === 'bookmarked'
                 ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500/35'
                 : 'text-[var(--ink-muted)] hover:text-[var(--ink-primary)] hover:bg-[var(--bg-inset)] border-transparent'
             }`}
           >
-            <Bookmark className={`w-3.5 h-3.5 ${bookmarks.size > 0 ? 'fill-amber-500 text-amber-500' : ''}`} />
+            <Bookmark className={`w-3.5 h-3.5 shrink-0 ${bookmarks.size > 0 ? 'fill-amber-500 text-amber-500' : ''}`} />
             <span>Bookmarked</span>
             <span className="text-[10px] font-mono tabular-nums px-1.5 py-0.5 rounded bg-[var(--bg-inset)] text-[var(--ink-secondary)]">
               {bookmarks.size}
